@@ -11,8 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import { toast } from "sonner";
-import logo from "@/public/image/logo.webp"; 
-import ascended from "@/public/image/ascended.webp"; 
+import logo from "@/public/image/logo.webp";
+import ascended from "@/public/image/ascended.webp";
 
 export default function SignUpPage() {
   const {
@@ -207,7 +207,6 @@ export default function SignUpPage() {
                 </span>
               </div>
 
-              {/* Terms Checkbox */}
               <div className="flex items-start text-sm gap-2 text-zinc-300">
                 <input
                   type="checkbox"
@@ -217,7 +216,10 @@ export default function SignUpPage() {
                 />
                 <label htmlFor="agreed" className="leading-tight">
                   I agree to the{" "}
-                  <Link href="/terms" className="text-blue-400 hover:underline">
+                  <Link
+                    href="/terms-and-conditions"
+                    className="text-blue-400 hover:underline"
+                  >
                     Terms and Conditions
                   </Link>
                 </label>
@@ -231,7 +233,6 @@ export default function SignUpPage() {
               </span>
             </div>
 
-            {/* Action Buttons */}
             <div className="space-y-3">
               <button
                 type="submit"
@@ -250,7 +251,6 @@ export default function SignUpPage() {
               </button>
             </div>
 
-            {/* Footer */}
             <div className="text-center text-sm text-zinc-400 mt-2">
               Already have an account?{" "}
               <Link href="/login" className="text-blue-400 hover:underline">
