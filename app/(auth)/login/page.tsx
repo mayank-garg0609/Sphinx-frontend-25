@@ -12,7 +12,7 @@ import Image from "next/image";
 import { toast } from "sonner";
 import logo from "@/public/image/logo.webp";
 import ascended from "@/public/image/ascended.webp";
-import { loginSchema, LoginFormData } from "../schemas/loginSchema";
+import { loginSchema, LoginFormData } from "../../schemas/loginSchema";
 
 export default function LoginPage() {
   const {

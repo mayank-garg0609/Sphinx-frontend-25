@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signUpSchema, SignUpFormData } from "../schemas/signupSchema";
+import { signUpSchema, SignUpFormData } from "../../schemas/signupSchema";
 import { FcGoogle } from "react-icons/fc";
 import { Text, Flex } from "@radix-ui/themes";
 import Link from "next/link";

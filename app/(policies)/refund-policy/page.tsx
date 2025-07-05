@@ -1,12 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import policyBG from "@/public/image/policyBG.webp";
+import refundBG from "@/public/image/legalsBG.webp";
 
 export default function RefundPage() {
   return (
     <div className="relative h-screen w-screen overflow-hidden">
       <Image
-        src={policyBG}
+        src={refundBG}
         alt="Background"
         fill
         priority

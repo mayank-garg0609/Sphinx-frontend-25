@@ -1,15 +1,59 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import policyBG from "@/public/image/policyBG.webp";
+import policyBG from "@/public/image/legalsBG.webp";
+import { useTransitionRouter } from "next-view-transitions";
+import slideInOut from "@/app/animations/transition";
 
 export default function TermsPage() {
+  const router = useTransitionRouter();
+
+  function slideInOut() {
+    document.documentElement.animate(
+      [
+        {
+          opacity: 1,
+          transform: "translateY(0%)",
+        },
+        {
+          opacity: 0.2,
+          transform: "translateY(-50%)",
+        },
+      ],
+      {
+        duration: 1500,
+        easing: "cubic-bezier(0.87, 0, 0.13, 1)",
+        fill: "forwards",
+        pseudoElement: "::view-transition-old(root) ",
+      }
+    );
+
+    document.documentElement.animate(
+      [
+        {
+          clipPath: "polygon(0% 100% 100% 100% 100% 100% 0% 100%)",
+        },
+        {
+          clipPath: "polygon(0% 100% 100% 100% 100% 0% 0% 0%)",
+        },
+      ],
+      {
+        duration: 1500,
+        easing: "cubic-bezier(0.87, 0, 0.13, 1)",
+        fill: "forwards",
+        pseudoElement: "::view-transition-new(root) ",
+      }
+    );
+  }
+
   return (
     <div className="relative h-screen w-screen overflow-hidden">
       <Image
         src={policyBG}
         alt="Background"
         fill
-        priority 
+        priority
         placeholder="blur"
         className="object-cover z-0"
       />
@@ -419,7 +463,23 @@ export default function TermsPage() {
           </div>
 
           <div className="mt-4 flex justify-center">
-            <Link href="/" prefetch>
+            <Link
+              href="/"
+              onClick={(e) => {
+                e.preventDefault();
+                if (document.startViewTransition) {
+                  document
+                    .startViewTransition(() => {
+                      router.push("/");
+                    })
+                    .ready.then(() => {
+                      slideInOut();
+                    });
+                } else {
+                  router.push("/");
+                }
+              }}
+            >
               <button className="px-6 py-2 border border-white text-white rounded-md hover:bg-white hover:text-black transition duration-200 shadow-lg backdrop-blur-sm">
                 Return to Home
               </button>

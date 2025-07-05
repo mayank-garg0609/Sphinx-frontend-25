@@ -18,3 +18,20 @@ body {
   color: var(--foreground);
   font-family: var(--font-main), sans-serif; 
 }
+
+.cursor-glow {
+  position: fixed;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  width: 75px;  
+  height: 75px;
+  border-radius: 50%;
+  transform: translate(calc(var(--cursor-x, 0px) - 50%), calc(var(--cursor-y, 0px) - 50%));
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.5), transparent 80%);
+  transition: transform 0.05s linear;
+  z-index: 9999;
+  mix-blend-mode: lighten;
+  filter: blur(12px); 
+}
+
