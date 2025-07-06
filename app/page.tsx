@@ -1,16 +1,37 @@
+import Navbar from "./components/navbar";
+import Image from "next/image";
+import homeBG from "@/public/image/homeBG.webp"; 
+
 export default function Home() {
   return (
-    <div className="bg-amber-700 font-main">
-      <div className="flex flex-col items-center justify-center h-screen">
-        <h1 className="text-5xl font-bold text-white">Sphinx</h1>
-        <p className="mt-4 text-lg text-gray-200">Your one-stop t!</p>
-        <button className="mt-6 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-          Get Started
-        </button>
+    <main>
+      <Navbar />
+      <div className="min-h-screen bg-[#0f1b1d] text-white">
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center space-y-4">
+            <h1 className="text-4xl font-bold text-[#3fe0b2]">PLACEHOLDER</h1>
+          </div>
+        </div>
       </div>
-
-    </div>
- 
- 
+      <div className="relative h-screen w-screen overflow-hidden">
+        <Image
+          src={homeBG}
+          alt="Background"
+          fill
+          loading="lazy"
+          placeholder="blur"
+          className="object-cover z-0"
+          quality={60}
+          sizes="100vw"
+        />{" "}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent z-20" />
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center space-y-4">
+            <h1 className="text-4xl font-bold text-[#3fe0b2]">Text</h1>
+            <h1> lorem ipsum</h1>
+          </div>
+        </div>
+      </div>
+    </main>
   );
 }

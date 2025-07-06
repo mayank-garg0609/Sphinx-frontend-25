@@ -1,0 +1,121 @@
+.navbar-group {
+  position: fixed;
+  width: 40%;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  gap: 6rem;
+  padding: 0.5rem;
+  background: rgba(22, 22, 7, 0.8);
+}
+
+.bg-TL {
+  position: fixed;
+  width: 40.1%;
+  height: 42px;
+  z-index: 45;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 1);
+  clip-path: polygon(
+    0% 0%,
+    100% 0%,
+    100% calc(100% - 32px),
+    calc(100% - 32px) 100%,
+    0% 100%
+  );
+  border-radius: 4px;
+}
+
+.top-left {
+  top: 0;
+  left: 0;
+  z-index: 50;
+  clip-path: polygon(
+    0% 0%,
+    100% 0%,
+    100% calc(100% - 32px),
+    calc(100% - 32px) 100%,
+    0% 100%
+  );
+  box-shadow: 3px 3px 6px rgba(14, 0, 0, 0.918);
+}
+
+.bg-TR {
+  position: fixed;
+  width: 40.1%;
+  height: 44px;
+  z-index: 45;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 1);
+  clip-path: polygon(
+    32px 100%,
+    0% calc(100% - 32px),
+    0% 0%,
+    100% 0%,
+    100% 100%
+  );
+
+  border-radius: 4px;
+}
+.top-right {
+  top: 0;
+  right: 0;
+  z-index: 50;
+  clip-path: polygon(
+    32px 100%,
+    0% calc(100% - 32px),
+    0% 0%,
+    100% 0%,
+    100% 100%
+  );
+
+  box-shadow: 3px 3px 6px rgba(248, 247, 247, 0.945);
+}
+.bg-BL {
+  position: fixed;
+  width: 40.1%;
+  height: 42px;
+  z-index: 45;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 1);
+  clip-path: polygon(
+    0% 0%,
+    calc(100% - 32px) 0%,
+    100% 32px,
+    100% 100%,
+    0% 100%
+  );
+
+  border-radius: 4px;
+}
+.bottom-left {
+  bottom: 0;
+  left: 0;
+  clip-path: polygon(
+    0% 0%,
+    calc(100% - 32px) 0%,
+    100% 32px,
+    100% 100%,
+    0% 100%
+  );
+  box-shadow: 3px 3px 6px rgba(255, 255, 255, 0.884);
+}
+.bg-BR {
+  position: fixed;
+  width: 40.1%;
+  height: 42px;
+  z-index: 45;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 1);
+  clip-path: polygon(0% 32px, 32px 0%, 100% 0%, 100% 100%, 0% 100%);
+
+  border-radius: 4px;
+}
+.bottom-right {
+  bottom: 0;
+  right: 0;
+  clip-path: polygon(0% 32px, 32px 0%, 100% 0%, 100% 100%, 0% 100%);
+
+  box-shadow: 3px 3px 6px rgb(235, 232, 232);
+}
+

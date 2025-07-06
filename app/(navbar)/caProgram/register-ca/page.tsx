@@ -14,6 +14,23 @@ import Image from "next/image";
 import logo from "@/public/image/logo.webp";
 import caRegister from "@/public/image/caRegister.webp";
 
+const formFields: {
+  key: keyof RegisterFormData;
+  label: string;
+  placeholder: string;
+}[] = [
+  { key: "name", label: "Full Name", placeholder: "John Doe" },
+  { key: "age", label: "Age", placeholder: "20" },
+  { key: "phone", label: "Phone Number", placeholder: "9876543210" },
+  { key: "email", label: "Email Address", placeholder: "example@email.com" },
+  { key: "college", label: "College Name", placeholder: "ABC College" },
+  { key: "college_city", label: "College City", placeholder: "Jaipur" },
+  { key: "college_state", label: "College State", placeholder: "Rajasthan" },
+  { key: "collegeId", label: "College ID", placeholder: "2023uch1219" },
+  { key: "branch", label: "Branch", placeholder: "Chemical Engg" },
+  { key: "graduation_year", label: "Graduation Year", placeholder: "2027" },
+];
+
 export default function RegisterPage() {
   const {
     register,
@@ -61,10 +78,10 @@ export default function RegisterPage() {
       <div className="flex justify-end items-center w-full z-10">
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="bg-black/50 text-white p-8 rounded-2xl shadow-2xl w-full max-w-md border border-white space-y-6 font-main mr-36 h-[70vh] overflow-y-auto"
+          className="bg-black/30 backdrop-blur-md text-white p-8 rounded-2xl shadow-[0_8px_32px_0_rgba(255,255,255,0.2)] w-full max-w-md border border-white/30 space-y-6 font-main mr-36 h-[70vh] overflow-y-auto"
           style={{
             scrollbarWidth: "thin",
-            scrollbarColor: "#cbd5e1 #2d2d2d", // thumb color (light gray) on dark track
+            scrollbarColor: "#cbd5e1 #2d2d2d",
           }}
         >
           <Flex direction="column" gap="2">
@@ -72,7 +89,7 @@ export default function RegisterPage() {
               <Image
                 src={logo}
                 alt="Sphinx Logo"
-                className="w-6 h-6 bg-white"
+                className="w-6 h-6 bg-white animate-pulse rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]"
                 placeholder="blur"
                 blurDataURL={logo.blurDataURL}
               />
@@ -88,29 +105,17 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-4 pt-4">
-              {[
-                ["name", "Full Name"],
-                ["age", "Age"],
-                ["phone", "Phone Number"],
-                ["email", "Email Address"],
-                ["college", "College Name"],
-                ["college_city", "College City"],
-                ["college_state", "College State"],
-                ["collegeId", "College ID"],
-                ["branch", "Branch"],
-                ["graduation_year", "Graduation Year"],
-              ].map(([key, label]) => (
+              {formFields.map(({ key, label, placeholder }) => (
                 <div key={key} className="flex flex-col gap-2 text-zinc-300">
                   <Label htmlFor={key}>{label}</Label>
                   <Input
                     id={key}
-                    {...register(key as keyof RegisterFormData)}
+                    placeholder={placeholder}
+                    {...register(key)}
                   />
-                  {errors[key as keyof RegisterFormData] && (
+                  {errors[key] && (
                     <span className="text-red-400 text-sm">
-                      {errors[
-                        key as keyof RegisterFormData
-                      ]?.message?.toString()}
+                      {errors[key]?.message?.toString()}
                     </span>
                   )}
                 </div>

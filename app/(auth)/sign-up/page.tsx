@@ -91,13 +91,17 @@ export default function SignUpPage() {
       <div className="relative z-10 flex justify-end w-full items-center">
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="bg-black/50 text-white p-8 rounded-2xl shadow-2xl w-full max-w-md border border-white space-y-6 font-oxanium mr-36 backdrop-blur-md"
+          className="bg-black/30 backdrop-blur-md text-white p-8 rounded-2xl shadow-[0_8px_32px_0_rgba(255,255,255,0.2)] w-full max-w-md border border-white/30 space-y-6 font-main mr-36 h-[70vh] overflow-y-auto"
+          style={{
+            scrollbarWidth: "thin",
+            scrollbarColor: "#cbd5e1 #2d2d2d",
+          }}
         >
           <Flex direction="column" gap="2">
             {/* Logo */}
             <div className="flex items-center gap-3 justify-center">
               <Image
-                className="w-6 h-6 bg-white"
+                className="w-6 h-6 bg-white animate-pulse rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]"
                 src={logo}
                 alt="Sphinx Logo"
                 placeholder="blur"
