@@ -1,16 +1,44 @@
-"use client";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
-export function useCursorTracker() {
+const CSS_PROPERTIES = {
+  X: "--cursor-x",
+  Y: "--cursor-y"
+};
+
+export function useCursorTracker(): void {
+  const rafRef = useRef<number | undefined>(undefined);
+  const documentElement: HTMLElement = document.documentElement;
+
   useEffect(() => {
-    const injectCursorPosition = ({ clientX: x, clientY: y }: PointerEvent) => {
-      document.documentElement.style.setProperty("--cursor-x", `${x}px`);
-      document.documentElement.style.setProperty("--cursor-y", `${y}px`);
+    const handlePointerMove = (event: PointerEvent): void => {
+      if (event.pointerType !== "mouse") return;
+      if (rafRef.current !== undefined) return;
+
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = undefined;
+        const { clientX: x, clientY: y } = event;
+        documentElement.style.setProperty(CSS_PROPERTIES.X, `${x}px`);
+        documentElement.style.setProperty(CSS_PROPERTIES.Y, `${y}px`);
+      });
     };
 
-    document.body.addEventListener("pointermove", injectCursorPosition);
+    const handlePointerLeave = (): void => {
+      documentElement.style.removeProperty(CSS_PROPERTIES.X);
+      documentElement.style.removeProperty(CSS_PROPERTIES.Y);
+    };
+
+    document.body.addEventListener("pointermove", handlePointerMove, { passive: true });
+    document.body.addEventListener("mouseleave", handlePointerLeave);
+    window.addEventListener("blur", handlePointerLeave); 
+
     return () => {
-      document.body.removeEventListener("pointermove", injectCursorPosition);
+      document.body.removeEventListener("pointermove", handlePointerMove);
+      document.body.removeEventListener("mouseleave", handlePointerLeave);
+      window.removeEventListener("blur", handlePointerLeave);
+
+      if (rafRef.current !== undefined) {
+        cancelAnimationFrame(rafRef.current);
+      }
     };
   }, []);
 }

@@ -2,19 +2,19 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { memo, useCallback, useState } from "react";
 import {
   RegisterFormData,
   registerSchema,
 } from "../../../schemas/registerSchema";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Text, Flex } from "@radix-ui/themes";
 import { toast } from "sonner";
 import Image from "next/image";
 import logo from "@/public/image/logo.webp";
 import caRegister from "@/public/image/caRegister.webp";
 
-const formFields: {
+const FORM_FIELDS: {
   key: keyof RegisterFormData;
   label: string;
   placeholder: string;
@@ -31,7 +31,71 @@ const formFields: {
   { key: "graduation_year", label: "Graduation Year", placeholder: "2027" },
 ];
 
+const formClasses =
+  "bg-black/40 backdrop-blur-md text-white p-6 md:p-8 rounded-2xl shadow-[0_8px_32px_0_rgba(255,255,255,0.2)] w-full max-w-md border border-white/30 space-y-6 font-main max-h-[90vh] overflow-y-auto";
+
+const inputClasses =
+  "bg-transparent text-white border border-white/50 rounded-md py-2 px-3 placeholder:text-zinc-400 focus:border-white focus:ring-1 focus:ring-white/20 transition-colors duration-200";
+
+const selectClasses =
+  "bg-transparent text-white border border-white/50 rounded-md py-2 px-3 focus:border-white focus:ring-1 focus:ring-white/20 focus:outline-none transition-colors duration-200";
+
+const FormField = memo<{
+  field: { key: keyof RegisterFormData; label: string; placeholder: string };
+  register: any;
+  error?: any;
+}>(({ field, register, error }) => (
+  <div className="flex flex-col gap-2 text-zinc-300">
+    <Label htmlFor={field.key} className="text-sm md:text-base">
+      {field.label}
+    </Label>
+    <Input
+      id={field.key}
+      placeholder={field.placeholder}
+      {...register(field.key)}
+      className={inputClasses}
+    />
+    {error && (
+      <span className="text-red-400 text-sm">{error.message?.toString()}</span>
+    )}
+  </div>
+));
+
+FormField.displayName = "FormField";
+
+const GenderSelect = memo<{
+  register: any;
+  error?: any;
+}>(({ register, error }) => (
+  <div className="flex flex-col gap-2 text-zinc-300">
+    <Label htmlFor="gender" className="text-sm md:text-base">
+      Gender
+    </Label>
+    <select id="gender" {...register("gender")} className={selectClasses}>
+      <option value="" disabled hidden className="text-zinc-400">
+        Select your gender
+      </option>
+      <option value="male" className="text-black bg-white">
+        Male
+      </option>
+      <option value="female" className="text-black bg-white">
+        Female
+      </option>
+      <option value="other" className="text-black bg-white">
+        Other
+      </option>
+    </select>
+    {error && (
+      <span className="text-red-400 text-sm">{error.message?.toString()}</span>
+    )}
+  </div>
+));
+
+GenderSelect.displayName = "GenderSelect";
+
 export default function RegisterPage() {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -39,126 +103,122 @@ export default function RegisterPage() {
     reset,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    mode: "onSubmit", // Only validate on submit for better performance
+    reValidateMode: "onChange", // Re-validate on change after first submit
   });
 
-  const onSubmit = async (data: RegisterFormData) => {
-    console.log("🚀 Submitting Registration:", data);
-    try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+  const onSubmit = useCallback(
+    async (data: RegisterFormData) => {
+      console.log("🚀 Submitting Registration:", data);
+      try {
+        const res = await fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
 
-      if (res.ok) {
-        const result = await res.json();
-        console.log("✅ Registered:", result);
-        reset();
-        toast.success("Account created successfully!");
-      } else {
-        const error = await res.json();
-        toast.error(error.message || "Registration failed.");
+        if (res.ok) {
+          const result = await res.json();
+          console.log("✅ Registered:", result);
+          reset();
+          toast.success("Account created successfully!");
+        } else {
+          const error = await res.json();
+          toast.error(error.message || "Registration failed.");
+        }
+      } catch (err) {
+        console.error("❌ Network error:", err);
+        toast.error("Check your connection and try again.");
       }
-    } catch (err) {
-      console.error("❌ Network error:", err);
-      toast.error("Check your connection and try again.");
-    }
-  };
+    },
+    [reset]
+  );
+
+  const handleImageLoad = useCallback(() => {
+    setImageLoaded(true);
+  }, []);
 
   return (
-    <div className="min-h-screen w-full flex bg-black px-4 bg-cover bg-no-repeat relative">
-      <Image
-        src={caRegister}
-        alt="ascended"
-        placeholder="blur"
-        blurDataURL={caRegister.blurDataURL}
-        className="h-[960px] w-auto object-contain absolute bottom-0 left-24"
-      />
+    <div className="min-h-screen w-full relative bg-black overflow-hidden">
+      <div className="absolute inset-0 z-0">
+        <Image
+          src={caRegister}
+          alt="ascended"
+          width={1200}
+          height={800}
+          placeholder="blur"
+          blurDataURL={caRegister.blurDataURL}
+          className={`h-full w-full object-cover md:object-contain md:object-left-bottom transition-opacity duration-500 ${
+            imageLoaded ? "opacity-30 md:opacity-50" : "opacity-0"
+          }`}
+          sizes="(max-width: 768px) 100vw, 1200px"
+          priority={false}
+          quality={75}
+          onLoad={handleImageLoad}
+        />
+      </div>
 
-      <div className="flex justify-end items-center w-full z-10">
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 md:justify-end md:pr-24">
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="bg-black/30 backdrop-blur-md text-white p-8 rounded-2xl shadow-[0_8px_32px_0_rgba(255,255,255,0.2)] w-full max-w-md border border-white/30 space-y-6 font-main mr-36 h-[70vh] overflow-y-auto"
+          className={formClasses}
           style={{
             scrollbarWidth: "thin",
             scrollbarColor: "#cbd5e1 #2d2d2d",
           }}
         >
-          <Flex direction="column" gap="2">
+          <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3 justify-center">
               <Image
                 src={logo}
                 alt="Sphinx Logo"
-                className="w-6 h-6 bg-white animate-pulse rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                width={24}
+                height={24}
+                className="bg-white animate-pulse rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]"
                 placeholder="blur"
                 blurDataURL={logo.blurDataURL}
+                priority={true}
+                quality={90}
               />
-              <Text size="7" weight="bold">
-                Sphinx'25
-              </Text>
+              <h1 className="text-3xl md:text-4xl font-bold">Sphinx'25</h1>
             </div>
 
-            <div className="text-center pt-6">
-              <Text size="5" weight="bold">
+            <div className="text-center pt-4 md:pt-6">
+              <h2 className="text-xl md:text-2xl font-bold">
                 Campus Ambassador Registration
-              </Text>
+              </h2>
             </div>
 
             <div className="space-y-4 pt-4">
-              {formFields.map(({ key, label, placeholder }) => (
-                <div key={key} className="flex flex-col gap-2 text-zinc-300">
-                  <Label htmlFor={key}>{label}</Label>
-                  <Input
-                    id={key}
-                    placeholder={placeholder}
-                    {...register(key)}
-                  />
-                  {errors[key] && (
-                    <span className="text-red-400 text-sm">
-                      {errors[key]?.message?.toString()}
-                    </span>
-                  )}
-                </div>
+              {FORM_FIELDS.map((field) => (
+                <FormField
+                  key={field.key}
+                  field={field}
+                  register={register}
+                  error={errors[field.key]}
+                />
               ))}
 
-              <div className="flex flex-col gap-2 text-zinc-300">
-                <Label htmlFor="gender">Gender</Label>
-                <select
-                  id="gender"
-                  {...register("gender")}
-                  className="bg-transparent text-white border border-white rounded-md py-2 px-3"
-                >
-                  <option value="" disabled hidden>
-                    Select your gender
-                  </option>
-                  <option value="male" className="text-black">
-                    Male
-                  </option>
-                  <option value="female" className="text-black">
-                    Female
-                  </option>
-                  <option value="other" className="text-black">
-                    Other
-                  </option>
-                </select>
-                {errors.gender && (
-                  <span className="text-red-400 text-sm">
-                    {errors.gender.message?.toString()}
-                  </span>
-                )}
-              </div>
+              <GenderSelect register={register} error={errors.gender} />
             </div>
 
-            <div className="space-y-3 pt-4">
+            <div className="space-y-3 pt-6">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-white text-black font-semibold py-2 rounded-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(255,255,255,0.4)]"
+                className="w-full bg-white text-black font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none active:scale-[0.98]"
               >
-                {isSubmitting ? "Registering..." : "Register"}
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                    Registering...
+                  </span>
+                ) : (
+                  "Register"
+                )}
               </button>
             </div>
-          </Flex>
+          </div>
         </form>
       </div>
     </div>

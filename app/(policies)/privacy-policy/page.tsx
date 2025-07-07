@@ -3,139 +3,144 @@
 import Image from "next/image";
 import Link from "next/link";
 import policyBG from "@/public/image/legalsBG.webp";
-import { useTransitionRouter } from "next-view-transitions";
 import { Home } from "lucide-react";
-import { motion } from "framer-motion";
+import { useMemo, memo } from "react";
+import type { CSSProperties } from "react";
 
-export default function PrivacyPage() {
-  const router = useTransitionRouter();
+const SCROLL_STYLES: CSSProperties = {
+  scrollbarWidth: "thin",
+  scrollbarColor: "#6b7280 #1f2937",
+} as const;
 
-  function slideInOut() {
-    document.documentElement.animate(
-      [
-        { opacity: 1, transform: "translateY(0%)" },
-        { opacity: 0.2, transform: "translateY(-50%)" },
-      ],
-      {
-        duration: 1500,
-        easing: "cubic-bezier(0.87, 0, 0.13, 1)",
-        fill: "forwards",
-        pseudoElement: "::view-transition-old(root)",
-      }
-    );
+interface PolicySection {
+  readonly title: string;
+  readonly content: string;
+}
 
-    document.documentElement.animate(
-      [
-        {
-          clipPath: "polygon(0% 100% 100% 100% 100% 100% 0% 100%)",
-        },
-        {
-          clipPath: "polygon(0% 100% 100% 100% 100% 0% 0% 0%)",
-        },
-      ],
-      {
-        duration: 1500,
-        easing: "cubic-bezier(0.87, 0, 0.13, 1)",
-        fill: "forwards",
-        pseudoElement: "::view-transition-new(root)",
-      }
-    );
-  }
+const POLICY_SECTIONS: readonly PolicySection[] = [
+  {
+    title: "User Conduct",
+    content:
+      "You agree not to reverse engineer, hack, or disrupt any part of the Services. You must not interfere with usage by other users or access parts of the Services not intended for you.",
+  },
+  {
+    title: "Prohibited Behavior",
+    content:
+      "Do not impersonate others, misrepresent yourself, solicit personal data, or attempt to harm, harass, or intimidate other users or staff.",
+  },
+  {
+    title: "Security & Privacy",
+    content:
+      "You may not introduce malware, spyware, or other malicious software. Any attempt to compromise the platform's integrity will lead to access revocation.",
+  },
+  {
+    title: "Information Disclosure",
+    content:
+      "Cognizance may disclose personal data when legally required or during investigations in cooperation with law enforcement.",
+  },
+] as const;
+
+const CSS_CLASSES = {
+  container: "absolute inset-0 z-10 flex items-center justify-center px-4",
+  contentBox:
+    "p-6 rounded-xl text-white max-w-4xl w-full max-h-[85vh] h-full flex flex-col backdrop-blur shadow-xl border border-white/20",
+  title: "text-3xl font-bold mb-4 text-center",
+  article:
+    "overflow-y-auto flex-1 pr-3 text-sm leading-relaxed tracking-wide space-y-5 scroll-smooth",
+  sectionTitle: "text-lg font-semibold mb-1",
+  buttonContainer: "mt-6 text-center",
+  button:
+    "inline-flex items-center gap-2 px-5 py-2 border border-white/30 text-white bg-white/10 hover:bg-white/20 rounded-md shadow-lg transition backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2",
+  gradient:
+    "absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent z-0",
+} as const;
+
+const PolicySectionComponent = memo(({ title, content }: PolicySection) => (
+  <section>
+    <h2 className={CSS_CLASSES.sectionTitle}>{title}</h2>
+    <p>{content}</p>
+  </section>
+));
+
+PolicySectionComponent.displayName = "PolicySectionComponent";
+
+const PolicyContent = memo(() => {
+  const renderedSections = useMemo(
+    () =>
+      POLICY_SECTIONS.map((section, index) => (
+        <PolicySectionComponent
+          key={`policy-section-${index}`}
+          title={section.title}
+          content={section.content}
+        />
+      )),
+    []
+  );
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.6, ease: "easeInOut" }}
-      className="relative h-screen w-screen overflow-hidden"
+    <article className={CSS_CLASSES.article} style={SCROLL_STYLES}>
+      {renderedSections}
+    </article>
+  );
+});
+
+PolicyContent.displayName = "PolicyContent";
+
+const HomeButton = memo(() => (
+  <Link href="/">
+    <button
+      type="button"
+      className={CSS_CLASSES.button}
+      aria-label="Return to Home"
     >
-      <Image
-        src={policyBG}
-        alt="Background"
-        fill
-        priority
-        placeholder="blur"
-        className="object-cover z-0"
-      />
+      <Home className="w-4 h-4" aria-hidden="true" />
+      Return to Home
+    </button>
+  </Link>
+));
 
-      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent z-0" />
+HomeButton.displayName = "HomeButton";
 
-      <div className="absolute inset-0 z-10 flex items-center justify-center px-4">
-        <div className="p-6 rounded-xl text-white max-w-4xl w-full max-h-[85vh] h-full flex flex-col backdrop-blur shadow-xl border border-white/20">
-          <h1 className="text-3xl font-bold mb-4 text-center">
-            Privacy Policy
-          </h1>
+const BackgroundLayer = memo(() => (
+  <>
+    <Image
+      src={policyBG}
+      alt="Privacy Policy Background"
+      fill
+      priority
+      placeholder="blur"
+      className="object-cover z-0"
+      sizes="100vw"
+    />
+    <div className={CSS_CLASSES.gradient} />
+  </>
+));
 
-          <article
-            className="overflow-y-auto flex-1 pr-3 text-sm leading-relaxed tracking-wide space-y-5 scroll-smooth"
-            style={{
-              scrollbarWidth: "thin",
-              scrollbarColor: "#6b7280 #1f2937",
-            }}
-          >
-            <section>
-              <h2 className="text-lg font-semibold mb-1">User Conduct</h2>
-              <p>
-                You agree not to reverse engineer, hack, or disrupt any part of
-                the Services. You must not interfere with usage by other users
-                or access parts of the Services not intended for you.
-              </p>
-            </section>
+BackgroundLayer.displayName = "BackgroundLayer";
 
-            <section>
-              <h2 className="text-lg font-semibold mb-1">Prohibited Behavior</h2>
-              <p>
-                Do not impersonate others, misrepresent yourself, solicit
-                personal data, or attempt to harm, harass, or intimidate other
-                users or staff.
-              </p>
-            </section>
+export default function PrivacyPage() {
+  const pageTitle = useMemo(() => "Privacy Policy", []);
 
-            <section>
-              <h2 className="text-lg font-semibold mb-1">Security & Privacy</h2>
-              <p>
-                You may not introduce malware, spyware, or other malicious
-                software. Any attempt to compromise the platform’s integrity
-                will lead to access revocation.
-              </p>
-            </section>
+  const containerClasses = useMemo(
+    () => "relative h-screen w-screen overflow-hidden",
+    []
+  );
 
-            <section>
-              <h2 className="text-lg font-semibold mb-1">Information Disclosure</h2>
-              <p>
-                Cognizance may disclose personal data when legally required or
-                during investigations in cooperation with law enforcement.
-              </p>
-            </section>
-          </article>
+  return (
+    <div className={containerClasses}>
+      <BackgroundLayer />
 
-          <div className="mt-6 text-center">
-            <Link
-              href="/"
-              onClick={(e) => {
-                e.preventDefault();
-                if (document.startViewTransition) {
-                  document
-                    .startViewTransition(() => {
-                      router.push("/");
-                    })
-                    .ready.then(() => {
-                      slideInOut();
-                    });
-                } else {
-                  router.push("/");
-                }
-              }}
-            >
-              <button className="inline-flex items-center gap-2 px-5 py-2 border border-white/30 text-white bg-white/10 hover:bg-white/20 rounded-md shadow-lg transition backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2">
-                <Home className="w-4 h-4" />
-                Return to Home
-              </button>
-            </Link>
+      <div className={CSS_CLASSES.container}>
+        <div className={CSS_CLASSES.contentBox}>
+          <h1 className={CSS_CLASSES.title}>{pageTitle}</h1>
+
+          <PolicyContent />
+
+          <div className={CSS_CLASSES.buttonContainer}>
+            <HomeButton />
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
