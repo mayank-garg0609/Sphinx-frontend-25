@@ -342,7 +342,7 @@ export default function CaProgram() {
           </div>
 
           <div className="flex justify-center">
-            <Link href="/caProgram/register-ca">
+            <Link href="/caProgram/register">
               <button className="px-6 py-2 border border-white text-white rounded-md hover:bg-white hover:text-black hover:scale-105 active:scale-95 transition duration-200 shadow-lg backdrop-blur-sm">
                 Register for CA
               </button>

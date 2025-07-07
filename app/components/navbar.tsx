@@ -45,12 +45,12 @@ const navbarBR: NavbarItem[] = [
     label: "Facebook",
     link: "https://www.facebook.com/sphinxMNIT/",
     icon: <FaFacebook size={20} />,
-  }, // Optional
-];
+  }, 
+]
 
 const Navbar: React.FC = () => {
   return (
-    <>
+    < main >
       <div className="bg-TL top-left">
         <div className="navbar-group top-left text-white font-bold tracking-wider">
           {navbarTL.map((item) => (
@@ -101,7 +101,7 @@ const Navbar: React.FC = () => {
           ))}
         </div>
       </div>
-    </>
+    </main>
   );
 };
 

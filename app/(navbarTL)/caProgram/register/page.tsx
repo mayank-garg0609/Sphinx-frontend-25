@@ -148,9 +148,7 @@ export default function RegisterPage() {
           height={800}
           placeholder="blur"
           blurDataURL={caRegister.blurDataURL}
-          className={`h-full w-full object-cover md:object-contain md:object-left-bottom transition-opacity duration-500 ${
-            imageLoaded ? "opacity-30 md:opacity-50" : "opacity-0"
-          }`}
+          className={`h-full w-full object-cover md:object-contain md:object-left-bottom transition-opacity duration-500 `}
           sizes="(max-width: 768px) 100vw, 1200px"
           priority={false}
           quality={75}
