@@ -65,28 +65,28 @@ interface Applicant {
 
 const applicants: Applicant[] = [
   {
-    name: "Ananya Sharma",
+    name: "Anurag Sharma",
     college: "IIT Delhi",
     experience:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi at lectus tincidunt, venenatis ex vitae, maximus purus. Mauris auctor eget diam in suscipit.",
     image: "/image/human.png",
   },
   {
-    name: "Rahul Mehta",
+    name: "Aditya Jain",
     college: "Graphic Era University",
     experience:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi at lectus tincidunt, venenatis ex vitae, maximus purus. Mauris auctor eget diam in suscipit.",
     image: "/image/human.png",
   },
   {
-    name: "Sneha Roy",
+    name: "Neha ",
     college: "BITS Pilani",
     experience:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi at lectus tincidunt, venenatis ex vitae, maximus purus. Mauris auctor eget diam in suscipit.",
     image: "/image/human.png",
   },
   {
-    name: "Karthik Iyer",
+    name: "Kartik Garg",
     college: "VIT Vellore",
     experience:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi at lectus tincidunt, venenatis ex vitae, maximus purus. Mauris auctor eget diam in suscipit.",
@@ -191,6 +191,9 @@ const AmbassadorCard: React.FC<AmbassadorCardProps> = ({ applicant }) => (
 );
 
 export default function CaProgram() {
+
+
+  
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const toggleFAQ = useCallback((index: number) => {
