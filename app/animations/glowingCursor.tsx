@@ -46,13 +46,10 @@ export function useCursorTracker() {
   );
 
   useEffect(() => {
-    // OPTIMIZATION: Early return for server-side rendering
     if (typeof window === "undefined") return;
     
-    // OPTIMIZATION: Only initialize on desktop to save resources
     if (window.innerWidth < 1024) return;
 
-    // OPTIMIZATION: Set active flag for cleanup safety
     isActiveRef.current = true;
 
     document.body.addEventListener("pointermove", injectCursorPosition, { 
@@ -60,13 +57,10 @@ export function useCursorTracker() {
     });
 
     return () => {
-      // OPTIMIZATION: Set inactive flag first
       isActiveRef.current = false;
       
-      // OPTIMIZATION: Clean up event listener
       document.body.removeEventListener("pointermove", injectCursorPosition);
       
-      // OPTIMIZATION: Cancel any pending RAF calls
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
@@ -75,8 +69,7 @@ export function useCursorTracker() {
   }, [injectCursorPosition]);
 }
 
-// OPTIMIZATION: Default export component for better tree shaking
 export default function CursorTracker() {
   useCursorTracker();
-  return null; // Hook-only component
+  return null;
 }

@@ -14,11 +14,13 @@ import Image from "next/image";
 import logo from "@/public/image/logo.webp";
 import caRegister from "@/public/image/caRegister.webp";
 
-const FORM_FIELDS: {
+interface form_fields {
   key: keyof RegisterFormData;
   label: string;
   placeholder: string;
-}[] = [
+}
+
+const FORM_FIELDS: form_fields[] = [
   { key: "name", label: "Full Name", placeholder: "John Doe" },
   { key: "age", label: "Age", placeholder: "20" },
   { key: "phone", label: "Phone Number", placeholder: "9876543210" },
@@ -29,79 +31,126 @@ const FORM_FIELDS: {
   { key: "collegeId", label: "College ID", placeholder: "2023uch1219" },
   { key: "branch", label: "Branch", placeholder: "Chemical Engg" },
   { key: "graduation_year", label: "Graduation Year", placeholder: "2027" },
+  { key: "gender", label: "Gender", placeholder: "Select your gender" },
 ];
 
-// Optimized class strings with mobile-first approach
 const formClasses =
-  "bg-black/40 backdrop-blur-md text-white p-4 sm:p-6 lg:p-8 rounded-2xl shadow-[0_8px_32px_0_rgba(255,255,255,0.2)] w-full max-w-sm sm:max-w-md border border-white/30 space-y-4 sm:space-y-6 font-main max-h-[85vh] sm:max-h-[90vh] overflow-y-auto";
+  "bg-black/40 backdrop-blur-md text-white p-4 sm:p-6 lg:p-8 rounded-2xl shadow-[0_8px_32px_0_rgba(255,255,255,0.2)] w-full max-w-sm sm:max-w-md border border-white/30 space-y-4 sm:space-y-6 font-main max-h-[85vh] sm:max-h-[90vh] overflow-y-auto relative";
 
 const inputClasses =
   "bg-transparent text-white border border-white/50 rounded-md py-2.5 sm:py-2 px-3 placeholder:text-zinc-400 focus:border-white focus:ring-1 focus:ring-white/20 transition-colors duration-200 text-sm sm:text-base min-h-[44px] sm:min-h-[40px]";
 
 const selectClasses =
-  "bg-transparent text-white border border-white/50 rounded-md py-2.5 sm:py-2 px-3 focus:border-white focus:ring-1 focus:ring-white/20 focus:outline-none transition-colors duration-200 text-sm sm:text-base min-h-[44px] sm:min-h-[40px]";
+  "bg-transparent text-white border border-white/50 rounded-md py-2.5 sm:py-2 px-3 focus:border-white focus:ring-1 focus:ring-white/20 focus:outline-none transition-colors duration-200 text-sm sm:text-base min-h-[44px] sm:min-h-[40px] w-full appearance-none";
 
-// Memoized FormField component with mobile optimizations
 const FormField = memo<{
-  field: { key: keyof RegisterFormData; label: string; placeholder: string };
+  field: form_fields;
   register: any;
   error?: any;
-}>(({ field, register, error }) => (
-  <div className="flex flex-col gap-1.5 sm:gap-2 text-zinc-300">
-    <Label htmlFor={field.key} className="text-sm sm:text-base font-medium">
-      {field.label}
-    </Label>
-    <Input
-      id={field.key}
-      placeholder={field.placeholder}
-      {...register(field.key)}
-      className={inputClasses}
-      autoComplete="off"
-    />
-    {error && (
-      <span className="text-red-400 text-xs sm:text-sm leading-tight">
-        {error.message?.toString()}
-      </span>
-    )}
-  </div>
-));
+}>(({ field, register, error }) => {
+  const isGender = field.key === "gender";
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedValue, setSelectedValue] = useState("");
+
+  const genderOptions = [
+    { value: "male", label: "Male" },
+    { value: "female", label: "Female" },
+    { value: "other", label: "Other" },
+  ];
+
+  const handleGenderSelect = (value: string) => {
+    setSelectedValue(value);
+    setIsOpen(false);
+    const event = {
+      target: { name: field.key, value: value }
+    };
+    register(field.key).onChange(event);
+  };
+
+  return (
+    <div className="relative flex flex-col gap-1.5 sm:gap-2 text-zinc-300">
+      <Label htmlFor={field.key} className="text-sm sm:text-base font-medium">
+        {field.label}
+      </Label>
+
+      {isGender ? (
+        <div className="relative w-full">
+          <select
+            id={field.key}
+            {...register(field.key)}
+            className="sr-only"
+            value={selectedValue}
+            onChange={(e) => setSelectedValue(e.target.value)}
+          >
+            <option value="">Select your gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+          
+          <button
+            type="button"
+            onClick={() => setIsOpen(!isOpen)}
+            className={`${selectClasses} flex items-center justify-between cursor-pointer`}
+          >
+            <span className={selectedValue ? "text-white" : "text-zinc-400"}>
+              {selectedValue ? genderOptions.find(opt => opt.value === selectedValue)?.label : "Select your gender"}
+            </span>
+            <svg
+              className={`w-4 h-4 transform transition-transform ${isOpen ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {isOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
+                onClick={() => setIsOpen(false)}
+              />
+              
+              <div className="absolute top-full left-0 right-0 mt-1 bg-black/90 backdrop-blur-md border border-white/30 rounded-md shadow-lg z-50 overflow-hidden">
+                {genderOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => handleGenderSelect(option.value)}
+                    className="w-full px-3 py-2.5 text-left text-white hover:bg-white/10 transition-colors duration-200 first:rounded-t-md last:rounded-b-md"
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      ) : (
+        <Input
+          id={field.key}
+          placeholder={field.placeholder}
+          {...register(field.key)}
+          className={inputClasses}
+          autoComplete="off"
+        />
+      )}
+
+      {error && (
+        <span className="text-red-400 text-xs sm:text-sm leading-tight">
+          {error.message?.toString()}
+        </span>
+      )}
+    </div>
+  );
+});
 
 FormField.displayName = "FormField";
 
-// Memoized GenderSelect component with mobile optimizations
-const GenderSelect = memo<{
-  register: any;
-  error?: any;
-}>(({ register, error }) => (
-  <div className="flex flex-col gap-1.5 sm:gap-2 text-zinc-300">
-    <Label htmlFor="gender" className="text-sm sm:text-base font-medium">
-      Gender
-    </Label>
-    <select id="gender" {...register("gender")} className={selectClasses}>
-      <option value="" disabled hidden className="text-zinc-400">
-        Select your gender
-      </option>
-      <option value="male" className="text-black bg-white">
-        Male
-      </option>
-      <option value="female" className="text-black bg-white">
-        Female
-      </option>
-      <option value="other" className="text-black bg-white">
-        Other
-      </option>
-    </select>
-    {error && (
-      <span className="text-red-400 text-xs sm:text-sm leading-tight">
-        {error.message?.toString()}
-      </span>
-    )}
-  </div>
-));
 
-GenderSelect.displayName = "GenderSelect";
 
-// Memoized loading spinner component
 const LoadingSpinner = memo(() => (
   <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
 ));
@@ -122,7 +171,6 @@ export default function RegisterPage() {
     reValidateMode: "onChange",
   });
 
-  // Memoized submit handler for better performance
   const onSubmit = useCallback(
     async (data: RegisterFormData) => {
       console.log("🚀 Submitting Registration:", data);
@@ -154,7 +202,6 @@ export default function RegisterPage() {
     setImageLoaded(true);
   }, []);
 
-  // Memoized form fields to prevent unnecessary re-renders
   const memoizedFormFields = useMemo(
     () =>
       FORM_FIELDS.map((field) => (
@@ -170,7 +217,6 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen w-full relative bg-black overflow-hidden">
-      {/* Background Image - Mobile: covers entire screen, Desktop: positioned left-bottom */}
       <div className="absolute inset-0 z-0">
         <Image
           src={caRegister}
@@ -189,7 +235,6 @@ export default function RegisterPage() {
         />
       </div>
 
-      {/* Form Container - Mobile: centered, Desktop: positioned right */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-3 sm:p-4 lg:justify-end lg:pr-24">
         <form
           onSubmit={handleSubmit(onSubmit)}
@@ -197,10 +242,12 @@ export default function RegisterPage() {
           style={{
             scrollbarWidth: "thin",
             scrollbarColor: "#cbd5e1 #2d2d2d",
+            position: 'relative',
+            zIndex: 10,
+            isolation: 'isolate'
           }}
         >
           <div className="flex flex-col gap-3 ">
-            {/* Header Section */}
             <div className="flex flex-col gap-2 ">
               <div className="flex items-center gap-3 justify-center">
                 <Image
@@ -214,9 +261,7 @@ export default function RegisterPage() {
                   priority={true}
                   quality={90}
                 />
-                <h1 className="text-3xl lg:text-4xl font-bold">
-                  Sphinx'25
-                </h1>
+                <h1 className="text-3xl lg:text-4xl font-bold">Sphinx'25</h1>
               </div>
 
               <div className="text-center pt-2 sm:pt-4 lg:pt-6">
@@ -226,13 +271,10 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Form Fields */}
             <div className="space-y-4 pt-4">
               {memoizedFormFields}
-              <GenderSelect register={register} error={errors.gender} />
             </div>
 
-            {/* Submit Button */}
             <div className="space-y-3 pt-6">
               <button
                 type="submit"

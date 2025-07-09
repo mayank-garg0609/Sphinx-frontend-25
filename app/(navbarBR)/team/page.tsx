@@ -4,7 +4,7 @@ const WRAPPER_CLASSES = "relative min-h-screen w-full bg-transparent flex flex-c
 const CARD_CLASSES = `
   absolute left-1/2 top-1/3 -translate-x-1/2
   w-[90%] max-w-md
-  rounded-2xl border border-white/30 bg-black/80 p-8
+  rounded-2xl border border-white/30 bg-black/50 p-8
   font-main text-white-md shadow-[0_8px_32px_0_rgba(255,255,255,0.2)]
   lg:static lg:translate-x-0 lg:top-auto lg:bottom-auto lg:ml-auto lg:mr-36 lg:flex
 `;

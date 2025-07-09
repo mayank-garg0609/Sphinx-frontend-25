@@ -118,7 +118,7 @@
 
   box-shadow: 3px 3px 6px rgb(235, 232, 232);
 }
-/* navbar.css */
+
 .drawer-menu {
   transition: transform 0.5s ease-in-out;
   transform: translateX(-100%);
