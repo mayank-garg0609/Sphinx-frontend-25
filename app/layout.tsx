@@ -72,19 +72,20 @@ const IMAGE_STYLES = {
 const HOME_OVERLAY_STYLE =
   "absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent z-10";
 
-// ========== CONFIGURATION ==========
 const getGoogleClientId = () => {
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-  
+
   if (!clientId) {
-    console.warn('Google Client ID is not configured. Google OAuth will not work.');
-    return '';
+    console.warn(
+      "Google Client ID is not configured. Google OAuth will not work."
+    );
+    return "";
   }
-  
+
   return clientId;
 };
 
-// ========== COMPONENTS ==========
+
 const NavbarFallback = memo(() => (
   <div className="h-16 bg-black/20 backdrop-blur-sm" />
 ));
@@ -172,24 +173,26 @@ const BackgroundSelector = memo<{ isUpcoming: boolean }>(({ isUpcoming }) => {
 });
 BackgroundSelector.displayName = "BackgroundSelector";
 
-// ========== GOOGLE OAUTH WRAPPER ==========
-const GoogleOAuthWrapper = memo<{ children: React.ReactNode }>(({ children }) => {
-  const googleClientId = useMemo(() => getGoogleClientId(), []);
 
-  // If no client ID, render children without Google OAuth
-  if (!googleClientId) {
-    return <>{children}</>;
+const GoogleOAuthWrapper = memo<{ children: React.ReactNode }>(
+  ({ children }) => {
+    const googleClientId = useMemo(() => getGoogleClientId(), []);
+
+    // If no client ID, render children without Google OAuth
+    if (!googleClientId) {
+      return <>{children}</>;
+    }
+
+    return (
+      <GoogleOAuthProvider clientId={googleClientId}>
+        {children}
+      </GoogleOAuthProvider>
+    );
   }
-
-  return (
-    <GoogleOAuthProvider clientId={googleClientId}>
-      {children}
-    </GoogleOAuthProvider>
-  );
-});
+);
 GoogleOAuthWrapper.displayName = "GoogleOAuthWrapper";
 
-// ========== MAIN LAYOUT ==========
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -230,6 +233,11 @@ export default function RootLayout({
       <html lang="en">
         <head>
           <title>Rajasthan's largest techno-management festival</title>
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+          />
+          <meta name="theme-color" content="#000000" />
           <link rel="preload" href={mobileBG.src} as="image" type="image/png" />
           <link
             rel="preload"

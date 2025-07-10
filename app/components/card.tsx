@@ -1,7 +1,7 @@
 import Image from "next/image";
 import type { StaticImageData } from "next/image";
 import React from "react";
-import eventImage from "@/public/image/human.webp";
+import eventImage from "@/public/image/legalsBG.webp";
 
 interface cardProps {
   id: number;
@@ -11,47 +11,24 @@ interface cardProps {
   isCenter?: boolean;
   imageData: StaticImageData;
 }
-
-const cards: cardProps[] = [
-  {
-    id: 1,
-    title: "Meshmerize",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus ac fermentum metus. Pellentesque diam lorem, consequat at maximus eget, tempus vel erat.",
-    prizes_worth: "$100000",
-    imageData: eventImage,
-  },
-  {
-    id: 2,
-    title: "CosmClench",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus ac fermentum metus. Pellentesque diam lorem, consequat at maximus eget, tempus vel erat.",
-    prizes_worth: "$100000",
-    isCenter: true,
-    imageData: eventImage,
-  },
-  {
-    id: 3,
-    title: "CoDecode",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus ac fermentum metus. Pellentesque diam lorem, consequat at maximus eget, tempus vel erat.",
-    prizes_worth: "$100000",
-    imageData: eventImage,
-  },
-];
-
-const CardContent: React.FC<{
+interface cardContentType {
   title: string;
   description: string;
   prizes_worth: string;
-}> = ({ title, description, prizes_worth }) => (
-  <div className="text-center px-4 py-5 rounded-lg border border-purple-500/30 bg-black/20 space-y-3">
+}
+
+const CardContent: React.FC<cardContentType> = ({
+  title,
+  description,
+  prizes_worth,
+}) => (
+  <div className="text-center px-4 py-5 rounded-lg  space-y-3">
     <h3 className="text-xl font-bold text-white">{title}</h3>
 
     <p className="text-zinc-300 text-sm leading-relaxed">{description}</p>
 
     <div className="flex items-center justify-center">
-      <span className="text-xs text-white font-medium px-4 py-1 rounded-full border border-fuchsia-500/50 bg-black/30">
+      <span className="text-xs text-white font-medium px-4 py-1 rounded-full">
         Prizes Worth: {prizes_worth}
       </span>
     </div>
@@ -67,20 +44,20 @@ const Card: React.FC<cardProps> = ({
 }) => {
   return (
     <div
-      className={`relative group transition-transform duration-300 h-full ${
+      className={`relative group transition-transform duration-300 h-[75h] w-[35vh] ${
         isCenter ? "scale-110 z-10" : "z-0"
       }`}
     >
       <div className="absolute inset-0 rounded-xl blur-xl opacity-60 group-hover:opacity-90 transition-opacity duration-300 bg-gradient-to-br from-purple-700/30 via-pink-500/30 to-indigo-600/30" />
 
-      <div className="relative h-full w-full flex flex-col justify-between backdrop-blur-sm bg-black/40 rounded-xl p-6 border border-white/20 shadow-xl hover:shadow-purple-500/30 transition-all duration-300 hover:scale-105">
-        <div className="flex justify-center">
-          <div className="p-2 rounded-xl border border-purple-400/50 bg-black/30">
+      <div className="relative h-full w-full flex flex-col justify-between backdrop-blur-sm bg-zinc-950/35 rounded-xl p-6 border border-white/20 shadow-xl hover:shadow-[0_0_20px_5px_rgba(168,85,247,0.5)] transition-all duration-300 hover:scale-105 ">
+        <div className="flex justify-center ">
+          <div className="p-2 rounded-xl border border-purple-400/50 bg-black/30 shadow-[0_0_12px_rgba(192,132,252,0.6)] hover:shadow-[0_0_24px_rgba(192,132,252,0.8)] transition-shadow duration-300">
             <Image
               src={imageData}
               alt="Event image"
               width={300}
-              height={300}
+              height={400}
               loading="lazy"
               className="rounded-lg"
             />
@@ -99,25 +76,6 @@ const Card: React.FC<cardProps> = ({
   );
 };
 
-const CardLayout: React.FC = () => {
-  return (
-    <div className="relative">
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-      </div>
 
-      <div className="relative z-10 flex items-center justify-center min-h-screen p-8">
-        <div className="flex flex-col lg:flex-row items-center justify-center gap-8 max-w-7xl mx-auto">
-          {cards.map((card) => (
-            <div key={card.id} className="w-full max-w-[320px] h-[480px] gap-6">
-              <Card {...card} />
-            </div>
-          ))}
-        </div>
-      </div>
 
-    </div>
-  );
-};
-
-export default CardLayout;
+export default Card;

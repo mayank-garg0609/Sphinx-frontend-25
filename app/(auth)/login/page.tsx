@@ -65,7 +65,7 @@ interface ApiResponse<T = any> {
   message?: string;
 }
 
-interface LoginResponse {
+interface LoginResponse extends ApiResponse{
   token: string;
   user: {
     sphinx_id: string;
@@ -365,10 +365,6 @@ export default function LoginPage() {
 
   const password = watch("password");
 
-  const submitHandlerRef = useRef<(data: LoginFormData) => Promise<void>>();
-  const googleAuthHandlerRef = useRef<(authResult: any) => Promise<void>>();
-  const googleErrorHandlerRef = useRef<(error: any) => void>();
-
   const onSubmit = useCallback(
     async (data: LoginFormData) => {
       console.log("🔐 Logging in with:", data);
@@ -447,10 +443,6 @@ export default function LoginPage() {
     );
     setIsGoogleLoading(false);
   }, []);
-
-  submitHandlerRef.current = onSubmit;
-  googleAuthHandlerRef.current = handleGoogleAuth;
-  googleErrorHandlerRef.current = handleGoogleAuthError;
 
   const googleLogin = useGoogleLogin({
     onSuccess: handleGoogleAuth,

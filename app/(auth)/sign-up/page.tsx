@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, memo, useRef } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signUpSchema, SignUpFormData } from "../../schemas/signupSchema";
@@ -77,7 +77,7 @@ interface ApiResponse<T = any> {
   message?: string;
 }
 
-interface SignUpResponse {
+interface SignUpResponse extends ApiResponse {
   token: string;
   user: {
     sphinx_id: string;
@@ -88,7 +88,6 @@ interface SignUpResponse {
     applied_ca: boolean;
   };
 }
-
 
 const saveAuthToken = (token: string): void => {
   try {
@@ -416,10 +415,6 @@ export default function SignUpPage() {
 
   const password = watch("password");
 
-  const submitHandlerRef = useRef<(data: SignUpFormData) => Promise<void>>();
-  const googleAuthHandlerRef = useRef<(authResult: any) => Promise<void>>();
-  const googleErrorHandlerRef = useRef<(error: any) => void>();
-
   const onSubmit = useCallback(
     async (data: SignUpFormData) => {
       console.log("📦 Signing up with:", data);
@@ -433,7 +428,6 @@ export default function SignUpPage() {
           body: JSON.stringify(data),
         });
 
-        // Check if response is JSON
         const contentType = res.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
           console.error("❌ Server returned non-JSON response:", res.status);
@@ -441,7 +435,7 @@ export default function SignUpPage() {
           return;
         }
 
-        const result: ApiResponse<SignUpResponse> = await res.json();
+        const result:SignUpResponse = await res.json();
 
         if (res.ok) {
           console.log("✅ Sign up successful:", result);
@@ -519,10 +513,6 @@ export default function SignUpPage() {
     );
     setIsGoogleLoading(false);
   }, []);
-
-  submitHandlerRef.current = onSubmit;
-  googleAuthHandlerRef.current = handleGoogleAuth;
-  googleErrorHandlerRef.current = handleGoogleAuthError;
 
   const googleLogin = useGoogleLogin({
     onSuccess: handleGoogleAuth,
