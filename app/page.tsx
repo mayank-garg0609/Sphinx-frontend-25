@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { ReactLenis } from "@studio-freight/react-lenis";
 import "./globals.css";
+import CardLayout from "./components/card";
 
 const HOME_CONTAINER_CLASSES =
   "relative w-screen min-h-screen overflow-x-hidden overflow-y-auto text-white";
@@ -27,7 +28,9 @@ export default function Home() {
         <section className="h-screen w-screen flex items-center justify-center bg-black/20">
           <div className="text-center space-y-4">
             <h1 className="text-4xl font-bold text-[#3fe0b2]">SECTION 2</h1>
+            <CardLayout />
           </div>
+
         </section>
       </main>
     </ReactLenis>

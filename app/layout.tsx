@@ -14,6 +14,7 @@ import { ViewTransitions } from "next-view-transitions";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import "./globals.css";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const Navbar = lazy(() => import("./components/navbar"));
 const CursorTracker = lazy(() => import("../app/animations/glowingCursor"));
@@ -22,6 +23,7 @@ import homeBG from "@/public/image/homeBG.webp";
 import upcomingBG from "@/public/image/upcomingBG.webp";
 import mobileBG from "@/public/image/mobileBG.webp";
 
+// ========== CONSTANTS ==========
 const NO_BG_PATHS = new Set([
   "/login",
   "/sign-up",
@@ -46,7 +48,7 @@ const oxanium = Oxanium({
   weight: "300",
   subsets: ["latin"],
   display: "swap",
-  preload: true, // Preload for better performance
+  preload: true,
 });
 
 const CONTAINER_STYLES = "fixed inset-0 z-10";
@@ -70,6 +72,19 @@ const IMAGE_STYLES = {
 const HOME_OVERLAY_STYLE =
   "absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent z-10";
 
+// ========== CONFIGURATION ==========
+const getGoogleClientId = () => {
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  
+  if (!clientId) {
+    console.warn('Google Client ID is not configured. Google OAuth will not work.');
+    return '';
+  }
+  
+  return clientId;
+};
+
+// ========== COMPONENTS ==========
 const NavbarFallback = memo(() => (
   <div className="h-16 bg-black/20 backdrop-blur-sm" />
 ));
@@ -157,6 +172,24 @@ const BackgroundSelector = memo<{ isUpcoming: boolean }>(({ isUpcoming }) => {
 });
 BackgroundSelector.displayName = "BackgroundSelector";
 
+// ========== GOOGLE OAUTH WRAPPER ==========
+const GoogleOAuthWrapper = memo<{ children: React.ReactNode }>(({ children }) => {
+  const googleClientId = useMemo(() => getGoogleClientId(), []);
+
+  // If no client ID, render children without Google OAuth
+  if (!googleClientId) {
+    return <>{children}</>;
+  }
+
+  return (
+    <GoogleOAuthProvider clientId={googleClientId}>
+      {children}
+    </GoogleOAuthProvider>
+  );
+});
+GoogleOAuthWrapper.displayName = "GoogleOAuthWrapper";
+
+// ========== MAIN LAYOUT ==========
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -196,7 +229,7 @@ export default function RootLayout({
     <ViewTransitions>
       <html lang="en">
         <head>
-          <title> Rajasthan's largest techno-management festival</title>
+          <title>Rajasthan's largest techno-management festival</title>
           <link rel="preload" href={mobileBG.src} as="image" type="image/png" />
           <link
             rel="preload"
@@ -206,13 +239,12 @@ export default function RootLayout({
           />
         </head>
         <body className={bodyClassName}>
-          <Toaster {...toasterProps} />
-
-          {cursorWrapper}
-
-          {backgroundContent}
-
-          <main className={MAIN_STYLES}>{children}</main>
+          <GoogleOAuthWrapper>
+            <Toaster {...toasterProps} />
+            {cursorWrapper}
+            {backgroundContent}
+            <main className={MAIN_STYLES}>{children}</main>
+          </GoogleOAuthWrapper>
         </body>
       </html>
     </ViewTransitions>
