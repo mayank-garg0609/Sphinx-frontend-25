@@ -18,7 +18,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const Navbar = lazy(() => import("./components/navbar"));
 const CursorTracker = lazy(() => import("../app/animations/glowingCursor"));
-
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import homeBG from "@/public/image/homeBG.webp";
 import upcomingBG from "@/public/image/upcomingBG.webp";
 import mobileBG from "@/public/image/mobileBG.webp";
@@ -248,6 +248,7 @@ export default function RootLayout({
         </head>
         <body className={bodyClassName}>
           <GoogleOAuthWrapper>
+            <SpeedInsights/>
             <Toaster {...toasterProps} />
             {cursorWrapper}
             {backgroundContent}
