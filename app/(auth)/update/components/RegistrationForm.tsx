@@ -1,3 +1,5 @@
+"use lient";
+
 import { memo, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,6 +15,7 @@ import { useTransitionRouter } from "next-view-transitions";
 import { slideInOut } from "@/app/animations/pageTrans";
 interface RegistrationFormProps {
   logo: any;
+
 }
 
 export const RegistrationForm = memo<RegistrationFormProps>(({ logo }) => {

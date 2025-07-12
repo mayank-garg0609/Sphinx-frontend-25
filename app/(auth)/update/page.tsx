@@ -5,6 +5,7 @@ import Image from "next/image";
 import logo from "@/public/image/logo.webp";
 import caRegister from "@/public/image/caRegister.webp";
 import { RegistrationForm } from "./components/RegistrationForm";
+import { Suspense } from "react";
 
 export default function RegisterPage() {
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -34,10 +35,11 @@ export default function RegisterPage() {
       </div>
 
       <div className="absolute inset-0 z-5 bg-gradient-to-r from-black/60 via-transparent to-black/40 lg:from-black/40 lg:via-transparent lg:to-black/60" />
-
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-3 sm:p-4 lg:justify-end lg:pr-24">
-        <RegistrationForm logo={logo} />
-      </div>
+      <Suspense fallback={<div>Loading form...</div>}>
+        <div className="relative z-10 min-h-screen flex items-center justify-center p-3 sm:p-4 lg:justify-end lg:pr-24">
+          <RegistrationForm logo={logo} />
+        </div>
+      </Suspense>
     </div>
   );
 }
