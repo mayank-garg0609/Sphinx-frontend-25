@@ -10,7 +10,7 @@ export const UpdateButton = memo(function RefreshButton({}) {
       <button
         onClick={(e) => {
           e.preventDefault;
-          router.push("/caProgram/register", { onTransitionReady: slideInOut });
+          router.push("/update", { onTransitionReady: slideInOut });
         }}
         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors duration-200 flex items-center space-x-2"
       >

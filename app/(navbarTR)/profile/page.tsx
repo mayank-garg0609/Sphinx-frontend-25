@@ -20,7 +20,6 @@ const ProfilePage: React.FC = () => {
     profile,
     loading,
     error,
-    isRefreshing,
     canRetry,
     handleRetry,
   } = useProfile();
