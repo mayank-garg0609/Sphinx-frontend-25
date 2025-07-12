@@ -1,30 +1,42 @@
-import React from "react";
+"use client";
+import { ReactLenis } from "@studio-freight/react-lenis";
+import { useRef } from "react";
+import { useTeamState } from "./hooks/useTeamState";
+import TeamNavigation from "./components/TeamNavigation";
+import TeamMobileDropdown from "./components/TeamMobileDropdown";
+import TeamContent from "./components/TeamContent";
+import FixedBackgroundImage from "./components/BackgroundImage";
 
-const WRAPPER_CLASSES = "relative min-h-screen w-full bg-transparent flex flex-col items-center justify-center";
-const CARD_CLASSES = `
-  absolute left-1/2 top-1/3 -translate-x-1/2
-  w-[90%] max-w-md
-  rounded-2xl border border-white/30 bg-black/50 p-8
-  font-main text-white-md shadow-[0_8px_32px_0_rgba(255,255,255,0.2)]
-  lg:static lg:translate-x-0 lg:top-auto lg:bottom-auto lg:ml-auto lg:mr-36 lg:flex
-`;
-const TITLE_CLASSES =
-"text-3xl font-bold text-[#3fe0b2] typewriter whitespace-nowrap";
+export default function Team() {
+  const lenisRef = useRef(null);
+  const {
+    view,
+    setView,
+    isDropdownOpen,
+    setIsDropdownOpen,
+    handleSectionChange,
+    handleDropdownToggle,
+    activeLabel,
+  } = useTeamState();
 
-
-const MemoizedCard = React.memo(() => (
-  <div className={CARD_CLASSES} style={{ height: "100px" }}>
-    <h1 className={TITLE_CLASSES}>Coming Soon...</h1>
-  </div>
-));
-MemoizedCard.displayName = "MemoizedCard";
-
-const Accommodation: React.FC = () => {
   return (
-    <div className={WRAPPER_CLASSES}>
-      <MemoizedCard />
+    <div className="relative min-h-screen overflow-hidden">
+      <FixedBackgroundImage />
+      
+      <ReactLenis root ref={lenisRef}>
+        <TeamNavigation view={view} setView={setView} />
+        
+        <TeamMobileDropdown
+          view={view}
+          activeLabel={activeLabel}
+          isDropdownOpen={isDropdownOpen}
+          handleDropdownToggle={handleDropdownToggle}
+          handleSectionChange={handleSectionChange}
+          setIsDropdownOpen={setIsDropdownOpen}
+        />
+        
+        <TeamContent view={view} />
+      </ReactLenis>
     </div>
   );
-};
-
-export default React.memo(Accommodation);
+}

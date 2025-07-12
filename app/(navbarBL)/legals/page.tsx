@@ -238,12 +238,15 @@ const MobileDropdown = memo(
           </div>
         </button>
 
-        {isOpen && (
-          <div
-            className="absolute top-full left-0 right-0 mt-2 
-    backdrop-blur-lg bg-black/80 rounded-lg border border-black/20 
-    shadow-xl overflow-hidden z-[9999]"
-          >
+{isOpen && (
+  <div
+    className="absolute top-full left-0 right-0 mt-2
+    z-100 backdrop-blur-md bg-black/90 border border-white/10
+    rounded-lg shadow-2xl transition-all duration-300 "
+    style={{ position: "absolute" }}
+  >
+
+          
             {SECTION_KEYS.map((section) => {
               const sectionData = LEGAL_SECTIONS[section];
               const isActive = activeSection === section;

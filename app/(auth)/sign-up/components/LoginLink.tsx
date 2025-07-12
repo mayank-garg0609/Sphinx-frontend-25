@@ -1,4 +1,3 @@
-// components/LoginLink.tsx
 import { memo, useCallback } from "react";
 import Link from "next/link";
 import { useTransitionRouter } from "next-view-transitions";

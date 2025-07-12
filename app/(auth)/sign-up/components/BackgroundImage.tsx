@@ -1,4 +1,3 @@
-// components/BackgroundImage.tsx
 import { memo } from "react";
 import Image from "next/image";
 import ascended from "@/public/image/ascended.webp";

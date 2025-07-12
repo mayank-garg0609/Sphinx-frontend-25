@@ -1,4 +1,3 @@
-// components/ActionButtons.tsx
 import { memo } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { BUTTON_STYLES } from "../utils/constants";

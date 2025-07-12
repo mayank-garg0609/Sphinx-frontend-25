@@ -1,12 +1,5 @@
 "use client";
-import {
-  useMemo,
-  memo,
-  lazy,
-  Suspense,
-  useEffect,
-  useState,
-} from "react";
+import { useMemo, memo, lazy, Suspense, useEffect, useState } from "react";
 import { Oxanium } from "next/font/google";
 import { Toaster } from "sonner";
 import { ViewTransitions } from "next-view-transitions";
@@ -17,7 +10,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const Navbar = lazy(() => import("./components/navbar/navbar"));
 const CursorTracker = lazy(() => import("../app/animations/glowingCursor"));
-import { SpeedInsights } from "@vercel/speed-insights/next"
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import homeBG from "@/public/image/homeBG.webp";
 import upcomingBG from "@/public/image/upcomingBG.webp";
 import mobileBG from "@/public/image/mobileBG.webp";
@@ -28,7 +21,7 @@ const NO_BG_PATHS = new Set([
   "/sign-up",
   "/caProgram",
   "/caProgram/register",
-  "/update"
+  "/update",
 ]);
 
 const UPCOMING_PATHS = new Set([
@@ -51,7 +44,8 @@ const oxanium = Oxanium({
   preload: true,
 });
 
-const CONTAINER_STYLES = "fixed inset-0 z-10";
+const CONTAINER_STYLES =
+  "fixed inset-0 z-10 pointer-events-none will-change-transform";
 const NAVBAR_STYLES = "fixed top-0 left-0 w-full z-50";
 const MAIN_STYLES = "relative z-10";
 const CURSOR_GLOW_STYLES = "hidden lg:block cursor-glow";
@@ -84,7 +78,6 @@ const getGoogleClientId = () => {
 
   return clientId;
 };
-
 
 const NavbarFallback = memo(() => (
   <div className="h-16 bg-black/20 backdrop-blur-sm" />
@@ -173,7 +166,6 @@ const BackgroundSelector = memo<{ isUpcoming: boolean }>(({ isUpcoming }) => {
 });
 BackgroundSelector.displayName = "BackgroundSelector";
 
-
 const GoogleOAuthWrapper = memo<{ children: React.ReactNode }>(
   ({ children }) => {
     const googleClientId = useMemo(() => getGoogleClientId(), []);
@@ -191,7 +183,6 @@ const GoogleOAuthWrapper = memo<{ children: React.ReactNode }>(
   }
 );
 GoogleOAuthWrapper.displayName = "GoogleOAuthWrapper";
-
 
 export default function RootLayout({
   children,
@@ -248,7 +239,7 @@ export default function RootLayout({
         </head>
         <body className={bodyClassName}>
           <GoogleOAuthWrapper>
-            <SpeedInsights/>
+            <SpeedInsights />
             <Toaster {...toasterProps} />
             {cursorWrapper}
             {backgroundContent}

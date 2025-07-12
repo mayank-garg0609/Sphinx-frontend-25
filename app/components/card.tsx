@@ -1,7 +1,6 @@
 import Image from "next/image";
 import type { StaticImageData } from "next/image";
 import React from "react";
-import eventImage from "@/public/image/legalsBG.webp";
 
 interface cardProps {
   id: number;

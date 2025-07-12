@@ -1,4 +1,3 @@
-// components/PasswordValidationMessage.tsx
 import { memo } from "react";
 import { calculatePasswordStrength } from "../utils/authHelpers";
 
