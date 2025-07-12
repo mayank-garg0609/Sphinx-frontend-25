@@ -2,9 +2,9 @@ import { useState, useCallback, useEffect } from "react";
 import { useTransitionRouter } from "next-view-transitions";
 import { toast } from "sonner";
 import {
-  RegistrationData,
-  registrationSchema,
-} from "@/app/schemas/registrationSchema";
+  ProfileData,
+  ProfileSchema,
+} from "@/app/schemas/profileSchema";
 import { useUser } from "@/app/hooks/useUser/useUser";
 import { fetchProfileData } from "../utils/api";
 import { getAuthToken, clearAuthData } from "../utils/auth";
@@ -14,7 +14,7 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY = 2000;
 
 interface UseProfileReturn {
-  profile: RegistrationData | null;
+  profile: ProfileData | null;
   loading: boolean;
   error: string | null;
   isRefreshing: boolean;
@@ -29,7 +29,7 @@ export const useProfile = (): UseProfileReturn => {
   const router = useTransitionRouter();
   const { user, isLoggedIn, isLoading, refreshUserData } = useUser();
 
-  const [profile, setProfile] = useState<RegistrationData | null>(null);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -48,12 +48,6 @@ export const useProfile = (): UseProfileReturn => {
         return;
       }
 
-      if (!canMakeRequest()) {
-        setError("Request limit exceeded. Please wait before trying again.");
-        setLoading(false);
-        setCanRetry(false);
-        return;
-      }
 
       try {
         if (showRefreshing) {
@@ -67,7 +61,7 @@ export const useProfile = (): UseProfileReturn => {
 
         const data = await fetchProfileData(token);
 
-        const parsed = registrationSchema.safeParse(data);
+        const parsed = ProfileSchema.safeParse(data);
         console.log(parsed);
 
         if (!parsed.success) {

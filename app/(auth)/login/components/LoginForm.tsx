@@ -9,7 +9,6 @@ import { useGoogleAuth } from "../hooks/useGoogleAuth";
 import { FormField } from "./FormFields";
 import { ActionButtons } from "./ActionButtons";
 import { SignUpLink } from "./SignUpLink";
-import { PasswordValidationMessage } from "./PasswordValidation";
 import {
   FORM_FIELDS,
   MOBILE_STYLES,
@@ -23,7 +22,6 @@ export function LoginForm() {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors, isSubmitting },
     reset,
     clearErrors,
@@ -32,7 +30,6 @@ export function LoginForm() {
     mode: "onChange",
   });
 
-  const password = watch("password");
   const { loginUser } = useAuth(router, reset);
   const { isGoogleLoading, googlePopupClosed, handleGoogleLogin } =
     useGoogleAuth(router, clearErrors);
@@ -61,12 +58,7 @@ export function LoginForm() {
           register={register}
           error={passwordError}
           disabled={isFormDisabled}
-        >
-          <PasswordValidationMessage
-            password={password || ""}
-            error={passwordError}
-          />
-        </FormField>
+        ></FormField>
       </div>
 
       <ActionButtons

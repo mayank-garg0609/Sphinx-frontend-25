@@ -35,5 +35,3 @@ export interface UserPreferences {
   notifications: boolean;
   language: string;
 }
-
-export type PasswordStrength = "Weak" | "Medium" | "Strong" | "";

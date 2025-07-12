@@ -2,7 +2,6 @@
 import {
   useMemo,
   memo,
-  useCallback,
   lazy,
   Suspense,
   useEffect,
@@ -16,7 +15,7 @@ import Image from "next/image";
 import "./globals.css";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
-const Navbar = lazy(() => import("./components/navbar"));
+const Navbar = lazy(() => import("./components/navbar/navbar"));
 const CursorTracker = lazy(() => import("../app/animations/glowingCursor"));
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import homeBG from "@/public/image/homeBG.webp";
@@ -29,6 +28,7 @@ const NO_BG_PATHS = new Set([
   "/sign-up",
   "/caProgram",
   "/caProgram/register",
+  "/update"
 ]);
 
 const UPCOMING_PATHS = new Set([
@@ -42,7 +42,7 @@ const UPCOMING_PATHS = new Set([
   "/sponsors",
 ]);
 
-const GLOW_PATH = new Set(["/login", "/sign-up", "/register"]);
+const GLOW_PATH = new Set(["/login", "/sign-up", "/update"]);
 
 const oxanium = Oxanium({
   weight: "300",

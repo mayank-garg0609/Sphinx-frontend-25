@@ -8,6 +8,7 @@ export const getRequestTracker = (): RequestTracker => {
       const tracker = JSON.parse(stored) as RequestTracker;
       const now = Date.now();
       
+      // Reset if enough time has passed
       if (now - tracker.lastReset > RATE_LIMIT_RESET_TIME) {
         return { count: 0, lastReset: now, blocked: false };
       }
@@ -37,6 +38,7 @@ export const canMakeRequest = (): boolean => {
   }
   
   if (tracker.count >= MAX_REQUESTS_PER_SESSION) {
+    // Block further requests
     tracker.blocked = true;
     updateRequestTracker(tracker);
     return false;

@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { RegistrationData } from "@/app/schemas/registrationSchema";
+import { ProfileData } from "@/app/schemas/profileSchema";
 import { SECTION_STYLES } from "../utils/constants";
 
 interface InfoRowProps {
@@ -17,11 +17,14 @@ const InfoRow = memo(function InfoRow({ label, value }: InfoRowProps) {
 });
 
 interface SectionIconProps {
-  type: 'contact' | 'id' | 'events';
+  type: "contact" | "id" | "events";
   className: string;
 }
 
-const SectionIcon = memo(function SectionIcon({ type, className }: SectionIconProps) {
+const SectionIcon = memo(function SectionIcon({
+  type,
+  className,
+}: SectionIconProps) {
   const icons = {
     contact: (
       <>
@@ -46,17 +49,23 @@ const SectionIcon = memo(function SectionIcon({ type, className }: SectionIconPr
   };
 
   return (
-    <svg className={`w-5 h-5 mr-2 ${className}`} fill="currentColor" viewBox="0 0 20 20">
+    <svg
+      className={`w-5 h-5 mr-2 ${className}`}
+      fill="currentColor"
+      viewBox="0 0 20 20"
+    >
       {icons[type]}
     </svg>
   );
 });
 
 interface ContactSectionProps {
-  profile: RegistrationData;
+  profile: ProfileData;
 }
 
-export const ContactSection = memo(function ContactSection({ profile }: ContactSectionProps) {
+export const ContactSection = memo(function ContactSection({
+  profile,
+}: ContactSectionProps) {
   return (
     <div className={SECTION_STYLES.card}>
       <h2 className={`${SECTION_STYLES.sectionTitle} text-blue-400`}>
@@ -65,8 +74,13 @@ export const ContactSection = memo(function ContactSection({ profile }: ContactS
       </h2>
       <div className={SECTION_STYLES.infoGrid}>
         <InfoRow label="Name" value={profile.name} />
+        <InfoRow label="Gender" value={profile.gender || "Not Provided"} />
+
         <InfoRow label="Email" value={profile.email} />
-        <InfoRow label="College" value={profile.collegeName || "Not provided"} />
+        <InfoRow
+          label="College"
+          value={profile.college_name || "Not provided"}
+        />
         <InfoRow
           label="Location"
           value={
@@ -81,10 +95,12 @@ export const ContactSection = memo(function ContactSection({ profile }: ContactS
 });
 
 interface IdentificationSectionProps {
-  profile: RegistrationData;
+  profile: ProfileData;
 }
 
-export const IdentificationSection = memo(function IdentificationSection({ profile }: IdentificationSectionProps) {
+export const IdentificationSection = memo(function IdentificationSection({
+  profile,
+}: IdentificationSectionProps) {
   return (
     <div className={SECTION_STYLES.card}>
       <h2 className={`${SECTION_STYLES.sectionTitle} text-green-400`}>
@@ -92,9 +108,15 @@ export const IdentificationSection = memo(function IdentificationSection({ profi
         Identification
       </h2>
       <div className={SECTION_STYLES.infoGrid}>
-        <InfoRow label="College ID" value={profile.collegeId || "Not provided"} />
-        <InfoRow label="Sphinx ID" value={profile.sphinx_id || "Not provided"} />
-        <InfoRow label="Ticket ID" value={profile.ticketID || "Not provided"} />
+        <InfoRow
+          label="College ID"
+          value={profile.college_id || "Not provided"}
+        />
+        <InfoRow
+          label="Sphinx ID"
+          value={profile.sphinx_id || "Not provided"}
+        />
+        <InfoRow label="Ticket ID" value={profile.ticketID || "Unavailible"} />
       </div>
     </div>
   );
@@ -104,7 +126,9 @@ interface EventsSectionProps {
   events: string[];
 }
 
-export const EventsSection = memo(function EventsSection({ events }: EventsSectionProps) {
+export const EventsSection = memo(function EventsSection({
+  events,
+}: EventsSectionProps) {
   return (
     <div className={SECTION_STYLES.card}>
       <h2 className={`${SECTION_STYLES.sectionTitle} text-purple-400`}>
@@ -114,7 +138,10 @@ export const EventsSection = memo(function EventsSection({ events }: EventsSecti
       <div className="space-y-2">
         {events.length > 0 ? (
           events.map((event, idx) => (
-            <div key={idx} className="flex items-center space-x-2 text-sm text-gray-200">
+            <div
+              key={idx}
+              className="flex items-center space-x-2 text-sm text-gray-200"
+            >
               <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
               <span>{event}</span>
             </div>

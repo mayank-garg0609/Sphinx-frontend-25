@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { RegistrationData } from "@/app/schemas/registrationSchema";
+import { ProfileData } from "@/app/schemas/profileSchema";
 import { ProfileAvatar } from "./ProfileAvatar";
 import {
   ContactSection,
@@ -8,15 +8,13 @@ import {
 } from "./ProfileSection";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { ErrorMessage } from "./ErrorMessage";
-import { RefreshButton } from "./RefreshButton";
+import { UpdateButton } from "./UpdateButton";
 
 interface ProfileContentProps {
   loading: boolean;
   error: string | null;
-  profile: RegistrationData | null;
-  onRefresh: () => void;
+  profile: ProfileData | null;
   onRetry: () => void;
-  isRefreshing: boolean;
   canRetry: boolean;
 }
 
@@ -24,9 +22,7 @@ const ProfileContent = memo(function ProfileContent({
   loading,
   error,
   profile,
-  onRefresh,
   onRetry,
-  isRefreshing,
   canRetry,
 }: ProfileContentProps) {
   if (loading) {
@@ -64,13 +60,7 @@ const ProfileContent = memo(function ProfileContent({
   }
 
   return (
-    <div className="text-center space-y-4 text-white">
-      <RefreshButton
-        onRefresh={onRefresh}
-        isRefreshing={isRefreshing}
-        canRefresh={canRetry}
-      />
-
+    <div className="text-center justify-center space-y-4 text-white ">
       <div className="mb-6">
         <ProfileAvatar name={profile.name} />
         <h1 className="text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
@@ -82,6 +72,9 @@ const ProfileContent = memo(function ProfileContent({
         <ContactSection profile={profile} />
         <IdentificationSection profile={profile} />
         <EventsSection events={profile.eventsRegisteredIn ?? []} />
+      </div>
+      <div className="flex flex-col items-center justify-center">
+        <UpdateButton />
       </div>
     </div>
   );

@@ -22,7 +22,6 @@ const ProfilePage: React.FC = () => {
     error,
     isRefreshing,
     canRetry,
-    handleRefresh,
     handleRetry,
   } = useProfile();
 
@@ -74,9 +73,7 @@ const ProfilePage: React.FC = () => {
         loading={loading}
         error={error}
         profile={profile}
-        onRefresh={handleRefresh}
         onRetry={handleRetry}
-        isRefreshing={isRefreshing}
         canRetry={canRetry}
       />
     );

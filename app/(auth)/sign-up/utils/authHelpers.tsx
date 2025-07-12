@@ -1,7 +1,11 @@
-// utils/auth.ts
 import { toast } from "sonner";
 import { slideInOut } from "@/app/animations/pageTrans";
-import { User, UserCache, UserPreferences, PasswordStrength } from "../types/authTypes";
+import {
+  User,
+  UserCache,
+  UserPreferences,
+  PasswordStrength,
+} from "../types/authTypes";
 
 export const saveAuthToken = (token: string): void => {
   try {
@@ -23,22 +27,24 @@ export const saveUserData = (user: User): void => {
       created_at: user.created_at,
       last_login: new Date().toISOString(),
     };
-    
+
     localStorage.setItem("user_data", JSON.stringify(userCache));
-    
+
     const userPreferences: UserPreferences = {
       theme: "dark",
       notifications: true,
       language: "en",
     };
-    
+
     localStorage.setItem("user_preferences", JSON.stringify(userPreferences));
   } catch (error) {
     console.error("Failed to save user data:", error);
   }
 };
 
-export const calculatePasswordStrength = (password: string): PasswordStrength => {
+export const calculatePasswordStrength = (
+  password: string
+): PasswordStrength => {
   if (!password) return "";
 
   const hasUpper = /[A-Z]/.test(password);
@@ -55,17 +61,25 @@ export const calculatePasswordStrength = (password: string): PasswordStrength =>
   }
 };
 
-export const handleAuthSuccess = (token: string, user: User, router: any): void => {
+export const handleAuthSuccess = (
+  token: string,
+  user: User,
+  router: any
+): void => {
   try {
     saveAuthToken(token);
     saveUserData(user);
     toast.success("✅ Account created successfully!");
 
     setTimeout(() => {
-      router.push("/", { onTransitionReady: slideInOut });
+      router.push(`/update?redirectedFrom=/sign-up`, {
+        onTransitionReady: slideInOut,
+      });
     }, 500);
   } catch (error) {
     console.error("Auth success handling failed:", error);
-    toast.error("Account created but navigation failed. Please refresh the page.");
+    toast.error(
+      "Account created but navigation failed. Please refresh the page."
+    );
   }
 };

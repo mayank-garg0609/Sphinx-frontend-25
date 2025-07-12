@@ -1,4 +1,4 @@
-import { UserData, UserPreferences, PasswordStrength } from "../types/authTypes";
+import { UserData, UserPreferences } from "../types/authTypes";
 import { slideInOut } from "@/app/animations/pageTrans";
 
 export const saveAuthToken = (token: string): void => {
@@ -18,12 +18,10 @@ export const saveUserData = (user: any): void => {
       role: user.role,
       is_verified: user.is_verified,
       applied_ca: user.applied_ca,
-      created_at: user.created_at,
       last_login: new Date().toISOString(),
     };
     localStorage.setItem("user_data", JSON.stringify(userCache));
     
-    // Update user preferences or create default ones
     const existingPrefs = localStorage.getItem("user_preferences");
     if (!existingPrefs) {
       const defaultPrefs: UserPreferences = {
@@ -38,28 +36,10 @@ export const saveUserData = (user: any): void => {
   }
 };
 
-export const calculatePasswordStrength = (password: string): PasswordStrength => {
-  if (!password) return "";
-
-  const hasUpper = /[A-Z]/.test(password);
-  const hasLower = /[a-z]/.test(password);
-  const hasNumber = /\d/.test(password);
-  const hasSpecial = /[^A-Za-z0-9]/.test(password);
-
-  if (password.length < 8) {
-    return "Weak";
-  } else if (hasUpper && hasLower && hasNumber && hasSpecial) {
-    return "Strong";
-  } else {
-    return "Medium";
-  }
-};
-
 export const handleAuthSuccess = (token: string, user: any, router: any): void => {
   try {
     saveAuthToken(token);
     saveUserData(user);
-    // Toast success will be handled in the calling component
     
     setTimeout(() => {
       router.push("/", { onTransitionReady: slideInOut });

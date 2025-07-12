@@ -14,8 +14,6 @@ interface FormFieldProps {
 export const FormField = memo(function FormField({
   field,
   register,
-  error,
-  children,
   disabled = false,
 }: FormFieldProps) {
   return (
@@ -31,13 +29,6 @@ export const FormField = memo(function FormField({
         {...register(field.id)}
         className="text-sm lg:text-base py-2 lg:py-2 h-10 lg:h-auto disabled:opacity-50 disabled:cursor-not-allowed"
       />
-      <span className="text-xs lg:text-sm h-1 block">
-        {error ? (
-          <span className="text-red-400 text-xs lg:text-sm">{error}</span>
-        ) : (
-          children
-        )}
-      </span>
     </div>
   );
 });

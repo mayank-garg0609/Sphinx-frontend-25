@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getUserData, isUserLoggedIn } from "./utils/helperFunctions";
+import { getUserData, isUserLoggedIn} from "./utils/helperFunctions";
 import { UserData } from "./types/userCache";
 
 export const useUser = () => {

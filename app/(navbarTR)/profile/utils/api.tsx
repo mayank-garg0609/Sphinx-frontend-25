@@ -4,13 +4,13 @@ import { slideInOut } from "@/app/animations/pageTrans";
 import { ProfileResponse } from "../types/profileTypes";
 import { canMakeRequest, incrementRequestCount } from "./requestTracker";
 import { clearAuthData } from "./auth";
-import { RegistrationData } from "@/app/schemas/registrationSchema";
+import { ProfileData } from "@/app/schemas/profileSchema";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export const fetchProfileData = async (
   token: string
-): Promise<RegistrationData> => {
+): Promise<ProfileData> => {
   console.log("📦 Fetching profile data...");
 
   if (!canMakeRequest()) {
