@@ -1,25 +1,39 @@
 import React from "react";
-import { iconComponents } from "./icons";
+import { NavLink } from "./navlink";
+import { UserButton } from "./userButton";
+import { NavbarSection } from "../types/navbarTypes";
 
-interface MobileMenuButtonProps {
-  onClick: () => void;
+interface DesktopNavigationProps {
+  onNavClick: (link: string) => void;
+  sections: NavbarSection[];
+  currentPath: string;
 }
 
-export const MobileMenuButton = React.memo<MobileMenuButtonProps>(
-  ({ onClick }) => {
-    const { FaBars } = iconComponents;
-
-    return (
-      <button
-        className="lg:hidden text-white hover:text-gray-300 transition-colors"
-        onClick={onClick}
-        aria-label="Open navigation menu"
-      >
-        <FaBars size={24} />
-      </button>
-    );
-  },
-  () => true
+export const DesktopNavigation = React.memo<DesktopNavigationProps>(
+  ({ onNavClick, sections, currentPath }) => (
+    <>
+      {sections.map(({ items, position, className, includeSignUp }) => (
+        <div key={position} className={`hidden lg:block ${className}`}>
+          <div
+            className={`navbar-group ${position} text-white font-bold tracking-wider`}
+          >
+            {items.map((item) => (
+              <NavLink
+                key={item.label}
+                item={item}
+                onClick={onNavClick}
+                currentPath={currentPath}
+              />
+            ))}
+            {includeSignUp && <UserButton currentPath={currentPath} />}
+          </div>
+        </div>
+      ))}
+    </>
+  ),
+  (prevProps, nextProps) => {
+    return prevProps.currentPath === nextProps.currentPath;
+  }
 );
 
-MobileMenuButton.displayName = "MobileMenuButton";
+DesktopNavigation.displayName = "DesktopNavigation";

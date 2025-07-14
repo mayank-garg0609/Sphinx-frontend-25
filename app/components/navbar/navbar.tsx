@@ -1,3 +1,4 @@
+// app/components/navbar/navbar.tsx
 "use client";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useTransitionRouter } from "next-view-transitions";
@@ -5,38 +6,51 @@ import { usePathname } from "next/navigation";
 import { slideInOut } from "../../animations/pageTrans";
 import "./navbar.css";
 import { Logo } from "./components/logo";
-import { DesktopNavigation } from "./components/DesktopNavigation";
-import { MobileNavigation } from "./components/MobileNavigation";
-import { MobileMenuButton } from "./components/MobileMenuButton";
+import { DesktopSidebar } from "./components/DesktopSidebar";
+import { MobileSidebar } from "./components/MobileSidebar";
+import { SidebarToggle } from "./components/SidebarToggle";
 import { LoadingPlaceholder } from "./components/loadingPlaceholder";
 import { useIsDesktop } from "./hooks/usIsDesktop";
-import { createNavbarItems, createDesktopSections, getAllNavItems } from "./utils/navbatUtils";
+import { createNavbarItems, getAllNavItems } from "./utils/navbatUtils";
 import { iconComponents } from "./components/icons";
 
 const Navbar: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(false);
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
   const { isDesktop, isClient } = useIsDesktop();
   const router = useTransitionRouter();
   const pathname = usePathname();
 
   const navItems = useMemo(() => createNavbarItems(iconComponents), []);
-  const desktopSections = useMemo(() => createDesktopSections(navItems), [navItems]);
   const allNavItems = useMemo(() => getAllNavItems(navItems), [navItems]);
 
   const handleNavClick = useCallback(
     (link: string) => {
-      setIsMenuOpen(false);
+      setIsLeftSidebarOpen(false);
+      setIsRightSidebarOpen(false);
       router.push(link, { onTransitionReady: slideInOut });
     },
     [router]
   );
 
-  const openMenu = useCallback(() => setIsMenuOpen(true), []);
-  const closeMenu = useCallback(() => setIsMenuOpen(false), []);
+  const toggleLeftSidebar = useCallback(() => {
+    setIsLeftSidebarOpen(prev => !prev);
+    setIsRightSidebarOpen(false);
+  }, []);
 
-  // Body overflow management for mobile menu
+  const toggleRightSidebar = useCallback(() => {
+    setIsRightSidebarOpen(prev => !prev);
+    setIsLeftSidebarOpen(false);
+  }, []);
+
+  const closeSidebars = useCallback(() => {
+    setIsLeftSidebarOpen(false);
+    setIsRightSidebarOpen(false);
+  }, []);
+
+  // Body overflow management for sidebars
   useEffect(() => {
-    if (isMenuOpen) {
+    if (isLeftSidebarOpen || isRightSidebarOpen) {
       document.body.classList.add("overflow-hidden");
     } else {
       document.body.classList.remove("overflow-hidden");
@@ -45,16 +59,21 @@ const Navbar: React.FC = () => {
     return () => {
       document.body.classList.remove("overflow-hidden");
     };
-  }, [isMenuOpen]);
+  }, [isLeftSidebarOpen, isRightSidebarOpen]);
+
+  // Close sidebars on route change
+  useEffect(() => {
+    closeSidebars();
+  }, [pathname, closeSidebars]);
 
   // Loading state
   if (!isClient) {
     return (
       <main>
-        <div className="flex items-center justify-between px-4 lg:justify-center lg:gap-3 mt-6">
+        <div className="flex items-center justify-between px-4 lg:px-8 mt-6">
+          <LoadingPlaceholder className="w-6 h-6" />
           <Logo currentPath={pathname} />
-          <div className="w-4 lg:hidden" />
-          <LoadingPlaceholder className="lg:hidden w-6 h-6" />
+          <LoadingPlaceholder className="w-6 h-6" />
         </div>
       </main>
     );
@@ -62,25 +81,35 @@ const Navbar: React.FC = () => {
 
   return (
     <main>
-      <div className="flex items-center justify-between px-4 lg:justify-center lg:gap-3 mt-6">
+      <div className="flex items-center justify-between px-4 lg:px-8 mt-6 relative z-50">
+        <SidebarToggle
+          onClick={toggleLeftSidebar}
+          isOpen={isLeftSidebarOpen}
+          position="left"
+        />
         <Logo currentPath={pathname} />
-        <div className="w-4 lg:hidden" />
-        {!isDesktop && <MobileMenuButton onClick={openMenu} />}
+        <SidebarToggle
+          onClick={toggleRightSidebar}
+          isOpen={isRightSidebarOpen}
+          position="right"
+        />
       </div>
 
-      {isDesktop && (
-        <DesktopNavigation
+      {isDesktop ? (
+        <DesktopSidebar
+          isLeftOpen={isLeftSidebarOpen}
+          isRightOpen={isRightSidebarOpen}
           onNavClick={handleNavClick}
-          sections={desktopSections}
+          onClose={closeSidebars}
+          navItems={navItems}
           currentPath={pathname}
         />
-      )}
-
-      {!isDesktop && (
-        <MobileNavigation
-          isOpen={isMenuOpen}
-          onClose={closeMenu}
+      ) : (
+        <MobileSidebar
+          isLeftOpen={isLeftSidebarOpen}
+          isRightOpen={isRightSidebarOpen}
           onNavClick={handleNavClick}
+          onClose={closeSidebars}
           allNavItems={allNavItems}
           currentPath={pathname}
         />

@@ -42,6 +42,7 @@ export const createNavbarItems = (icons: any): Record<string, NavbarItem[]> => (
   ],
 });
 
+// Legacy function for backward compatibility
 export const createDesktopSections = (navItems: Record<string, NavbarItem[]>): NavbarSection[] => [
   {
     items: navItems.TL,
@@ -76,3 +77,21 @@ export const getAllNavItems = (navItems: Record<string, NavbarItem[]>) =>
 
 export const normalizePathname = (pathname: string) =>
   pathname === "/" ? "/" : pathname.replace(/\/$/, "");
+
+// New utility functions for sidebar organization
+export const getLeftSidebarItems = (navItems: Record<string, NavbarItem[]>) => [
+  ...navItems.TL,
+  ...navItems.TR,
+];
+
+export const getRightSidebarItems = (navItems: Record<string, NavbarItem[]>) => [
+  ...navItems.BL,
+  ...navItems.BR,
+];
+
+export const groupNavItemsByCategory = (navItems: Record<string, NavbarItem[]>) => ({
+  main: [...navItems.TL, ...navItems.TR],
+  info: navItems.BL,
+  team: navItems.BR.filter(item => !item.external),
+  social: navItems.BR.filter(item => item.external),
+});
