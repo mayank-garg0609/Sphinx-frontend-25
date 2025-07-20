@@ -27,17 +27,6 @@ export const Logo = React.memo<LogoProps>(
 
     return (
       <div className="flex items-center gap-2 justify-center lg:mx-0">
-        <Image
-          src={logo}
-          alt="Sphinx Logo"
-          width={LOGO_SIZE}
-          height={LOGO_SIZE}
-          className="bg-white animate-pulse rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]"
-          placeholder="blur"
-          blurDataURL={logo.blurDataURL}
-          priority
-          quality={90}
-        />
         <Link
           onClick={handleClick}
           href="/"

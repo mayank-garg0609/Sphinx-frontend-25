@@ -3,17 +3,15 @@ import { EXTERNAL_LINKS, ICON_SIZE, DESKTOP_BREAKPOINT } from "../types/constant
 
 export const createNavbarItems = (icons: any): Record<string, NavbarItem[]> => ({
   TL: [
-    { label: "Campus Ambassador", link: "/caProgram" },
-    { label: "Accommodation", link: "/accommodation" },
+    { label: "CA Program", link: "/caProgram" },
+    { label: "Passes", link: "/accommodation" },
     { label: "Workshops", link: "/workshops" },
   ],
   TR: [
     { label: "Events", link: "/events" },
-    { label: "Competition", link: "/competition" },
     { label: "Profile", link: "/profile" },
   ],
   BL: [
-    { label: "Contact Us", link: "/contact-us" },
     { label: "Sponsors", link: "/sponsors" },
     { label: "Legals", link: "/legals" },
     { label: "About Us", link: "/about-us" },
@@ -33,16 +31,9 @@ export const createNavbarItems = (icons: any): Record<string, NavbarItem[]> => (
       icon: <icons.FaLinkedin size={ICON_SIZE} />,
       external: true,
     },
-    {
-      label: "Facebook",
-      link: EXTERNAL_LINKS.FACEBOOK,
-      icon: <icons.FaFacebook size={ICON_SIZE} />,
-      external: true,
-    },
   ],
 });
 
-// Legacy function for backward compatibility
 export const createDesktopSections = (navItems: Record<string, NavbarItem[]>): NavbarSection[] => [
   {
     items: navItems.TL,
@@ -77,21 +68,3 @@ export const getAllNavItems = (navItems: Record<string, NavbarItem[]>) =>
 
 export const normalizePathname = (pathname: string) =>
   pathname === "/" ? "/" : pathname.replace(/\/$/, "");
-
-// New utility functions for sidebar organization
-export const getLeftSidebarItems = (navItems: Record<string, NavbarItem[]>) => [
-  ...navItems.TL,
-  ...navItems.TR,
-];
-
-export const getRightSidebarItems = (navItems: Record<string, NavbarItem[]>) => [
-  ...navItems.BL,
-  ...navItems.BR,
-];
-
-export const groupNavItemsByCategory = (navItems: Record<string, NavbarItem[]>) => ({
-  main: [...navItems.TL, ...navItems.TR],
-  info: navItems.BL,
-  team: navItems.BR.filter(item => !item.external),
-  social: navItems.BR.filter(item => item.external),
-});
