@@ -299,7 +299,6 @@ export default function CaProgram() {
   const router = useTransitionRouter();
   const lenisRef = useRef(null);
   const particleIdRef = useRef(0);
-  const animationFrameRef = useRef<number>();
   const lastScrollY = useRef(0);
 
   const toggleFAQ = useCallback((index: number) => {

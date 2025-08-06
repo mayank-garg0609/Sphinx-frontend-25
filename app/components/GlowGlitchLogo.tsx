@@ -32,7 +32,7 @@ const GlowGlitchLogo: React.FC<GlowGlitchLogoProps> = ({
   const [isAnimating, setIsAnimating] = useState(autoPlay);
   const [particles, setParticles] = useState<Particle[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number>(0);
   const particleIdRef = useRef(0);
 
   const generateParticles = () => {
