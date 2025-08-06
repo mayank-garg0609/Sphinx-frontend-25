@@ -21,7 +21,6 @@ const Navbar: React.FC = () => {
 
   const onInnerCircleNavigation = () => handleInnerCircleNavigation(isLoggedIn);
 
-  // Show loading placeholder during hydration
   if (!isClient) {
     return (
       <div className="flex items-center justify-between px-4 lg:justify-center lg:gap-3 mt-6">
@@ -38,9 +37,7 @@ const Navbar: React.FC = () => {
     <>
       <style jsx>{navbarStyles}</style>
 
-      {/* Main navbar container */}
       <div className="flex items-center justify-between px-4 lg:justify-center lg:gap-3 mt-6">
-        {/* Logo */}
         <div className="flex items-center gap-2 justify-center lg:mx-0">
           <button
             onClick={navigateHome}
@@ -50,7 +47,6 @@ const Navbar: React.FC = () => {
           </button>
         </div>
 
-        {/* Mobile menu button */}
         {!isDesktop && (
           <button
             className="text-white hover:text-gray-300 transition-colors"
@@ -62,7 +58,6 @@ const Navbar: React.FC = () => {
         )}
       </div>
 
-      {/* Desktop Navigation */}
       {isDesktop && (
         <DesktopDial
           isExpanded={isExpanded}
@@ -75,7 +70,6 @@ const Navbar: React.FC = () => {
         />
       )}
 
-      {/* Mobile Navigation */}
       {!isDesktop && (
         <MobileMenu
           isOpen={isMobileMenuOpen}

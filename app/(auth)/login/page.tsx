@@ -8,7 +8,6 @@ export default function LoginPage() {
   return (
     <div className={MOBILE_STYLES.container}>
       <BackgroundImage />
-      
       <div className={MOBILE_STYLES.formWrapper}>
         <LoginForm />
       </div>

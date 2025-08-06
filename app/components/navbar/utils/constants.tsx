@@ -1,4 +1,4 @@
-export const DIAL_RADIUS_CLOSED = 35;
+export const DIAL_RADIUS_CLOSED = 45;
 export const DIAL_RADIUS_OPEN = 180;
 export const CENTER_SIZE_CLOSED = 70;
 export const INNER_CIRCLE_SIZE = 60;

@@ -1,5 +1,4 @@
 "use client";
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTransitionRouter } from "next-view-transitions";
@@ -18,7 +17,6 @@ import { LoginHeader } from "./LoginHeader";
 
 export function LoginForm() {
   const router = useTransitionRouter();
-
   const {
     register,
     handleSubmit,
@@ -52,22 +50,19 @@ export function LoginForm() {
           error={emailError}
           disabled={isFormDisabled}
         />
-
         <FormField
           field={FORM_FIELDS.password}
           register={register}
           error={passwordError}
           disabled={isFormDisabled}
-        ></FormField>
+        />
       </div>
-
       <ActionButtons
         isSubmitting={isSubmitting}
         onGoogleLogin={handleGoogleLogin}
         isGoogleLoading={isGoogleLoading}
         googlePopupClosed={googlePopupClosed}
       />
-
       <SignUpLink />
     </form>
   );
