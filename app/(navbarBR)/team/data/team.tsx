@@ -22,7 +22,7 @@ import ms1 from "@/public/team/IMG_5071.webp";
 import ms2 from "@/public/team/IMG_50822.webp";
 // import ms3 from "@/public/team/IMG_50.webp";
 import ms3 from "@/public/image/human.webp";
-import ds1 from "@/public/team/IMG_5060.webp";
+// import ds1 from "@/public/team/IMG_5060.webp";
 import ds2 from "@/public/team/IMG_5020.webp";
 import ds3 from "@/public/team/IMG_5057.webp";
 import ps1 from "@/public/team/IMG_5067.webp";
@@ -194,7 +194,7 @@ export const DecSec: TeamMember[] = [
     id: 1,
     title: "LOKESH",
     subtitle: "Decor Secretary",
-    imageData:ds1,
+    imageData:ds2,
   },
   {
     id: 2,

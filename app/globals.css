@@ -7,7 +7,6 @@ body {
   width: 100%;
 }
 
-/* Glowing cursor effect */
 .cursor-glow {
   position: fixed;
   left: 0;

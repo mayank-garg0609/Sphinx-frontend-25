@@ -1,90 +1,94 @@
 "use client";
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useTransitionRouter } from "next-view-transitions";
-import { usePathname } from "next/navigation";
-import { slideInOut } from "../../animations/pageTrans";
-import "./navbar.css";
-import { Logo } from "./components/logo";
-import { DesktopNavigation } from "./components/DesktopNavigation";
-import { MobileNavigation } from "./components/MobileNavigation";
-import { MobileMenuButton } from "./components/MobileMenuButton";
-import { LoadingPlaceholder } from "./components/loadingPlaceholder";
-import { useIsDesktop } from "./hooks/usIsDesktop";
-import { createNavbarItems, createDesktopSections, getAllNavItems } from "./utils/navbatUtils";
-import { iconComponents } from "./components/icons";
+
+import React, { useState } from "react";
+import { FaBars } from "react-icons/fa";
+import { useDesktop } from "./hooks/useDesktop";
+import { useNavigation } from "./hooks/useNavigation";
+import { DesktopDial } from "./components/DesktopDial";
+import { MobileMenu } from "./components/MobileMenu";
+import { navbarStyles } from "./styles/navbar";
 
 const Navbar: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isDesktop, isClient } = useIsDesktop();
-  const router = useTransitionRouter();
-  const pathname = usePathname();
-
-  const navItems = useMemo(() => createNavbarItems(iconComponents), []);
-  const desktopSections = useMemo(() => createDesktopSections(navItems), [navItems]);
-  const allNavItems = useMemo(() => getAllNavItems(navItems), [navItems]);
-
-  const handleNavClick = useCallback(
-    (link: string) => {
-      setIsMenuOpen(false);
-      router.push(link, { onTransitionReady: slideInOut });
-    },
-    [router]
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  const { isDesktop, isClient } = useDesktop();
+  const { pathname, handleNavigation, handleInnerCircleNavigation, navigateHome } = useNavigation(
+    setIsExpanded,
+    setIsMobileMenuOpen
   );
 
-  const openMenu = useCallback(() => setIsMenuOpen(true), []);
-  const closeMenu = useCallback(() => setIsMenuOpen(false), []);
+  const onInnerCircleNavigation = () => handleInnerCircleNavigation(isLoggedIn);
 
-  useEffect(() => {
-    if (isMenuOpen) {
-      document.body.classList.add("overflow-hidden");
-    } else {
-      document.body.classList.remove("overflow-hidden");
-    }
-
-    return () => {
-      document.body.classList.remove("overflow-hidden");
-    };
-  }, [isMenuOpen]);
-
+  // Show loading placeholder during hydration
   if (!isClient) {
     return (
-      <main>
-        <div className="flex items-center justify-between px-4 lg:justify-center lg:gap-3 mt-6">
-          <Logo currentPath={pathname} />
-          <div className="w-4 lg:hidden" />
-          <LoadingPlaceholder className="lg:hidden w-6 h-6" />
+      <div className="flex items-center justify-between px-4 lg:justify-center lg:gap-3 mt-6">
+        <div className="flex items-center gap-2 justify-center lg:mx-0">
+          <h1 className="text-3xl font-bold text-white">Sphinx'25</h1>
         </div>
-      </main>
+        <div className="w-4 lg:hidden" />
+        <div className="lg:hidden w-6 h-6 bg-gray-400 rounded animate-pulse" />
+      </div>
     );
   }
 
   return (
-    <main>
+    <>
+      <style jsx>{navbarStyles}</style>
+
+      {/* Main navbar container */}
       <div className="flex items-center justify-between px-4 lg:justify-center lg:gap-3 mt-6">
-        <Logo currentPath={pathname} />
-        <div className="w-4 lg:hidden" />
-        {!isDesktop && <MobileMenuButton onClick={openMenu} />}
+        {/* Logo */}
+        <div className="flex items-center gap-2 justify-center lg:mx-0">
+          <button
+            onClick={navigateHome}
+            className="text-3xl font-bold text-white hover:opacity-80 transition-opacity"
+          >
+            Sphinx'25
+          </button>
+        </div>
+
+        {/* Mobile menu button */}
+        {!isDesktop && (
+          <button
+            className="text-white hover:text-gray-300 transition-colors"
+            onClick={() => setIsMobileMenuOpen(true)}
+            aria-label="Open navigation menu"
+          >
+            <FaBars size={24} />
+          </button>
+        )}
       </div>
 
+      {/* Desktop Navigation */}
       {isDesktop && (
-        <DesktopNavigation
-          onNavClick={handleNavClick}
-          sections={desktopSections}
-          currentPath={pathname}
+        <DesktopDial
+          isExpanded={isExpanded}
+          setIsExpanded={setIsExpanded}
+          isLoggedIn={isLoggedIn}
+          pathname={pathname}
+          onNavigation={handleNavigation}
+          onInnerCircleNavigation={onInnerCircleNavigation}
+          onHomeNavigation={navigateHome}
         />
       )}
 
+      {/* Mobile Navigation */}
       {!isDesktop && (
-        <MobileNavigation
-          isOpen={isMenuOpen}
-          onClose={closeMenu}
-          onNavClick={handleNavClick}
-          allNavItems={allNavItems}
-          currentPath={pathname}
+        <MobileMenu
+          isOpen={isMobileMenuOpen}
+          onClose={() => setIsMobileMenuOpen(false)}
+          pathname={pathname}
+          isLoggedIn={isLoggedIn}
+          setIsLoggedIn={setIsLoggedIn}
+          onNavigation={handleNavigation}
+          onInnerCircleNavigation={onInnerCircleNavigation}
         />
       )}
-    </main>
+    </>
   );
 };
 
-export default React.memo(Navbar);
+export default Navbar;
