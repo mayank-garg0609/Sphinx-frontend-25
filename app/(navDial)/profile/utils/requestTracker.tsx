@@ -1,5 +1,5 @@
 import { RequestTracker } from "../types/profileTypes";
-import { MAX_REQUESTS_PER_SESSION, RATE_LIMIT_RESET_TIME } from "../utils/constants";
+import { MAX_REQUESTS_PER_SESSION, RATE_LIMIT_RESET_TIME } from "./constants";
 
 export const getRequestTracker = (): RequestTracker => {
   try {

@@ -1,21 +1,31 @@
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { DIAL_RADIUS_CLOSED, DIAL_RADIUS_OPEN, BUTTON_SIZE, VISIBLE_ITEMS } from "../utils/constants";
-import { ButtonPosition } from "../types/navbarTypes";
-import { navItems } from "../utils/navItems";
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { DIAL_RADIUS_CLOSED, DIAL_RADIUS_OPEN, VISIBLE_ITEMS, TRANSITION_DURATION } from '../utils/constants';
+import { ButtonPosition } from '../types/navbarTypes';
+import { navItems, NAV_ITEMS_COUNT } from '../utils/navItems';
+import { calculateButtonPosition, createPositionCache } from '../utils/calculations';
 
 export const useDesktopDial = (isExpanded: boolean) => {
-  const [currentOffset, setCurrentOffset] = useState(0);
-  const [isRotating, setIsRotating] = useState(false);
+  const [currentOffset, setCurrentOffset] = useState<number>(0);
+  const [isRotating, setIsRotating] = useState<boolean>(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const dialRef = useRef<HTMLDivElement>(null);
+  
+  const currentRadius = useMemo(
+    () => isExpanded ? DIAL_RADIUS_OPEN : DIAL_RADIUS_CLOSED,
+    [isExpanded]
+  );
 
-  const currentRadius = isExpanded ? DIAL_RADIUS_OPEN : DIAL_RADIUS_CLOSED;
+  const positionCache = useMemo(
+    () => createPositionCache(currentRadius, NAV_ITEMS_COUNT),
+    [currentRadius]
+  );
 
   const getVisibleItems = useCallback(() => {
     const visibleItems = [];
-    for (let i = 0; i < VISIBLE_ITEMS && i < navItems.length; i++) {
-      const index = (currentOffset + i) % navItems.length;
+    const visibleCount = Math.min(VISIBLE_ITEMS, NAV_ITEMS_COUNT);
+    
+    for (let i = 0; i < visibleCount; i++) {
+      const index = (currentOffset + i) % NAV_ITEMS_COUNT;
       visibleItems.push({
         ...navItems[index],
         displayIndex: i,
@@ -26,76 +36,83 @@ export const useDesktopDial = (isExpanded: boolean) => {
 
   const getButtonPosition = useCallback(
     (displayIndex: number): ButtonPosition => {
-      const startAngle = -80;
-      const endAngle = 80;
-      const angleStep = (endAngle - startAngle) / (Math.min(VISIBLE_ITEMS, navItems.length) - 1);
-      const angle = startAngle + displayIndex * angleStep;
-      const radian = (angle * Math.PI) / 180;
-
-      return {
-        x: Math.cos(radian) * currentRadius,
-        y: Math.sin(radian) * currentRadius,
-        angle,
-        zIndex: Math.round(100 + Math.cos(radian) * 50),
-      };
+      const cached = positionCache.get(displayIndex);
+      return cached || calculateButtonPosition(displayIndex, currentRadius, NAV_ITEMS_COUNT);
     },
-    [currentRadius]
+    [positionCache, currentRadius]
   );
 
   const rotateNext = useCallback(() => {
-    if (isRotating || navItems.length <= VISIBLE_ITEMS) return;
+    if (isRotating || NAV_ITEMS_COUNT <= VISIBLE_ITEMS) return;
+    
     setIsRotating(true);
-    setCurrentOffset((prev) => (prev + 1) % navItems.length);
-    setTimeout(() => setIsRotating(false), 400);
+    setCurrentOffset((prev) => (prev + 1) % NAV_ITEMS_COUNT);
+    
+    const timeoutId = setTimeout(() => {
+      setIsRotating(false);
+    }, TRANSITION_DURATION);
+    
+    return () => clearTimeout(timeoutId);
   }, [isRotating]);
 
   const rotatePrevious = useCallback(() => {
-    if (isRotating || navItems.length <= VISIBLE_ITEMS) return;
+    if (isRotating || NAV_ITEMS_COUNT <= VISIBLE_ITEMS) return;
+    
     setIsRotating(true);
-    setCurrentOffset((prev) => (prev - 1 + navItems.length) % navItems.length);
-    setTimeout(() => setIsRotating(false), 400);
+    setCurrentOffset((prev) => (prev - 1 + NAV_ITEMS_COUNT) % NAV_ITEMS_COUNT);
+    
+    const timeoutId = setTimeout(() => {
+      setIsRotating(false);
+    }, TRANSITION_DURATION);
+    
+    return () => clearTimeout(timeoutId);
   }, [isRotating]);
 
-  // Wheel event handler
   const handleWheel = useCallback(
     (e: WheelEvent) => {
-      if (!isExpanded || isRotating || navItems.length <= VISIBLE_ITEMS) return;
+      if (!isExpanded || isRotating || NAV_ITEMS_COUNT <= VISIBLE_ITEMS) return;
+      
       e.preventDefault();
-      if (e.deltaY > 0) rotateNext();
-      else rotatePrevious();
+      e.stopPropagation();
+      
+      requestAnimationFrame(() => {
+        if (e.deltaY > 0) {
+          rotateNext();
+        } else {
+          rotatePrevious();
+        }
+      });
     },
     [isExpanded, isRotating, rotateNext, rotatePrevious]
   );
 
-  // Mouse tracking
-  useEffect(() => {
-    const handleGlobalMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
-    };
-    document.addEventListener("mousemove", handleGlobalMouseMove);
-    return () => document.removeEventListener("mousemove", handleGlobalMouseMove);
-  }, []);
-
-  // Wheel event listener
   useEffect(() => {
     const dialElement = dialRef.current;
     if (dialElement && isExpanded) {
-      dialElement.addEventListener("wheel", handleWheel, { passive: false });
-      return () => dialElement.removeEventListener("wheel", handleWheel);
+      dialElement.addEventListener('wheel', handleWheel, { passive: false });
+      return () => dialElement.removeEventListener('wheel', handleWheel);
     }
   }, [isExpanded, handleWheel]);
 
-  return {
+  return useMemo(() => ({
     currentRadius,
     currentOffset,
     isRotating,
     hoveredItem,
-    mousePos,
     dialRef,
     getVisibleItems,
     getButtonPosition,
     rotateNext,
     rotatePrevious,
     setHoveredItem,
-  };
+  }), [
+    currentRadius,
+    currentOffset,
+    isRotating,
+    hoveredItem,
+    getVisibleItems,
+    getButtonPosition,
+    rotateNext,
+    rotatePrevious,
+  ]);
 };

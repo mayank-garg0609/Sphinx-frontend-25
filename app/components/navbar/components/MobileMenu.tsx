@@ -1,18 +1,18 @@
-import React, { useEffect } from "react";
-import { FaTimes, FaUser, FaUserPlus } from "react-icons/fa";
-import { navItems } from "../utils/navItems";
+import React, { useEffect, memo, Suspense, useCallback } from 'react';
+import { FaTimes, FaUser, FaUserPlus } from 'react-icons/fa';
+import { navItems } from '../utils/navItems';
 
 interface MobileMenuProps {
-  isOpen: boolean;
-  onClose: () => void;
-  pathname: string;
-  isLoggedIn: boolean;
-  setIsLoggedIn: (value: boolean) => void;
-  onNavigation: (item: any) => void;
-  onInnerCircleNavigation: () => void;
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly pathname: string;
+  readonly isLoggedIn: boolean;
+  readonly setIsLoggedIn: (value: boolean) => void;
+  readonly onNavigation: (item: any) => void;
+  readonly onInnerCircleNavigation: () => void;
 }
 
-export const MobileMenu: React.FC<MobileMenuProps> = ({
+const MobileMenuComponent: React.FC<MobileMenuProps> = ({
   isOpen,
   onClose,
   pathname,
@@ -21,19 +21,28 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
   onNavigation,
   onInnerCircleNavigation,
 }) => {
-  useEffect(() => {
-    if (isOpen) {
-      const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === "Escape") onClose();
-      };
-      document.addEventListener("keydown", handleEscape);
-      document.body.classList.add("overflow-hidden");
-      return () => {
-        document.removeEventListener("keydown", handleEscape);
-        document.body.classList.remove("overflow-hidden");
-      };
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      onClose();
     }
-  }, [isOpen, onClose]);
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    document.addEventListener('keydown', handleKeyDown, { passive: false });
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [isOpen, handleKeyDown]);
+
+  const toggleAuthStatus = useCallback(() => {
+    setIsLoggedIn(!isLoggedIn);
+  }, [isLoggedIn, setIsLoggedIn]);
 
   if (!isOpen) return null;
 
@@ -44,8 +53,11 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
         onClick={onClose}
         aria-label="Close navigation menu"
       >
-        <FaTimes size={32} />
+        <Suspense fallback={<div className="w-8 h-8 bg-gray-400 rounded animate-pulse" />}>
+          <FaTimes size={32} />
+        </Suspense>
       </button>
+      
       <nav className="flex flex-col items-center justify-center gap-1 mt-6 w-full">
         {navItems.map((item) => {
           const isActive = pathname === item.link;
@@ -54,34 +66,33 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
               key={item.id}
               onClick={() => onNavigation(item)}
               className={`w-full text-center py-2 text-xs font-semibold tracking-wide rounded-md hover:bg-white hover:text-black transition-all duration-200 active:scale-95 ${
-                isActive ? "bg-white text-black" : ""
+                isActive ? 'bg-white text-black' : ''
               }`}
             >
               <div className="flex justify-center items-center gap-2">
-                <item.icon size={16} />
+                <Suspense fallback={<div className="w-4 h-4 bg-gray-400 rounded animate-pulse" />}>
+                  <item.icon size={16} />
+                </Suspense>
                 {item.label}
               </div>
             </button>
           );
         })}
         
-        {/* User Button for Mobile */}
         <button
           onClick={onInnerCircleNavigation}
           className="mt-6 w-80 h-20 py-3 border border-white rounded-xl text-2xl font-semibold bg-transparent text-white hover:bg-white hover:text-black transition-all duration-200 ease-in-out active:scale-95 text-center flex items-center justify-center gap-2"
         >
-          {isLoggedIn ? <FaUser size={16} /> : <FaUserPlus size={20} />}
-          <span>{isLoggedIn ? "Logout" : "Sign Up"}</span>
+          <Suspense fallback={<div className="w-4 h-4 bg-gray-400 rounded animate-pulse" />}>
+            {isLoggedIn ? <FaUser size={16} /> : <FaUserPlus size={20} />}
+          </Suspense>
+          <span>{isLoggedIn ? 'Logout' : 'Sign Up'}</span>
         </button>
 
-        {/* Demo Auth toggle */}
-        <button
-          onClick={() => setIsLoggedIn(!isLoggedIn)}
-          className="mt-4 px-4 py-2 text-sm bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
-        >
-          Demo: {isLoggedIn ? "Switch to Not Logged" : "Switch to Logged In"}
-        </button>
+
       </nav>
     </div>
   );
-}
+};
+
+export const MobileMenu = memo(MobileMenuComponent);

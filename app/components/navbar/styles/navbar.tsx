@@ -6,11 +6,14 @@ export const navbarStyles = `
     transform: translateY(-50%);
     z-index: 50;
     overflow: hidden;
+    contain: layout style paint;
+    will-change: transform;
   }
 
   .dial-wrapper {
     position: relative;
     transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    contain: layout style paint;
   }
 
   .semicircle-track {
@@ -19,6 +22,7 @@ export const navbarStyles = `
     border-radius: 50%;
     transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    contain: layout style paint;
   }
 
   .inner-track {
@@ -26,9 +30,12 @@ export const navbarStyles = `
     position: absolute;
     border-radius: 50%;
     transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    contain: layout style paint;
   }
 
-  .inner-track:hover { background: #e8e8e8; }
+  .inner-track:hover { 
+    background: #e8e8e8; 
+  }
 
   .center-hub {
     background: linear-gradient(135deg, #333333 0%, #1a1a1a 100%);
@@ -36,12 +43,14 @@ export const navbarStyles = `
     border-radius: 50%;
     position: absolute;
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 200;
+    contain: layout style paint;
+    will-change: transform;
   }
 
   .center-hub:hover {
@@ -55,12 +64,14 @@ export const navbarStyles = `
     border-radius: 50%;
     position: absolute;
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 6px 16px rgba(74, 144, 226, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 180;
+    contain: layout style paint;
+    will-change: transform;
   }
 
   .inner-profile-circle:hover {
@@ -87,6 +98,8 @@ export const navbarStyles = `
     display: flex;
     align-items: center;
     justify-content: center;
+    contain: layout style paint;
+    will-change: transform, background-color;
   }
 
   .nav-button:hover {
@@ -108,17 +121,41 @@ export const navbarStyles = `
     color: #333333;
   }
 
-  .tooltip {
-    position: fixed;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 14px;
-    pointer-events: none;
-    z-index: 1000;
-    white-space: nowrap;
-    backdrop-filter: blur(10px);
-    transition: opacity 0.2s ease;
+  .tooltip-content {
+    contain: layout style paint;
+    will-change: opacity, transform;
+  }
+
+  .dial-container * {
+    box-sizing: border-box;
+  }
+
+  .semicircle-track,
+  .inner-track,
+  .center-hub,
+  .inner-profile-circle,
+  .nav-button {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .center-hub,
+    .inner-profile-circle,
+    .nav-button {
+      transform: translateZ(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dial-wrapper,
+    .semicircle-track,
+    .inner-track,
+    .center-hub,
+    .inner-profile-circle,
+    .nav-button {
+      transition: none !important;
+      animation: none !important;
+    }
   }
 `;
