@@ -34,11 +34,11 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
 }) => {
   const {
     currentRadius,
-    currentOffset,
+    rotation,
     isRotating,
     hoveredItem,
     dialRef,
-    getVisibleItems,
+    getAllItems,
     getButtonPosition,
     rotateNext,
     rotatePrevious,
@@ -48,7 +48,7 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const isOverDial = useRef<boolean>(false);
 
-  const visibleItems = getVisibleItems();
+  const allItems = getAllItems();
 
   const handleMouseEnter = useCallback(() => {
     isOverDial.current = true;
@@ -104,6 +104,19 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
             transform: translateY(-50%) translateX(0);
           }
         }
+
+        .dial-rotation-container {
+          transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          transform-origin: 0 50%;
+        }
+
+        .nav-button-counter-rotate {
+          transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .inner-circle-counter-rotate {
+          transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
       `}</style>
       
       <div
@@ -125,32 +138,107 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
               : CENTER_SIZE_CLOSED + 20,
           }}
         >
+          {/* Rotating container for all dial elements except center hub */}
           <div
-            className="semicircle-track"
+            className="dial-rotation-container"
             style={{
-              width: (currentRadius + BUTTON_SIZE / 2 + 10) * 2,
-              height: (currentRadius + BUTTON_SIZE / 2 + 10) * 2,
-              left: -(currentRadius + BUTTON_SIZE / 2 + 10),
-              top: '50%',
-              transform: 'translateY(-50%)',
-              opacity: isExpanded ? 1 : 0.3,
+              transform: `rotate(${rotation}deg)`,
+              position: 'relative',
+              width: '100%',
+              height: '100%',
             }}
-          />
+          >
+            <div
+              className="semicircle-track"
+              style={{
+                width: (currentRadius + BUTTON_SIZE / 2 + 10) * 2,
+                height: (currentRadius + BUTTON_SIZE / 2 + 10) * 2,
+                left: -(currentRadius + BUTTON_SIZE / 2 + 10),
+                top: '50%',
+                transform: 'translateY(-50%)',
+                opacity: isExpanded ? 1 : 0.3,
+              }}
+            />
 
-          <div
-            className="inner-track"
-            onClick={onHomeNavigation}
-            style={{
-              width: (currentRadius - 20 + BUTTON_SIZE / 2) * 2 - 40,
-              height: (currentRadius - 20 + BUTTON_SIZE / 2) * 2 - 40,
-              left: -(currentRadius - 20 + BUTTON_SIZE / 2) + 20,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              opacity: isExpanded ? 1 : 0.3,
-              cursor: isExpanded ? 'pointer' : 'default',
-            }}
-          />
+            <div
+              className="inner-track"
+              onClick={onHomeNavigation}
+              style={{
+                width: (currentRadius - 20 + BUTTON_SIZE / 2) * 2 - 40,
+                height: (currentRadius - 20 + BUTTON_SIZE / 2) * 2 - 40,
+                left: -(currentRadius - 20 + BUTTON_SIZE / 2) + 20,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                opacity: isExpanded ? 1 : 0.3,
+                cursor: isExpanded ? 'pointer' : 'default',
+              }}
+            />
 
+            {isExpanded && (
+              <div
+                style={{
+                  position: 'absolute',
+                  width: INNER_CIRCLE_SIZE,
+                  height: INNER_CIRCLE_SIZE,
+                  left: (currentRadius - 60) / 2 - INNER_CIRCLE_SIZE / 2,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                }}
+              >
+                <button
+                  onClick={onInnerCircleNavigation}
+                  onMouseEnter={handleInnerCircleEnter}
+                  onMouseLeave={handleInnerCircleLeave}
+                  className={`inner-profile-circle inner-circle-counter-rotate ${!isLoggedIn ? 'signup' : ''}`}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    transform: `rotate(${-rotation}deg)`,
+                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transitionDelay: '200ms',
+                    position: 'relative',
+                  }}
+                  aria-label={isLoggedIn ? 'Profile' : 'Sign Up'}
+                >
+                  <Suspense fallback={<div className="w-5 h-5 bg-gray-400 rounded animate-pulse" />}>
+                    {isLoggedIn ? (
+                      <FaUser className="text-white" size={20} />
+                    ) : (
+                      <FaUserPlus className="text-white" size={22} />
+                    )}
+                  </Suspense>
+
+                  <Tooltip content={isLoggedIn ? 'Profile' : 'Sign Up'} show={isInnerCircleHovered}>
+                    <></>
+                  </Tooltip>
+                </button>
+              </div>
+            )}
+
+            {allItems.map((item, index) => {
+              const position = getButtonPosition(item.displayIndex);
+              const isActive = pathname === item.link;
+              const isHovered = hoveredItem === item.id;
+
+              return (
+                <NavButton
+                  key={item.id}
+                  item={item}
+                  position={position}
+                  isActive={isActive}
+                  isExpanded={isExpanded}
+                  isHovered={isHovered}
+                  index={index}
+                  counterRotation={-rotation}
+                  onNavigation={onNavigation}
+                  onMouseEnter={() => setHoveredItem(item.id)}
+                  onMouseLeave={() => setHoveredItem(null)}
+                />
+              );
+            })}
+          </div>
+
+          {/* Center hub stays fixed - not affected by rotation */}
           <button
             onClick={toggleExpanded}
             className="center-hub"
@@ -160,6 +248,8 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
               left: -(CENTER_SIZE_CLOSED / 2),
               top: '50%',
               transform: 'translateY(-50%)',
+              position: 'absolute',
+              zIndex: 10,
             }}
             aria-label={isExpanded ? 'Close navigation' : 'Open navigation'}
           >
@@ -171,67 +261,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
               )}
             </Suspense>
           </button>
-
-          {isExpanded && (
-            <div
-              style={{
-                position: 'relative',
-                width: INNER_CIRCLE_SIZE,
-                height: INNER_CIRCLE_SIZE,
-                left: (currentRadius - 60) / 2 - INNER_CIRCLE_SIZE / 2,
-                top: '50%',
-                transform: 'translateY(-50%)',
-              }}
-            >
-              <button
-                onClick={onInnerCircleNavigation}
-                onMouseEnter={handleInnerCircleEnter}
-                onMouseLeave={handleInnerCircleLeave}
-                className={`inner-profile-circle ${!isLoggedIn ? 'signup' : ''}`}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                  transitionDelay: '200ms',
-                  position: 'relative',
-                }}
-                aria-label={isLoggedIn ? 'Profile' : 'Sign Up'}
-              >
-                <Suspense fallback={<div className="w-5 h-5 bg-gray-400 rounded animate-pulse" />}>
-                  {isLoggedIn ? (
-                    <FaUser className="text-white" size={20} />
-                  ) : (
-                    <FaUserPlus className="text-white" size={22} />
-                  )}
-                </Suspense>
-
-                <Tooltip content={isLoggedIn ? 'Profile' : 'Sign Up'} show={isInnerCircleHovered}>
-                  <></>
-                </Tooltip>
-              </button>
-            </div>
-          )}
-
-          {visibleItems.map((item, index) => {
-            const position = getButtonPosition(item.displayIndex);
-            const isActive = pathname === item.link;
-            const isHovered = hoveredItem === item.id;
-
-            return (
-              <NavButton
-                key={`${item.id}-${currentOffset}`}
-                item={item}
-                position={position}
-                isActive={isActive}
-                isExpanded={isExpanded}
-                isHovered={isHovered}
-                index={index}
-                onNavigation={onNavigation}
-                onMouseEnter={() => setHoveredItem(item.id)}
-                onMouseLeave={() => setHoveredItem(null)}
-              />
-            );
-          })}
 
           <RotationControls
             onRotateNext={rotateNext}

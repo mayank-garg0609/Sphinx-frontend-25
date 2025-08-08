@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState } from "react";
 import { FaBars } from "react-icons/fa";
 import { useDesktop } from "./hooks/useDesktop";
@@ -14,10 +13,12 @@ const Navbar: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   
   const { isDesktop, isClient } = useDesktop();
-  const { pathname, handleNavigation, handleInnerCircleNavigation, navigateHome } = useNavigation(
-    setIsExpanded,
-    setIsMobileMenuOpen
-  );
+  const {
+    pathname,
+    handleNavigation,
+    handleInnerCircleNavigation,
+    navigateHome,
+  } = useNavigation(setIsExpanded, setIsMobileMenuOpen);
 
   const onInnerCircleNavigation = () => handleInnerCircleNavigation(isLoggedIn);
 
@@ -36,17 +37,7 @@ const Navbar: React.FC = () => {
   return (
     <>
       <style jsx>{navbarStyles}</style>
-
       <div className="flex items-center justify-between px-4 lg:justify-center lg:gap-3 mt-6">
-        <div className="flex items-center gap-2 justify-center lg:mx-0">
-          <button
-            onClick={navigateHome}
-            className="text-3xl font-bold text-white hover:opacity-80 transition-opacity"
-          >
-            Sphinx'25
-          </button>
-        </div>
-
         {!isDesktop && (
           <button
             className="text-white hover:text-gray-300 transition-colors"
@@ -57,7 +48,7 @@ const Navbar: React.FC = () => {
           </button>
         )}
       </div>
-
+      
       {isDesktop && (
         <DesktopDial
           isExpanded={isExpanded}
@@ -69,7 +60,7 @@ const Navbar: React.FC = () => {
           onHomeNavigation={navigateHome}
         />
       )}
-
+      
       {!isDesktop && (
         <MobileMenu
           isOpen={isMobileMenuOpen}

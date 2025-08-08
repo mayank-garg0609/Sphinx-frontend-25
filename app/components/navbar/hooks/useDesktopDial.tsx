@@ -1,118 +1,95 @@
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { DIAL_RADIUS_CLOSED, DIAL_RADIUS_OPEN, VISIBLE_ITEMS, TRANSITION_DURATION } from '../utils/constants';
-import { ButtonPosition } from '../types/navbarTypes';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import {
+  DIAL_RADIUS_CLOSED,
+  DIAL_RADIUS_OPEN,
+  BUTTON_SIZE,
+  VISIBLE_ITEMS,
+} from '../utils/constants';
 import { navItems, NAV_ITEMS_COUNT } from '../utils/navItems';
-import { calculateButtonPosition, createPositionCache } from '../utils/calculations';
+
+// Degree step for each rotation (360° / total items for even spacing)
+const ROTATION_STEP = 360 / NAV_ITEMS_COUNT;
 
 export const useDesktopDial = (isExpanded: boolean) => {
-  const [currentOffset, setCurrentOffset] = useState<number>(0);
-  const [isRotating, setIsRotating] = useState<boolean>(false);
+  const [rotation, setRotation] = useState(0);
+  const [isRotating, setIsRotating] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const dialRef = useRef<HTMLDivElement>(null);
-  
-  const currentRadius = useMemo(
-    () => isExpanded ? DIAL_RADIUS_OPEN : DIAL_RADIUS_CLOSED,
-    [isExpanded]
-  );
 
-  const positionCache = useMemo(
-    () => createPositionCache(currentRadius, NAV_ITEMS_COUNT),
-    [currentRadius]
-  );
+  // Calculate radius based on expansion state
+  const currentRadius = useMemo(() => {
+    return isExpanded ? DIAL_RADIUS_OPEN : DIAL_RADIUS_CLOSED;
+  }, [isExpanded]);
 
-  const getVisibleItems = useCallback(() => {
-    const visibleItems = [];
-    const visibleCount = Math.min(VISIBLE_ITEMS, NAV_ITEMS_COUNT);
+  // Get all items (no longer need to slice for visible items since we show all)
+  const getAllItems = useCallback(() => {
+    return navItems.map((item, index) => ({
+      ...item,
+      displayIndex: index,
+    }));
+  }, []);
+
+  // Calculate button position based on index and current rotation
+  const getButtonPosition = useCallback((displayIndex: number) => {
+    // Base angle for this item (evenly distributed around the semicircle)
+    const baseAngle = (displayIndex / (NAV_ITEMS_COUNT - 1)) * Math.PI;
     
-    for (let i = 0; i < visibleCount; i++) {
-      const index = (currentOffset + i) % NAV_ITEMS_COUNT;
-      visibleItems.push({
-        ...navItems[index],
-        displayIndex: i,
-      });
-    }
-    return visibleItems;
-  }, [currentOffset]);
+    // Convert to x, y coordinates
+    const x = Math.cos(baseAngle) * currentRadius;
+    const y = -Math.sin(baseAngle) * currentRadius; // Negative for upward arc
+    
+    return { x, y };
+  }, [currentRadius]);
 
-  const getButtonPosition = useCallback(
-    (displayIndex: number): ButtonPosition => {
-      const cached = positionCache.get(displayIndex);
-      return cached || calculateButtonPosition(displayIndex, currentRadius, NAV_ITEMS_COUNT);
-    },
-    [positionCache, currentRadius]
-  );
-
+  // Rotate to next position
   const rotateNext = useCallback(() => {
     if (isRotating || NAV_ITEMS_COUNT <= VISIBLE_ITEMS) return;
     
     setIsRotating(true);
-    setCurrentOffset((prev) => (prev + 1) % NAV_ITEMS_COUNT);
+    setRotation(prev => prev + ROTATION_STEP);
     
-    const timeoutId = setTimeout(() => {
+    // Reset rotation flag after animation completes
+    setTimeout(() => {
       setIsRotating(false);
-    }, TRANSITION_DURATION);
-    
-    return () => clearTimeout(timeoutId);
+    }, 500); // Match CSS transition duration
   }, [isRotating]);
 
+  // Rotate to previous position
   const rotatePrevious = useCallback(() => {
     if (isRotating || NAV_ITEMS_COUNT <= VISIBLE_ITEMS) return;
     
     setIsRotating(true);
-    setCurrentOffset((prev) => (prev - 1 + NAV_ITEMS_COUNT) % NAV_ITEMS_COUNT);
+    setRotation(prev => prev - ROTATION_STEP);
     
-    const timeoutId = setTimeout(() => {
+    // Reset rotation flag after animation completes
+    setTimeout(() => {
       setIsRotating(false);
-    }, TRANSITION_DURATION);
-    
-    return () => clearTimeout(timeoutId);
+    }, 500); // Match CSS transition duration
   }, [isRotating]);
 
-  const handleWheel = useCallback(
-    (e: WheelEvent) => {
-      if (!isExpanded || isRotating || NAV_ITEMS_COUNT <= VISIBLE_ITEMS) return;
-      
-      e.preventDefault();
-      e.stopPropagation();
-      
-      requestAnimationFrame(() => {
-        if (e.deltaY > 0) {
-          rotateNext();
-        } else {
-          rotatePrevious();
-        }
-      });
-    },
-    [isExpanded, isRotating, rotateNext, rotatePrevious]
-  );
-
-  useEffect(() => {
-    const dialElement = dialRef.current;
-    if (dialElement && isExpanded) {
-      dialElement.addEventListener('wheel', handleWheel, { passive: false });
-      return () => dialElement.removeEventListener('wheel', handleWheel);
+  // Reset rotation when dial collapses
+  const resetRotation = useCallback(() => {
+    if (!isExpanded) {
+      setRotation(0);
+      setIsRotating(false);
     }
-  }, [isExpanded, handleWheel]);
+  }, [isExpanded]);
 
-  return useMemo(() => ({
+  // Call reset when expanded state changes
+  useEffect(() => {
+    resetRotation();
+  }, [resetRotation]);
+
+  return {
     currentRadius,
-    currentOffset,
+    rotation,
     isRotating,
     hoveredItem,
     dialRef,
-    getVisibleItems,
+    getAllItems,
     getButtonPosition,
     rotateNext,
     rotatePrevious,
     setHoveredItem,
-  }), [
-    currentRadius,
-    currentOffset,
-    isRotating,
-    hoveredItem,
-    getVisibleItems,
-    getButtonPosition,
-    rotateNext,
-    rotatePrevious,
-  ]);
+  };
 };
