@@ -1,93 +1,107 @@
-import { useCallback, useState, useRef, useEffect } from "react";
-import { useGoogleLogin } from "@react-oauth/google";
-import { toast } from "sonner";
-import { LoginResponse } from "../types/authTypes";
-import { API_BASE_URL, MAX_RETRIES, GOOGLE_POPUP_TIMEOUT } from "../utils/constants";
-import { handleAuthSuccess } from "../utils/authHelpers";
-import { handleGoogleApiError, handleGoogleNetworkError } from "../utils/errorHandlers";
+'use client';
 
-export const useGoogleAuth = (router: any, clearErrors: () => void) => {
+import { useCallback, useState, useRef, useEffect, useTransition } from 'react';
+import { useGoogleLogin } from '@react-oauth/google';
+import { toast } from 'sonner';
+import type { LoginResponse } from '../types/authTypes';
+import { API_CONFIG } from '../utils/config';
+import { handleAuthSuccess } from '../utils/authHelpers';
+import { handleGoogleApiError, handleGoogleNetworkError } from '../utils/errorHandlers';
+
+interface UseGoogleAuthReturn {
+  isGoogleLoading: boolean;
+  googlePopupClosed: boolean;
+  handleGoogleLogin: () => void;
+}
+
+export function useGoogleAuth(
+  router: any,
+  clearErrors: () => void
+): UseGoogleAuthReturn {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [googlePopupClosed, setGooglePopupClosed] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const popupCheckInterval = useRef<NodeJS.Timeout | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const timeoutRef = useRef<NodeJS.Timeout>(null);
 
   useEffect(() => {
     return () => {
-      if (popupCheckInterval.current) {
-        clearInterval(popupCheckInterval.current);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
       }
     };
   }, []);
 
   const handleGoogleAuth = useCallback(
-    async (authResult: any) => {
-      console.log("🔍 Google Auth initiated with code:", authResult.code);
+    async (authResult: { code: string }) => {
+      console.log('🔍 Google Auth initiated');
       setIsGoogleLoading(true);
       setGooglePopupClosed(false);
 
-      try {
-        const code = authResult.code;
+      startTransition(async () => {
+        try {
+          const { code } = authResult;
 
-        if (!code) {
-          throw new Error("Google Auth code is missing");
-        }
+          if (!code) {
+            throw new Error('Google Auth code is missing');
+          }
 
-        const res = await fetch(`${API_BASE_URL}/auth/google`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ code }),
-        });
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.timeout);
 
-        const contentType = res.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-          console.error("❌ Server returned non-JSON response:", res.status);
-          toast.error("Server configuration error. Please try again later.");
-          return;
-        }
-
-        const result: LoginResponse = await res.json();
-
-        if (res.ok) {
-          console.log("✅ Google login successful:", {
-            ...result,
-            user: { ...result.user, password: "[PROTECTED]" },
+          const response = await fetch(`${API_CONFIG.baseUrl}/auth/google`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ code }),
+            signal: controller.signal,
           });
-          
-          try {
+
+          clearTimeout(timeoutId);
+
+          const contentType = response.headers.get('content-type');
+          if (!contentType?.includes('application/json')) {
+            console.error('❌ Server returned non-JSON response:', response.status);
+            toast.error('Server configuration error. Please try again later.');
+            return;
+          }
+
+          const result: LoginResponse = await response.json();
+
+          if (response.ok) {
+            console.log('✅ Google login successful');
+            
             handleAuthSuccess(
               result.data?.token || result.token,
               result.data?.user || result.user,
               router
             );
-            toast.success("✅ Logged in successfully!");
+            
+            toast.success('✅ Logged in successfully!');
             setRetryCount(0);
-          } catch (error) {
-            toast.error(error instanceof Error ? error.message : "Navigation failed");
+          } else {
+            handleGoogleApiError(response, result);
+            if (retryCount < API_CONFIG.maxRetries) {
+              setRetryCount(prev => prev + 1);
+            }
           }
-        } else {
-          handleGoogleApiError(res, result);
-          if (retryCount < MAX_RETRIES) {
-            setRetryCount((prev) => prev + 1);
+        } catch (error) {
+          handleGoogleNetworkError(error, retryCount, API_CONFIG.maxRetries);
+          if (retryCount < API_CONFIG.maxRetries) {
+            setRetryCount(prev => prev + 1);
           }
+        } finally {
+          setIsGoogleLoading(false);
         }
-      } catch (err) {
-        handleGoogleNetworkError(err, retryCount, MAX_RETRIES);
-        if (retryCount < MAX_RETRIES) {
-          setRetryCount((prev) => prev + 1);
-        }
-      } finally {
-        setIsGoogleLoading(false);
-      }
+      });
     },
     [router, retryCount]
   );
 
   const handleGoogleAuthError = useCallback((error: any) => {
-    console.error("🚨 Google Auth Error:", error);
-    toast.error("Google authentication was cancelled or failed. Please try again.");
+    console.error('🚨 Google Auth Error:', error);
+    toast.error('Google authentication was cancelled or failed. Please try again.');
     setIsGoogleLoading(false);
     setGooglePopupClosed(true);
   }, []);
@@ -95,39 +109,35 @@ export const useGoogleAuth = (router: any, clearErrors: () => void) => {
   const googleLogin = useGoogleLogin({
     onSuccess: handleGoogleAuth,
     onError: handleGoogleAuthError,
-    flow: "auth-code",
+    flow: 'auth-code',
   });
 
   const handleGoogleLogin = useCallback(() => {
-    console.log("🔍 Google login clicked");
+    console.log('🔍 Google login clicked');
     setIsGoogleLoading(true);
     setGooglePopupClosed(false);
     clearErrors();
 
     try {
-      const checkPopupClosed = () => {
-        setTimeout(() => {
-          if (isGoogleLoading) {
-            console.log("🔍 Checking if Google popup was closed...");
-            setGooglePopupClosed(true);
-            setIsGoogleLoading(false);
-          }
-        }, GOOGLE_POPUP_TIMEOUT);
-      };
+      timeoutRef.current = setTimeout(() => {
+        if (isGoogleLoading) {
+          setGooglePopupClosed(true);
+          setIsGoogleLoading(false);
+        }
+      }, API_CONFIG.googlePopupTimeout);
 
-      checkPopupClosed();
       googleLogin();
     } catch (error) {
-      console.error("🚨 Error initiating Google login:", error);
+      console.error('🚨 Error initiating Google login:', error);
       setIsGoogleLoading(false);
       setGooglePopupClosed(true);
-      toast.error("Failed to initiate Google login. Please try again.");
+      toast.error('Failed to initiate Google login. Please try again.');
     }
   }, [googleLogin, isGoogleLoading, clearErrors]);
 
   return {
-    isGoogleLoading,
+    isGoogleLoading: isGoogleLoading || isPending,
     googlePopupClosed,
     handleGoogleLogin,
   };
-};
+}

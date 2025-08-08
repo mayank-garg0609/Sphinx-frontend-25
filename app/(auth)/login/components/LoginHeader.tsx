@@ -1,18 +1,19 @@
-import { memo } from "react";
-import Image from "next/image";
-import logo from "@/public/image/logo.webp";
+import { memo } from 'react';
+import Image from 'next/image';
+import logo from '@/public/image/logo.webp';
 
 export const LoginHeader = memo(function LoginHeader() {
   return (
-    <div className="flex flex-col gap-2 lg:gap-2">
+    <header className="flex flex-col gap-2 lg:gap-2">
       <div className="flex items-center gap-3 justify-center">
         <Image
           className="w-5 h-5 lg:w-6 lg:h-6 bg-white animate-pulse rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]"
           src={logo}
           alt="Sphinx Logo"
           placeholder="blur"
-          blurDataURL={logo.blurDataURL}
           priority
+          width={24}
+          height={24}
         />
         <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-wide">
           Sphinx'25
@@ -27,6 +28,6 @@ export const LoginHeader = memo(function LoginHeader() {
           Log in to your account
         </p>
       </div>
-    </div>
+    </header>
   );
 });

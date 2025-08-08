@@ -21,32 +21,53 @@ export const useDesktopDial = (isExpanded: boolean) => {
     return isExpanded ? DIAL_RADIUS_OPEN : DIAL_RADIUS_CLOSED;
   }, [isExpanded]);
 
-  // Get all items (no longer need to slice for visible items since we show all)
+  // Get visible items based on current rotation
   const getAllItems = useCallback(() => {
-    return navItems.map((item, index) => ({
-      ...item,
-      displayIndex: index,
-    }));
-  }, []);
+    const startIndex = Math.round(rotation / ROTATION_STEP) % NAV_ITEMS_COUNT;
+    const visibleItems = [];
+    
+    for (let i = 0; i < VISIBLE_ITEMS; i++) {
+      const itemIndex = (startIndex + i) % NAV_ITEMS_COUNT;
+      visibleItems.push({
+        ...navItems[itemIndex],
+        displayIndex: i,
+        actualIndex: itemIndex,
+      });
+    }
+    
+    return visibleItems;
+  }, [rotation]);
 
-  // Calculate button position based on index and current rotation
+  // Calculate button position based on display index (semicircle distribution)
   const getButtonPosition = useCallback((displayIndex: number) => {
-    // Base angle for this item (evenly distributed around the semicircle)
-    const baseAngle = (displayIndex / (NAV_ITEMS_COUNT - 1)) * Math.PI;
+    // Distribute items evenly across a semicircle (180 degrees)
+    const startAngle = -90; // Start from top (-90 degrees)
+    const endAngle = 90;    // End at bottom (90 degrees)
+    const angleStep = VISIBLE_ITEMS > 1 ? (endAngle - startAngle) / (VISIBLE_ITEMS - 1) : 0;
+    const angle = startAngle + displayIndex * angleStep;
+    const radian = (angle * Math.PI) / 180;
     
     // Convert to x, y coordinates
-    const x = Math.cos(baseAngle) * currentRadius;
-    const y = -Math.sin(baseAngle) * currentRadius; // Negative for upward arc
+    const x = Math.cos(radian) * currentRadius;
+    const y = Math.sin(radian) * currentRadius;
     
-    return { x, y };
+    // Z-index for layering (items closer to center should be on top)
+    const zIndex = Math.round(100 + Math.cos(radian) * 50);
+    
+    return { 
+      x, 
+      y, 
+      zIndex,
+      angle: angle // Store angle for counter-rotation
+    };
   }, [currentRadius]);
 
-  // Rotate to next position
+  // Rotate to next position (show next set of items)
   const rotateNext = useCallback(() => {
     if (isRotating || NAV_ITEMS_COUNT <= VISIBLE_ITEMS) return;
     
     setIsRotating(true);
-    setRotation(prev => prev + ROTATION_STEP);
+    setRotation(prev => (prev + ROTATION_STEP) % 360);
     
     // Reset rotation flag after animation completes
     setTimeout(() => {
@@ -54,12 +75,12 @@ export const useDesktopDial = (isExpanded: boolean) => {
     }, 500); // Match CSS transition duration
   }, [isRotating]);
 
-  // Rotate to previous position
+  // Rotate to previous position (show previous set of items)
   const rotatePrevious = useCallback(() => {
     if (isRotating || NAV_ITEMS_COUNT <= VISIBLE_ITEMS) return;
     
     setIsRotating(true);
-    setRotation(prev => prev - ROTATION_STEP);
+    setRotation(prev => (prev - ROTATION_STEP + 360) % 360);
     
     // Reset rotation flag after animation completes
     setTimeout(() => {

@@ -35,3 +35,14 @@ export interface UserPreferences {
   notifications: boolean;
   language: string;
 }
+
+export interface User {
+  readonly sphinx_id: string;
+  readonly name: string;
+  readonly email: string;
+  readonly role: string;
+  readonly is_verified: boolean;
+  readonly applied_ca: boolean;
+  readonly created_at?: string;
+  readonly _id?: string;
+}

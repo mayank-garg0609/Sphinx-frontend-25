@@ -1,22 +1,21 @@
-"use client";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useTransitionRouter } from "next-view-transitions";
-import { loginSchema, LoginFormData } from "../../../schemas/loginSchema";
-import { useAuth } from "../hooks/useAuth";
-import { useGoogleAuth } from "../hooks/useGoogleAuth";
-import { FormField } from "./FormFields";
-import { ActionButtons } from "./ActionButtons";
-import { SignUpLink } from "./SignUpLink";
-import {
-  FORM_FIELDS,
-  MOBILE_STYLES,
-  FORM_CONTAINER_STYLES,
-} from "../utils/constants";
-import { LoginHeader } from "./LoginHeader";
+'use client';
 
-export function LoginForm() {
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useTransitionRouter } from 'next-view-transitions';
+import { memo } from 'react';
+import { loginSchema, type LoginFormData } from '@/app/schemas/loginSchema';
+import { useAuth } from '../hooks/useAuth';
+import { useGoogleAuth } from '../hooks/useGoogleAuth';
+import { FormField } from './FormFields';
+import { ActionButtons } from './ActionButtons';
+import { SignUpLink } from './SignUpLink';
+import { LoginHeader } from './LoginHeader';
+import { FORM_FIELDS, FORM_STYLES } from '../utils/constants';
+
+export const LoginForm = memo(function LoginForm() {
   const router = useTransitionRouter();
+  
   const {
     register,
     handleSubmit,
@@ -25,45 +24,49 @@ export function LoginForm() {
     clearErrors,
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    mode: "onChange",
+    mode: 'onChange',
+    defaultValues: {
+      email: '',
+      password: '',
+    },
   });
 
   const { loginUser } = useAuth(router, reset);
-  const { isGoogleLoading, googlePopupClosed, handleGoogleLogin } =
-    useGoogleAuth(router, clearErrors);
+  const { isGoogleLoading, googlePopupClosed, handleGoogleLogin } = useGoogleAuth(router, clearErrors);
 
-  const emailError = errors.email?.message?.toString();
-  const passwordError = errors.password?.message?.toString();
   const isFormDisabled = isSubmitting || isGoogleLoading;
 
   return (
     <form
       onSubmit={handleSubmit(loginUser)}
-      className={MOBILE_STYLES.form}
-      style={FORM_CONTAINER_STYLES}
+      className={FORM_STYLES.container}
+      style={FORM_STYLES.scrollbar}
     >
       <LoginHeader />
+      
       <div className="space-y-4 lg:space-y-6 pt-4 lg:pt-6 pb-4 lg:pb-6">
         <FormField
           field={FORM_FIELDS.email}
           register={register}
-          error={emailError}
+          error={errors.email?.message}
           disabled={isFormDisabled}
         />
         <FormField
           field={FORM_FIELDS.password}
           register={register}
-          error={passwordError}
+          error={errors.password?.message}
           disabled={isFormDisabled}
         />
       </div>
+      
       <ActionButtons
         isSubmitting={isSubmitting}
         onGoogleLogin={handleGoogleLogin}
         isGoogleLoading={isGoogleLoading}
         googlePopupClosed={googlePopupClosed}
       />
+      
       <SignUpLink />
     </form>
   );
-}
+});

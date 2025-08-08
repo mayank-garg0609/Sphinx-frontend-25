@@ -59,21 +59,20 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
   }, []);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
-    if (!isExpanded || isRotating || NAV_ITEMS_COUNT <= VISIBLE_ITEMS) {
+    if (!isExpanded || NAV_ITEMS_COUNT <= VISIBLE_ITEMS) {
       return;
     }
 
     e.preventDefault();
     e.stopPropagation();
 
-    requestAnimationFrame(() => {
-      if (e.deltaY > 0) {
-        rotateNext();
-      } else {
-        rotatePrevious();
-      }
-    });
-  }, [isExpanded, isRotating, rotateNext, rotatePrevious]);
+    // Direct rotation call with built-in throttling
+    if (e.deltaY > 0) {
+      rotateNext();
+    } else {
+      rotatePrevious();
+    }
+  }, [isExpanded, rotateNext, rotatePrevious]);
 
   const toggleExpanded = useCallback(() => {
     setIsExpanded(!isExpanded);
@@ -138,11 +137,10 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
               : CENTER_SIZE_CLOSED + 20,
           }}
         >
-          {/* Rotating container for all dial elements except center hub */}
+          {/* Static container for tracks and center hub (no rotation) */}
           <div
-            className="dial-rotation-container"
+            className="dial-static-container"
             style={{
-              transform: `rotate(${rotation}deg)`,
               position: 'relative',
               width: '100%',
               height: '100%',
@@ -174,6 +172,7 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
               }}
             />
 
+            {/* Inner circle button - NOT ROTATING */}
             {isExpanded && (
               <div
                 style={{
@@ -189,11 +188,10 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
                   onClick={onInnerCircleNavigation}
                   onMouseEnter={handleInnerCircleEnter}
                   onMouseLeave={handleInnerCircleLeave}
-                  className={`inner-profile-circle inner-circle-counter-rotate ${!isLoggedIn ? 'signup' : ''}`}
+                  className={`inner-profile-circle ${!isLoggedIn ? 'signup' : ''}`}
                   style={{
                     width: '100%',
                     height: '100%',
-                    transform: `rotate(${-rotation}deg)`,
                     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                     transitionDelay: '200ms',
                     position: 'relative',
@@ -215,6 +213,42 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
               </div>
             )}
 
+            {/* Center hub stays fixed - not affected by rotation */}
+            <button
+              onClick={toggleExpanded}
+              className="center-hub"
+              style={{
+                width: CENTER_SIZE_CLOSED,
+                height: CENTER_SIZE_CLOSED,
+                left: -(CENTER_SIZE_CLOSED / 2),
+                top: '50%',
+                transform: 'translateY(-50%)',
+                position: 'absolute',
+                zIndex: 10,
+              }}
+              aria-label={isExpanded ? 'Close navigation' : 'Open navigation'}
+            >
+              <Suspense fallback={<div className="w-6 h-6 bg-gray-400 rounded animate-pulse" />}>
+                {isExpanded ? (
+                  <FaTimes className="text-white" size={24} />
+                ) : (
+                  <span className="text-white font-bold text-2xl font-mono">S</span>
+                )}
+              </Suspense>
+            </button>
+          </div>
+
+          {/* Navigation buttons container - positioned absolutely */}
+          <div
+            className="nav-buttons-container"
+            style={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              top: 0,
+              left: 0,
+            }}
+          >
             {allItems.map((item, index) => {
               const position = getButtonPosition(item.displayIndex);
               const isActive = pathname === item.link;
@@ -222,14 +256,14 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
 
               return (
                 <NavButton
-                  key={item.id}
+                  key={`${item.id}-${item.actualIndex}`}
                   item={item}
                   position={position}
                   isActive={isActive}
                   isExpanded={isExpanded}
                   isHovered={isHovered}
                   index={index}
-                  counterRotation={-rotation}
+                  counterRotation={0} // Icons stay straight
                   onNavigation={onNavigation}
                   onMouseEnter={() => setHoveredItem(item.id)}
                   onMouseLeave={() => setHoveredItem(null)}
@@ -237,30 +271,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
               );
             })}
           </div>
-
-          {/* Center hub stays fixed - not affected by rotation */}
-          <button
-            onClick={toggleExpanded}
-            className="center-hub"
-            style={{
-              width: CENTER_SIZE_CLOSED,
-              height: CENTER_SIZE_CLOSED,
-              left: -(CENTER_SIZE_CLOSED / 2),
-              top: '50%',
-              transform: 'translateY(-50%)',
-              position: 'absolute',
-              zIndex: 10,
-            }}
-            aria-label={isExpanded ? 'Close navigation' : 'Open navigation'}
-          >
-            <Suspense fallback={<div className="w-6 h-6 bg-gray-400 rounded animate-pulse" />}>
-              {isExpanded ? (
-                <FaTimes className="text-white" size={24} />
-              ) : (
-                <span className="text-white font-bold text-2xl font-mono">S</span>
-              )}
-            </Suspense>
-          </button>
 
           <RotationControls
             onRotateNext={rotateNext}

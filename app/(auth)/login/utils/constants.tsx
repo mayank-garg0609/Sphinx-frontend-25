@@ -1,23 +1,42 @@
-export const FORM_FIELDS = {
+export interface FormField {
+  readonly id: string;
+  readonly type: 'email' | 'password' | 'text';
+  readonly placeholder: string;
+  readonly label: string;
+  readonly required?: boolean;
+}
+
+export const FORM_FIELDS: Record<'email' | 'password', FormField> = {
   email: {
-    id: "email",
-    type: "email" as const,
-    placeholder: "example@email.com",
-    label: "Email Address",
+    id: 'email',
+    type: 'email',
+    placeholder: 'example@email.com',
+    label: 'Email Address',
+    required: true,
   },
   password: {
-    id: "password",
-    type: "password" as const,
-    placeholder: "Enter your password",
-    label: "Password",
+    id: 'password',
+    type: 'password',
+    placeholder: 'Enter your password',
+    label: 'Password',
+    required: true,
   },
 } as const;
 
 export const BUTTON_STYLES = {
   primary:
-    "w-full bg-white text-black font-semibold py-2 lg:py-3 rounded-lg hover:bg-gray-200 transition text-sm lg:text-base disabled:opacity-50 disabled:cursor-not-allowed",
+    'w-full bg-white text-black font-semibold py-2 lg:py-3 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black transition-all duration-200 text-sm lg:text-base disabled:opacity-50 disabled:cursor-not-allowed',
   secondary:
-    "w-full flex items-center justify-center border border-white text-white font-medium py-2 lg:py-3 rounded-lg hover:bg-white hover:text-black transition text-sm lg:text-base gap-2 disabled:opacity-50 disabled:cursor-not-allowed",
+    'w-full flex items-center justify-center border border-white text-white font-medium py-2 lg:py-3 rounded-lg hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black transition-all duration-200 text-sm lg:text-base gap-2 disabled:opacity-50 disabled:cursor-not-allowed',
+} as const;
+
+export const FORM_STYLES = {
+  container:
+    'bg-black/40 backdrop-blur-md text-white p-6 lg:p-8 rounded-2xl shadow-[0_8px_32px_0_rgba(255,255,255,0.3)] w-full max-w-sm lg:max-w-md border border-white/30 space-y-4 lg:space-y-6 font-sans lg:mr-36 mx-auto h-auto lg:h-[70vh] max-h-[85vh] overflow-y-auto',
+  scrollbar: {
+    scrollbarWidth: 'thin' as const,
+    scrollbarColor: '#cbd5e1 #2d2d2d',
+  },
 } as const;
 
 export const MOBILE_STYLES = {
@@ -37,7 +56,3 @@ export const FORM_CONTAINER_STYLES = {
   scrollbarWidth: "thin" as const,
   scrollbarColor: "#cbd5e1 #2d2d2d",
 } as const;
-
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-export const MAX_RETRIES = 3;
-export const GOOGLE_POPUP_TIMEOUT = 30000;
