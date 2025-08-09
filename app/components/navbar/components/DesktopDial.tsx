@@ -78,7 +78,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
       e.preventDefault();
       e.stopPropagation();
 
-      // Fixed direction: wheel up = previous (up arrow), wheel down = next (down arrow)
       if (e.deltaY > 0) {
         rotateNext();
       } else {
@@ -424,7 +423,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
               : CENTER_SIZE_CLOSED + 20,
           }}
         >
-          {/* Static container for tracks and center hub */}
           <div
             className="dial-static-container"
             style={{
@@ -433,7 +431,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
               height: "100%",
             }}
           >
-            {/* Cyberpunk semicircle track */}
             <div
               className="semicircle-track cyberpunk-track neon-glow-cyan"
               style={{
@@ -449,7 +446,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
               }}
             />
 
-            {/* Cyberpunk inner track */}
             <div
               className="inner-track cyberpunk-inner-track neon-glow-amber"
               onClick={onHomeNavigation}
@@ -467,7 +463,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
               }}
             />
 
-            {/* Integrated rotation controls - Fixed labels */}
             {showRotationControls && (
               <>
                 <button
@@ -511,7 +506,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
               </>
             )}
 
-            {/* Inner circle button - Fixed z-index and positioning */}
             {isExpanded && (
               <div
                 style={{
@@ -581,7 +575,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
               </div>
             )}
 
-            {/* Center hub */}
             <button
               onClick={toggleExpanded}
               className="center-hub-cyberpunk neon-glow-cyan"
@@ -616,7 +609,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
             </button>
           </div>
 
-          {/* Navigation buttons container */}
           <div
             className="nav-buttons-container"
             style={{

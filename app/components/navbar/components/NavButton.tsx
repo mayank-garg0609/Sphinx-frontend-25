@@ -31,7 +31,6 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
   onMouseEnter,
   onMouseLeave,
 }) => {
-  // Calculate staggered animation delay for smooth one-by-one movement
   const animationDelay = item.isAnimating ? `${index * 80}ms` : `${index * 40}ms`;
   
   const buttonStyle = {
@@ -52,7 +51,6 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
   };
 
   const handleClick = () => {
-    // Create a clean NavItem object without the extra properties
     const cleanItem: NavItem = {
       id: item.id,
       label: item.label,
@@ -237,7 +235,6 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
         }
       `}</style>
       
-      {/* Tooltip using the new approach */}
       <Tooltip 
         content={item.label} 
         show={isHovered}

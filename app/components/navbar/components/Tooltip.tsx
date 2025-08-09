@@ -1,33 +1,35 @@
-import React, { memo, useEffect, useState } from 'react';
-import { TooltipProps } from '../types/navbarTypes';
+import React, { memo, useEffect, useState } from "react";
+import { TooltipProps } from "../types/navbarTypes";
 
-const TooltipComponent: React.FC<TooltipProps & { 
-  children: React.ReactNode;
-  isExpanded?: boolean;
-  buttonPosition?: { x: number; y: number };
-}> = ({
+const TooltipComponent: React.FC<
+  TooltipProps & {
+    children: React.ReactNode;
+    isExpanded?: boolean;
+    buttonPosition?: { x: number; y: number };
+  }
+> = ({
   content,
   show = false,
   children,
   isExpanded = false,
-  buttonPosition = { x: 0, y: 0 }
+  buttonPosition = { x: 0, y: 0 },
 }) => {
-  const [tooltipElement, setTooltipElement] = useState<HTMLDivElement | null>(null);
+  const [tooltipElement, setTooltipElement] = useState<HTMLDivElement | null>(
+    null
+  );
 
   useEffect(() => {
-    // Create tooltip element and append to body
     if (show && isExpanded) {
-      const tooltip = document.createElement('div');
-      tooltip.className = 'cyberpunk-tooltip-global';
+      const tooltip = document.createElement("div");
+      tooltip.className = "cyberpunk-tooltip-global";
       tooltip.textContent = content;
-      
-      // Position calculation - get the dial container position
-      const dialContainer = document.querySelector('.dial-container');
+
+      const dialContainer = document.querySelector(".dial-container");
       if (dialContainer) {
         const dialRect = dialContainer.getBoundingClientRect();
         const tooltipX = dialRect.left + buttonPosition.x + 70;
         const tooltipY = dialRect.top + dialRect.height / 2 + buttonPosition.y;
-        
+
         tooltip.style.cssText = `
           position: fixed;
           left: ${tooltipX}px;
@@ -51,21 +53,18 @@ const TooltipComponent: React.FC<TooltipProps & {
           opacity: 0;
           transition: opacity 0.2s ease-in-out;
         `;
-        
+
         document.body.appendChild(tooltip);
-        
-        // Trigger fade in
+
         requestAnimationFrame(() => {
-          tooltip.style.opacity = '1';
+          tooltip.style.opacity = "1";
         });
-        
+
         setTooltipElement(tooltip);
       }
-    }
-
-    return () => {
+    } else {
       if (tooltipElement) {
-        tooltipElement.style.opacity = '0';
+        tooltipElement.style.opacity = "0";
         setTimeout(() => {
           if (tooltipElement && tooltipElement.parentNode) {
             tooltipElement.parentNode.removeChild(tooltipElement);
@@ -73,8 +72,19 @@ const TooltipComponent: React.FC<TooltipProps & {
         }, 200);
         setTooltipElement(null);
       }
+    }
+
+    return () => {
+      if (tooltipElement) {
+        tooltipElement.style.opacity = "0";
+        setTimeout(() => {
+          if (tooltipElement && tooltipElement.parentNode) {
+            tooltipElement.parentNode.removeChild(tooltipElement);
+          }
+        }, 200);
+      }
     };
-  }, [show, isExpanded, content, buttonPosition.x, buttonPosition.y, tooltipElement]);
+  }, [show, isExpanded, content, buttonPosition.x, buttonPosition.y]);
 
   return <>{children}</>;
 };

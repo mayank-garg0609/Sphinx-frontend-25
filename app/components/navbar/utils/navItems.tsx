@@ -13,7 +13,6 @@ const FaLinkedin = lazy(() => import('react-icons/fa').then(m => ({ default: m.F
 const FaCode = lazy(() => import('react-icons/fa').then(m => ({ default: m.FaCode })));
 const FaBalanceScale = lazy(() => import('react-icons/fa').then(m => ({ default: m.FaBalanceScale })));
 
-// Memoize nav items to prevent recreations
 export const navItems: readonly NavItem[] = Object.freeze([
   { id: "events", label: "Events", link: "/events", icon: FaCalendarCheck },
   { id: "ca-program", label: "CA Program", link: "/caProgram", icon: FaUserGraduate },
@@ -40,5 +39,4 @@ export const navItems: readonly NavItem[] = Object.freeze([
   },
 ] as const);
 
-// Pre-calculate nav items length for performance
 export const NAV_ITEMS_COUNT = navItems.length;
