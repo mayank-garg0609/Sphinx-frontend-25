@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { RefObject } from 'react'
 
-export function useFluidBackground(canvasRef: RefObject<HTMLCanvasElement>) {
+export function useFluidBackground(canvasRef: React.RefObject<HTMLCanvasElement | null>)  {
   useEffect(() => {
     const canvas = canvasRef.current
     const ctx = canvas?.getContext("2d")
