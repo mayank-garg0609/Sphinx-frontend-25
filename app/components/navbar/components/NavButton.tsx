@@ -34,23 +34,22 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
   // Calculate staggered animation delay for smooth one-by-one movement
   const animationDelay = item.isAnimating ? `${index * 80}ms` : `${index * 40}ms`;
   
-const buttonStyle = {
-  position: 'absolute' as const,
-  width: 50,
-  height: 50,
-  left: 0,
-  top: '50%',
-  transform: `translate(-50%, -50%) translate(${position.x}px, ${position.y}px)`,
-  opacity: isExpanded ? 1 : 0,
-  zIndex: position.zIndex,
-  transitionProperty: 'all',
-  transitionDuration: item.isAnimating ? '0.6s' : '0.5s',
-  transitionTimingFunction: item.isAnimating 
-    ? 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' 
-    : 'cubic-bezier(0.34, 1.56, 0.64, 1)',
-  transitionDelay: animationDelay,
-};
-
+  const buttonStyle = {
+    position: 'absolute' as const,
+    width: 50,
+    height: 50,
+    left: 0,
+    top: '50%',
+    transform: `translate(-50%, -50%) translate(${position.x}px, ${position.y}px)`,
+    opacity: isExpanded ? 1 : 0,
+    zIndex: position.zIndex,
+    transitionProperty: 'all',
+    transitionDuration: item.isAnimating ? '0.6s' : '0.5s',
+    transitionTimingFunction: item.isAnimating 
+      ? 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' 
+      : 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+    transitionDelay: animationDelay,
+  };
 
   const handleClick = () => {
     // Create a clean NavItem object without the extra properties
@@ -65,7 +64,7 @@ const buttonStyle = {
   };
 
   return (
-    <>
+    <div style={buttonStyle}>
       <style jsx>{`
         @keyframes pulseGlow {
           0%, 100% { 
@@ -238,7 +237,13 @@ const buttonStyle = {
         }
       `}</style>
       
-      <div style={buttonStyle}>
+      {/* Tooltip using the new approach */}
+      <Tooltip 
+        content={item.label} 
+        show={isHovered}
+        isExpanded={isExpanded}
+        buttonPosition={position}
+      >
         <button
           onClick={handleClick}
           onMouseEnter={onMouseEnter}
@@ -248,7 +253,6 @@ const buttonStyle = {
             width: '100%',
             height: '100%',
             position: 'relative',
-            // Icons stay straight - no rotation applied
             transform: 'rotate(0deg)',
           }}
           aria-label={item.label}
@@ -256,13 +260,9 @@ const buttonStyle = {
           <Suspense fallback={<div className="w-5 h-5 bg-gray-400 rounded animate-pulse" />}>
             <item.icon size={20} className="nav-icon-cyberpunk" />
           </Suspense>
-          
-          <Tooltip content={item.label} show={isHovered}>
-            <></>
-          </Tooltip>
         </button>
-      </div>
-    </>
+      </Tooltip>
+    </div>
   );
 };
 

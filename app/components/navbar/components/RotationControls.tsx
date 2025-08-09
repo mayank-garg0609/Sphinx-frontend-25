@@ -22,7 +22,7 @@ const RotationControlsComponent: React.FC<RotationControlsProps> = ({
     background: '#333333',
     border: '2px solid #f5f5f5',
     color: 'white',
-    cursor: (isRotating ? 'not-allowed' : 'pointer') as const,
+    cursor: (isRotating ? 'not-allowed' : 'pointer'),
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

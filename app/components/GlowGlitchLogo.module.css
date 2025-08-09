@@ -1,5 +1,3 @@
-/* components/GlowGlitchLogo.module.css */
-
 .logoContainer {
   position: relative;
   display: flex;
@@ -23,10 +21,7 @@
   opacity: 0;
   z-index: 10;
   margin: 0;
-  text-shadow: 
-    0 0 10px #00ffff,
-    0 0 20px #00ffff,
-    0 0 30px #00ffff,
+  text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 30px #00ffff,
     0 0 40px #00ffff;
   transition: all 0.3s ease;
 }
@@ -199,29 +194,55 @@
 }
 
 @keyframes glitch1 {
-  0%, 14%, 15%, 49%, 50%, 99%, 100% {
+  0%,
+  14%,
+  15%,
+  49%,
+  50%,
+  99%,
+  100% {
     opacity: 0;
     transform: translate3d(0, 0, 0) skew(0deg);
   }
-  1%, 13%, 16%, 48%, 51%, 98% {
+  1%,
+  13%,
+  16%,
+  48%,
+  51%,
+  98% {
     opacity: 1;
     transform: translate3d(-2px, 0, 0) skew(-2deg);
   }
 }
 
 @keyframes glitch2 {
-  0%, 19%, 20%, 39%, 40%, 79%, 80%, 100% {
+  0%,
+  19%,
+  20%,
+  39%,
+  40%,
+  79%,
+  80%,
+  100% {
     opacity: 0;
     transform: translate3d(0, 0, 0) skew(0deg);
   }
-  1%, 18%, 21%, 38%, 41%, 78%, 81%, 99% {
+  1%,
+  18%,
+  21%,
+  38%,
+  41%,
+  78%,
+  81%,
+  99% {
     opacity: 1;
     transform: translate3d(2px, 0, 0) skew(2deg);
   }
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.3;
     transform: translate(-50%, -50%) scale(1);
   }
@@ -244,7 +265,8 @@
 }
 
 @keyframes electric {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0;
     height: 60px;
     transform: scaleY(1);
@@ -257,7 +279,8 @@
 }
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px) rotate(0deg);
     opacity: 1;
   }
@@ -272,18 +295,18 @@
   .logoContainer {
     min-height: 200px;
   }
-  
+
   .logoText {
     letter-spacing: clamp(2px, 3vw, 8px);
   }
-  
+
   .replayButton {
     bottom: 10px;
     right: 10px;
     padding: 8px 15px;
     font-size: 12px;
   }
-  
+
   .electricLine {
     height: 40px;
   }
@@ -313,13 +336,73 @@
   .particle {
     animation: none;
   }
-  
+
   .logoText.animate {
     opacity: 1;
     transform: none;
   }
-  
+
   .glowEffect.animate {
     opacity: 0.3;
+  }
+}
+/* Responsive design */
+@media (max-width: 768px) {
+  .logoContainer {
+    min-height: 200px;
+    touch-action: manipulation; /* Prevent zoom on touch */
+  }
+
+  .logoText {
+    letter-spacing: clamp(2px, 3vw, 8px);
+    font-size: clamp(1.5rem, 6vw, 4rem); /* Smaller on mobile */
+  }
+
+  .replayButton {
+    bottom: 10px;
+    right: 10px;
+    padding: 8px 15px;
+    font-size: 12px;
+    touch-action: manipulation;
+  }
+
+  .electricLine {
+    height: 40px;
+  }
+
+  .glowEffect {
+    width: min(90vw, 600px);
+    height: min(45vw, 300px);
+  }
+
+  /* Reduce particle effects on mobile */
+  .particles {
+    display: block;
+  }
+}
+
+@media (max-width: 480px) {
+  .logoContainer {
+    min-height: 150px;
+    padding: 10px;
+  }
+
+  .logoText {
+    font-size: clamp(1.2rem, 5vw, 3rem);
+    letter-spacing: clamp(1px, 2vw, 6px);
+  }
+  
+  .glowEffect {
+    width: min(95vw, 400px);
+    height: min(50vw, 200px);
+  }
+
+  /* Further reduce effects on small screens */
+  .electricLines {
+    opacity: 0.5;
+  }
+
+  .scanlines {
+    opacity: 0.5;
   }
 }

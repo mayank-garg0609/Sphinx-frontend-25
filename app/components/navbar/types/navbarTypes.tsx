@@ -17,5 +17,7 @@ export interface ButtonPosition {
 
 export interface TooltipProps {
   readonly content: string;
-  readonly show: boolean;
+  readonly show?: boolean;
+  readonly isExpanded?: boolean;
+  readonly buttonPosition?: { readonly x: number; readonly y: number };
 }
