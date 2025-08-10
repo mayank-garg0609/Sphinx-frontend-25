@@ -1,19 +1,15 @@
-'use client'
+"use client";
 
-import { memo } from 'react'
-import type { FAQ } from '../tupes/caProgram'
+import { memo } from "react";
+import type { FAQ } from "../tupes/caProgram";
 
 interface FAQItemProps {
-  readonly faq: FAQ
-  readonly isOpen: boolean
-  readonly onToggle: () => void
+  readonly faq: FAQ;
+  readonly isOpen: boolean;
+  readonly onToggle: () => void;
 }
 
-const FAQItem = memo<FAQItemProps>(function FAQItem({ 
-  faq, 
-  isOpen, 
-  onToggle 
-}) {
+const FAQItem = memo<FAQItemProps>(function FAQItem({ faq, isOpen, onToggle }) {
   return (
     <div className="rounded-lg bg-black/40 backdrop-blur-md shadow-lg hover:bg-black/50 transition-all duration-200 border border-yellow-300/20 hover:border-yellow-300/40">
       <button
@@ -41,7 +37,7 @@ const FAQItem = memo<FAQItemProps>(function FAQItem({
         </svg>
       </button>
       {isOpen && (
-        <div 
+        <div
           id={`faq-answer-${faq.id}`}
           className="px-3 sm:px-4 pb-3 pt-1 text-sm sm:text-base text-gray-200 leading-relaxed"
         >
@@ -49,7 +45,7 @@ const FAQItem = memo<FAQItemProps>(function FAQItem({
         </div>
       )}
     </div>
-  )
-})
+  );
+});
 
-export default FAQItem
+export default FAQItem;
