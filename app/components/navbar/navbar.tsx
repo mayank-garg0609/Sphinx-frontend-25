@@ -6,11 +6,12 @@ import { useNavigation } from "./hooks/useNavigation";
 import { DesktopDial } from "./components/DesktopDial";
 import { MobileMenu } from "./components/MobileMenu";
 import { navbarStyles } from "./styles/navbar";
+import { useUser } from "@/app/hooks/useUser/useUser";
 
 const Navbar: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isLoggedIn, refreshUserData } = useUser();
   
   const { isDesktop, isClient } = useDesktop();
   const {
@@ -20,7 +21,10 @@ const Navbar: React.FC = () => {
     navigateHome,
   } = useNavigation(setIsExpanded, setIsMobileMenuOpen);
 
-  const onInnerCircleNavigation = () => handleInnerCircleNavigation(isLoggedIn);
+  const onInnerCircleNavigation = () => {
+    refreshUserData();
+    handleInnerCircleNavigation(isLoggedIn);
+  };
 
   if (!isClient) {
     return (
@@ -67,7 +71,7 @@ const Navbar: React.FC = () => {
           onClose={() => setIsMobileMenuOpen(false)}
           pathname={pathname}
           isLoggedIn={isLoggedIn}
-          setIsLoggedIn={setIsLoggedIn}
+          setIsLoggedIn={() => refreshUserData()}
           onNavigation={handleNavigation}
           onInnerCircleNavigation={onInnerCircleNavigation}
         />

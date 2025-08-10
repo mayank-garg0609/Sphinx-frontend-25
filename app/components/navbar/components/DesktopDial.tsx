@@ -164,6 +164,30 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           }
         }
 
+        @keyframes signupGlow {
+          0%,
+          100% {
+            box-shadow: 0 0 15px #28a745, 0 0 30px #28a74540, 0 0 45px #28a74520,
+              inset 0 0 15px #28a74520;
+          }
+          50% {
+            box-shadow: 0 0 25px #28a745, 0 0 50px #28a74560, 0 0 75px #28a74540,
+              inset 0 0 25px #28a74530;
+          }
+        }
+
+        @keyframes profileGlow {
+          0%,
+          100% {
+            box-shadow: 0 0 15px #4a90e2, 0 0 30px #4a90e240, 0 0 45px #4a90e220,
+              inset 0 0 15px #4a90e220;
+          }
+          50% {
+            box-shadow: 0 0 25px #4a90e2, 0 0 50px #4a90e260, 0 0 75px #4a90e240,
+              inset 0 0 25px #4a90e230;
+          }
+        }
+
         .cyberpunk-dial {
           transform-style: preserve-3d;
           perspective: 1000px;
@@ -311,6 +335,11 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
           position: relative;
           overflow: hidden;
+          /* Closed state boundary - visible outline/glow */
+          box-shadow: 
+            0 0 15px #00ffff80,
+            inset 0 0 10px #00ffff20,
+            0 0 25px #00ffff40;
         }
 
         .center-hub-cyberpunk::before {
@@ -357,9 +386,11 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
             #357abd 50%,
             #2563eb 100%
           );
-          border: 2px solid #00ffff;
+          border: 2px solid #4a90e2;
           position: relative;
           overflow: hidden;
+          /* Default profile state - animated glow */
+          animation: profileGlow 3s ease-in-out infinite;
         }
 
         .inner-profile-cyberpunk::before {
@@ -387,6 +418,7 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           transform: scale(1.15);
           box-shadow: 0 0 20px #4a90e280, inset 0 0 20px #ffffff20,
             0 0 40px #4a90e240;
+          animation: none;
         }
 
         .inner-profile-cyberpunk.signup {
@@ -396,11 +428,15 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
             #1e7e34 50%,
             #16a085 100%
           );
+          border: 2px solid #28a745;
+          /* Signup state - different animated glow */
+          animation: signupGlow 3s ease-in-out infinite;
         }
 
         .inner-profile-cyberpunk.signup:hover {
           box-shadow: 0 0 20px #28a74580, inset 0 0 20px #ffffff20,
             0 0 40px #28a74540;
+          animation: none;
         }
       `}</style>
 
