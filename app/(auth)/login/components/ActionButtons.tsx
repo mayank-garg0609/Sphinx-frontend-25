@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useCallback, useState, useEffect } from 'react';
+import { memo, useCallback } from 'react';
 import { FcGoogle } from 'react-icons/fc';
 import { BUTTON_STYLES } from '../utils/constants';
 
@@ -9,8 +9,6 @@ interface ActionButtonsProps {
   readonly onGoogleLogin: () => void;
   readonly isGoogleLoading: boolean;
   readonly googlePopupClosed: boolean;
-  readonly isLocked?: boolean;
-  readonly isGoogleLocked?: boolean;
 }
 
 export const ActionButtons = memo(function ActionButtons({
@@ -18,82 +16,32 @@ export const ActionButtons = memo(function ActionButtons({
   onGoogleLogin,
   isGoogleLoading,
   googlePopupClosed,
-  isLocked = false,
-  isGoogleLocked = false,
 }: ActionButtonsProps) {
-  const [clickCount, setClickCount] = useState(0);
-  const [lastClickTime, setLastClickTime] = useState(0);
-
-  // Reset click count after 5 seconds
-  useEffect(() => {
-    if (clickCount > 0) {
-      const timer = setTimeout(() => {
-        setClickCount(0);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [clickCount]);
-
   const getGoogleButtonText = useCallback(() => {
-    if (isGoogleLocked) return 'Temporarily Locked';
     if (googlePopupClosed) return 'Continue with Google';
     if (isGoogleLoading) return 'Authenticating...';
     return 'Continue with Google';
-  }, [googlePopupClosed, isGoogleLoading, isGoogleLocked]);
-
-  const getLoginButtonText = useCallback(() => {
-    if (isLocked) return 'Temporarily Locked';
-    if (isSubmitting) return 'Logging In...';
-    return 'Log In';
-  }, [isSubmitting, isLocked]);
-
-  // Enhanced click handler with rate limiting
-  const handleGoogleClick = useCallback(() => {
-    const now = Date.now();
-    
-    // Prevent rapid clicking (rate limiting)
-    if (now - lastClickTime < 1000) {
-      setClickCount(prev => prev + 1);
-      
-      // Block if too many rapid clicks
-      if (clickCount > 5) {
-        console.warn('Too many rapid clicks detected');
-        return;
-      }
-    } else {
-      setClickCount(0);
-    }
-    
-    setLastClickTime(now);
-    
-    if (!isGoogleLoading && !isSubmitting && !isGoogleLocked) {
-      onGoogleLogin();
-    }
-  }, [onGoogleLogin, isGoogleLoading, isSubmitting, isGoogleLocked, clickCount, lastClickTime]);
-
-  const isFormDisabled = isSubmitting || isGoogleLoading;
-  const isLoginDisabled = isFormDisabled || isLocked;
-  const isGoogleDisabled = isFormDisabled || isGoogleLocked || clickCount > 5;
+  }, [googlePopupClosed, isGoogleLoading]);
 
   return (
-    <div className="space-y-3 lg:space-y-3">
+    <div className="space-y-2 sm:space-y-2.5 md:space-y-3 lg:space-y-3 xl:space-y-4 2xl:space-y-5">
       <button
         type="submit"
-        disabled={isLoginDisabled}
-        className={BUTTON_STYLES.primary}
+        disabled={isSubmitting || isGoogleLoading}
+        className="w-full bg-white text-black font-semibold py-2 sm:py-2.5 md:py-2.5 lg:py-3 xl:py-3.5 2xl:py-4 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black transition-all duration-200 text-xs sm:text-sm md:text-sm lg:text-base xl:text-lg 2xl:text-xl disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label={isSubmitting ? 'Logging in...' : 'Log in to your account'}
       >
-        {getLoginButtonText()}
+        {isSubmitting ? 'Logging In...' : 'Log In'}
       </button>
 
       <button
         type="button"
-        onClick={handleGoogleClick}
-        disabled={isGoogleDisabled}
-        className={BUTTON_STYLES.secondary}
+        onClick={onGoogleLogin}
+        disabled={isGoogleLoading || isSubmitting}
+        className="w-full flex items-center justify-center border border-white text-white font-medium py-2 sm:py-2.5 md:py-2.5 lg:py-3 xl:py-3.5 2xl:py-4 rounded-lg hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black transition-all duration-200 text-xs sm:text-sm md:text-sm lg:text-base xl:text-lg 2xl:text-xl gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label="Continue with Google"
       >
-        <FcGoogle className="w-4 h-4 lg:w-5 lg:h-5" aria-hidden="true" />
+        <FcGoogle className="w-3 h-3 sm:w-4 sm:h-4 md:w-4 md:h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 2xl:w-7 2xl:h-7" aria-hidden="true" />
         <span>{getGoogleButtonText()}</span>
       </button>
     </div>

@@ -1,12 +1,11 @@
 'use client';
 
-import { memo, useCallback, useState } from 'react';
+import { memo } from 'react';
 import type { UseFormRegister, FieldError } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { LoginFormData } from '@/app/schemas/loginSchema';
 import type { FormField as FormFieldType } from '../utils/constants';
-import { sanitizeInput } from '../../utils/validation';
 
 interface FormFieldProps {
   readonly field: FormFieldType;
@@ -21,46 +20,13 @@ export const FormField = memo(function FormField({
   error,
   disabled = false,
 }: FormFieldProps) {
-  const [isFocused, setIsFocused] = useState(false);
   const hasError = Boolean(error);
 
-  const handleFocus = useCallback(() => {
-    setIsFocused(true);
-  }, []);
-
-  const handleBlur = useCallback(() => {
-    setIsFocused(false);
-  }, []);
-
-  // Enhanced input validation
-  const handleInput = useCallback((e: React.FormEvent<HTMLInputElement>) => {
-    const target = e.currentTarget;
-    const value = target.value;
-
-    // Basic length validation
-    if (value.length > 1000) {
-      target.value = value.substring(0, 1000);
-    }
-
-    // Remove null bytes and control characters for security
-    const sanitized = value.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-    if (sanitized !== value) {
-      target.value = sanitized;
-    }
-  }, []);
-
-  const registerOptions = {
-    ...register(field.id as keyof LoginFormData),
-    onFocus: handleFocus,
-    onBlur: handleBlur,
-    onInput: handleInput,
-  };
-
   return (
-    <div className="flex flex-col text-zinc-300 gap-2">
+    <div className="flex flex-col text-zinc-300 gap-1.5 sm:gap-2 md:gap-2 lg:gap-2 xl:gap-2.5 2xl:gap-3">
       <Label 
         htmlFor={field.id} 
-        className="text-sm lg:text-base font-medium"
+        className="text-xs sm:text-sm md:text-sm lg:text-base xl:text-lg 2xl:text-xl font-medium"
       >
         {field.label}
         {field.required && <span className="text-red-400 ml-1">*</span>}
@@ -73,18 +39,16 @@ export const FormField = memo(function FormField({
         disabled={disabled}
         aria-invalid={hasError}
         aria-describedby={hasError ? `${field.id}-error` : undefined}
-        autoComplete={field.id === 'email' ? 'email' : 'current-password'}
-        spellCheck={false}
-        {...registerOptions}
-        className={`text-sm lg:text-base py-2 lg:py-2 h-10 lg:h-auto disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+        {...register(field.id as keyof LoginFormData)}
+        className={`text-xs sm:text-sm md:text-sm lg:text-base xl:text-lg 2xl:text-xl py-2 sm:py-2 md:py-2 lg:py-2 xl:py-3 2xl:py-4 h-8 sm:h-9 md:h-10 lg:h-auto xl:h-auto 2xl:h-auto disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
           hasError ? 'border-red-500 focus:border-red-500' : ''
-        } ${isFocused ? 'ring-2 ring-blue-500 ring-opacity-50' : ''}`}
+        }`}
       />
       
       {hasError && (
         <span 
           id={`${field.id}-error`}
-          className="text-red-400 text-xs lg:text-sm"
+          className="text-red-400 text-xs sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg"
           role="alert"
         >
           {error}

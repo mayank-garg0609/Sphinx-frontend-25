@@ -28,4 +28,3 @@ export const SignUpLink = memo(function SignUpLink() {
     </div>
   );
 });
-SignUpLink.displayName = 'SignUpLink';

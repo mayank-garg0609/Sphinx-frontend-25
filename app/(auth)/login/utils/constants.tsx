@@ -1,3 +1,4 @@
+// app/(auth)/login/utils/constants.tsx
 export interface FormField {
   readonly id: string;
   readonly type: 'email' | 'password' | 'text';
