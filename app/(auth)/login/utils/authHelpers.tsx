@@ -1,6 +1,7 @@
 import type { UserData, UserPreferences, User } from '../types/authTypes';
 import { tokenUtils, userDataUtils } from '../../utils/secureStorage';
-import { validateEmail, validateName } from '../../utils/validation';
+import { validateEmail, validateName, sanitizeInput } from '../../utils/validation';
+import { SECURITY_CONFIG } from '../../utils/security';
 
 /**
  * Enhanced auth token saving with validation
@@ -9,6 +10,16 @@ export const saveAuthToken = (token: string): void => {
   try {
     if (!token || typeof token !== 'string') {
       throw new Error('Invalid token provided');
+    }
+
+    // Additional token validation
+    if (token.length > 10000) { // Reasonable JWT size limit
+      throw new Error('Token is too large');
+    }
+
+    // Check for suspicious content
+    if (/<script|javascript:|on\w+=/i.test(token)) {
+      throw new Error('Suspicious token content detected');
     }
     
     // Use secure storage utilities
@@ -46,9 +57,23 @@ export const saveUserData = (user: User): void => {
     if (!nameValidation.isValid) {
       throw new Error(`Invalid name: ${nameValidation.error}`);
     }
+
+    // Sanitize user data before storage
+    const sanitizedUser = {
+      ...user,
+      name: sanitizeInput(user.name),
+      email: sanitizeInput(user.email.toLowerCase()),
+      sphinx_id: sanitizeInput(user.sphinx_id),
+      role: sanitizeInput(user.role || 'user'),
+    };
+
+    // Additional validation for sphinx_id
+    if (!/^[a-zA-Z0-9_-]+$/.test(sanitizedUser.sphinx_id)) {
+      throw new Error('Invalid user ID format');
+    }
     
     // Use secure storage utilities
-    userDataUtils.saveUserData(user);
+    userDataUtils.saveUserData(sanitizedUser);
     
     console.log('✅ User data saved securely');
   } catch (error) {
@@ -120,7 +145,7 @@ export const handleAuthSuccess = (token: string, user: User, router: any): void 
 };
 
 /**
- * Secure session validation
+ * Secure session validation with enhanced checks
  */
 export const validateSession = (): { isValid: boolean; user?: any; token?: string } => {
   try {
@@ -145,6 +170,14 @@ export const validateSession = (): { isValid: boolean; user?: any; token?: strin
       userDataUtils.clearUserData();
       return { isValid: false };
     }
+
+    // Validate email format in stored data
+    const emailValidation = validateEmail(user.email);
+    if (!emailValidation.isValid) {
+      console.log('Session invalid due to corrupted email data');
+      userDataUtils.clearUserData();
+      return { isValid: false };
+    }
     
     return { isValid: true, user, token };
   } catch (error) {
@@ -154,7 +187,7 @@ export const validateSession = (): { isValid: boolean; user?: any; token?: strin
 };
 
 /**
- * Secure logout with cleanup
+ * Secure logout with comprehensive cleanup
  */
 export const handleLogout = async (): Promise<void> => {
   try {
@@ -166,16 +199,37 @@ export const handleLogout = async (): Promise<void> => {
     
     // Clear any cached data
     if (typeof window !== 'undefined') {
-      // Clear any session-related data
-      sessionStorage.clear();
+      // Clear session storage completely for security
+      try {
+        sessionStorage.clear();
+      } catch (e) {
+        console.warn('Could not clear session storage:', e);
+      }
       
-      // Clear specific localStorage items if needed
-      const keysToRemove = ['temp_data', 'form_cache', 'user_preferences'];
+      // Clear specific localStorage items
+      const keysToRemove = [
+        'temp_data', 
+        'form_cache', 
+        'user_preferences',
+        'google_auth_state',
+        'csrf_token',
+        'last_activity'
+      ];
+      
       keysToRemove.forEach(key => {
         try {
           localStorage.removeItem(key);
         } catch (e) {
           // Ignore individual failures
+        }
+      });
+
+      // Clear any authentication cookies (if used)
+      document.cookie.split(";").forEach(cookie => {
+        const eqPos = cookie.indexOf("=");
+        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+        if (name.includes('auth') || name.includes('session') || name.includes('token')) {
+          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname};secure;samesite=strict`;
         }
       });
     }

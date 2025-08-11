@@ -3,17 +3,19 @@ import { Camera, Play } from "lucide-react";
 import { AboutSectionProps } from "../types/aboutUs";
 
 const AboutSection: React.FC<AboutSectionProps> = React.memo(({ isLoaded }) => {
-  const leftColumnClasses = useMemo(() =>
-    `transform transition-all duration-1500 delay-300 ease-out ${
-      isLoaded ? "translate-x-0 opacity-100" : "-translate-x-16 opacity-0"
-    }`,
+  const leftColumnClasses = useMemo(
+    () =>
+      `transform transition-all duration-1500 delay-300 ease-out ${
+        isLoaded ? "translate-x-0 opacity-100" : "-translate-x-16 opacity-0"
+      }`,
     [isLoaded]
   );
 
-  const rightColumnClasses = useMemo(() =>
-    `transform transition-all duration-1500 delay-700 ease-out ${
-      isLoaded ? "translate-x-0 opacity-100" : "translate-x-16 opacity-0"
-    }`,
+  const rightColumnClasses = useMemo(
+    () =>
+      `transform transition-all duration-1500 delay-700 ease-out ${
+        isLoaded ? "translate-x-0 opacity-100" : "translate-x-16 opacity-0"
+      }`,
     [isLoaded]
   );
 
@@ -51,14 +53,9 @@ const AboutSection: React.FC<AboutSectionProps> = React.memo(({ isLoaded }) => {
             SPHINX is the cultural heartbeat of MNIT Jaipur — a festival that
             blends art, music, dance, literature, and expression into an
             electrifying celebration. Experience unforgettable performances,
-            workshops, and creative brilliance at one of India's premier
-            campus fests.
+            workshops, and creative brilliance at one of India's premier campus
+            fests.
           </p>
-          <button className="group bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-400 hover:to-yellow-300 text-black px-10 py-4 rounded-full font-bold transition-all duration-500 hover:shadow-2xl hover:shadow-yellow-400/25 transform hover:scale-105 hover:-translate-y-1">
-            <span className="group-hover:mr-2 transition-all duration-300">
-              Contact Us
-            </span>
-          </button>
         </div>
       </div>
     </section>

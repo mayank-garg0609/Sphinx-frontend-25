@@ -1,4 +1,4 @@
-// app/(auth)/login/hooks/useAuth.tsx - UPDATED VERSION
+// app/(auth)/login/hooks/useAuth.tsx - Enhanced with Security
 'use client';
 
 import { useCallback, useState, useTransition } from 'react';
@@ -8,13 +8,14 @@ import type { LoginFormData } from '@/app/schemas/loginSchema';
 import type { LoginResponse } from '../types/authTypes';
 import { handleAuthSuccess } from '../utils/authHelpers';
 import { authApi, type SecureApiError } from '../../utils/secureApiClient';
-import { validateEmail, sanitizeInput } from '../../utils/validation';
+import { validateEmail, validatePassword, sanitizeInput } from '../../utils/validation';
 import { SECURITY_CONFIG } from '../../utils/security';
 
 interface UseAuthReturn {
   loginUser: (data: LoginFormData) => Promise<void>;
   retryCount: number;
   isPending: boolean;
+  isLocked: boolean;
 }
 
 /**
@@ -26,42 +27,40 @@ export function useAuth(
 ): UseAuthReturn {
   const [retryCount, setRetryCount] = useState(0);
   const [isPending, startTransition] = useTransition();
+  const [isLocked, setIsLocked] = useState(false);
 
   const loginUser = useCallback(
     async (data: LoginFormData) => {
+      // Check if account is locked
+      if (isLocked) {
+        toast.error('Account temporarily locked. Please try again later.');
+        return;
+      }
+
       console.log('🔐 Starting secure login process');
 
       startTransition(async () => {
         try {
           // Enhanced input validation and sanitization
-          const sanitizedEmail = sanitizeInput(data.email.toLowerCase().trim());
-          const sanitizedPassword = data.password; // Don't sanitize passwords, just validate length
-          
-          // Validate email format
-          const emailValidation = validateEmail(sanitizedEmail);
+          const emailValidation = validateEmail(data.email);
           if (!emailValidation.isValid) {
             toast.error(emailValidation.error || 'Invalid email format');
             return;
           }
-          
-          // Validate password length (don't log password)
-          if (!sanitizedPassword || sanitizedPassword.length < 1) {
-            toast.error('Password is required');
-            return;
-          }
-          
-          if (sanitizedPassword.length > SECURITY_CONFIG.password.maxLength) {
-            toast.error('Password is too long');
+
+          const passwordValidation = validatePassword(data.password);
+          if (!passwordValidation.isValid) {
+            toast.error(passwordValidation.error || 'Invalid password');
             return;
           }
           
           // Prepare sanitized credentials
           const credentials = {
-            email: sanitizedEmail,
-            password: sanitizedPassword,
+            email: emailValidation.sanitized!,
+            password: data.password, // Keep original password
           };
           
-          console.log('📧 Attempting login for:', sanitizedEmail.replace(/(.{2}).*(@.*)/, '$1***$2'));
+          console.log('📧 Attempting login for:', credentials.email.replace(/(.{2}).*(@.*)/, '$1***$2'));
           
           // Use secure API client
           const result = await authApi.login(credentials);
@@ -78,16 +77,36 @@ export function useAuth(
           toast.success('✅ Logged in successfully!');
           reset();
           setRetryCount(0);
+          setIsLocked(false);
           
         } catch (error: any) {
           console.error('❌ Login failed:', error);
           
+          // Increment retry count
+          const newRetryCount = retryCount + 1;
+          setRetryCount(newRetryCount);
+
+          // Check for account lockout - FIX: Use correct config path
+          if (newRetryCount >= SECURITY_CONFIG.) {
+            setIsLocked(true);
+            
+            // Use the auth.lockoutDuration from config
+            const lockoutDuration = SECURITY_CONFIG.auth.lockoutDuration;
+            
+            setTimeout(() => {
+              setIsLocked(false);
+              setRetryCount(0);
+            }, lockoutDuration);
+            
+            const lockoutMinutes = Math.ceil(lockoutDuration / 60000);
+            toast.error(`Account temporarily locked due to too many failed attempts. Please try again in ${lockoutMinutes} minutes.`);
+            return;
+          }
+          
           // Handle different types of errors
           if (error.response && error.data) {
-            // Server error with structured response
             handleApiError(error.response, error.data, error.security);
           } else if (error.message) {
-            // Client-side or network error
             if (error.message.includes('Rate limited') || error.message.includes('Too many attempts')) {
               toast.error(error.message);
             } else if (error.message.includes('timeout')) {
@@ -100,18 +119,13 @@ export function useAuth(
           } else {
             toast.error('An unexpected error occurred. Please try again.');
           }
-          
-          // Increment retry count for tracking
-          if (retryCount < SECURITY_CONFIG.api.maxRetries) {
-            setRetryCount(prev => prev + 1);
-          }
         }
       });
     },
-    [reset, router, retryCount]
+    [reset, router, retryCount, isLocked]
   );
 
-  return { loginUser, retryCount, isPending };
+  return { loginUser, retryCount, isPending, isLocked };
 }
 
 /**
@@ -124,7 +138,6 @@ function handleApiError(response: Response, result: any, security?: any): void {
     security,
   });
 
-  // Security-aware error messages
   const securityContext = security ? ` (${security.rateLimitRemaining} attempts remaining)` : '';
 
   switch (response.status) {

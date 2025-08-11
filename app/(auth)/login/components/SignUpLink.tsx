@@ -16,7 +16,7 @@ export const SignUpLink = memo(function SignUpLink() {
   );
 
   return (
-    <div className="text-center text-xs lg:text-sm text-zinc-400 mt-2 lg:mt-2">
+    <div className="text-center text-xs sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg text-zinc-400 mt-1 sm:mt-1.5 md:mt-2 lg:mt-2 xl:mt-2.5 2xl:mt-3">
       Don't have an account?{' '}
       <Link
         href="/sign-up"
@@ -28,3 +28,4 @@ export const SignUpLink = memo(function SignUpLink() {
     </div>
   );
 });
+SignUpLink.displayName = 'SignUpLink';

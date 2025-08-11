@@ -1,12 +1,44 @@
-// app/(auth)/utils/secureApiClient.tsx
 import { SECURITY_CONFIG } from './security';
 import { rateLimiter } from './validation';
 import { tokenUtils } from './secureStorage';
+
+export interface SecureApiError extends Error {
+  response?: Response;
+  data?: any;
+  security?: {
+    rateLimitRemaining: number;
+    requestId: number;
+  };
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface SignUpCredentials {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  agreed: boolean;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: any;
+  data?: {
+    token: string;
+    user: any;
+  };
+}
 
 /**
  * Generate CSRF token for request
  */
 function generateCSRFToken(): string {
+  if (typeof window === 'undefined') return '';
+  
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
@@ -101,7 +133,7 @@ class SecureApiClient {
   private requestId: number = 0;
   
   constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
+    this.baseUrl = baseUrl || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
   }
   
   private getRequestIdentifier(endpoint: string, userIdentifier?: string): string {
@@ -185,14 +217,15 @@ class SecureApiClient {
         }
         
         // Enhanced error for security context
-        throw {
-          response,
-          data: errorData,
-          security: {
-            rateLimitRemaining: rateResult.remainingAttempts,
-            requestId,
-          }
+        const secureError = new Error(errorData.error || `Request failed with status ${response.status}`) as SecureApiError;
+        secureError.response = response;
+        secureError.data = errorData;
+        secureError.security = {
+          rateLimitRemaining: rateResult.remainingAttempts,
+          requestId,
         };
+        
+        throw secureError;
       }
       
       console.log(`✅ [${requestId}] Request successful`);
@@ -217,3 +250,84 @@ class SecureApiClient {
         await delay(backoffDelay);
         return this.makeRequest(endpoint, { ...options, retryCount: retryCount + 1 });
       }
+      
+      throw error;
+    }
+  }
+  
+  /**
+   * Login with credentials
+   */
+  async login(credentials: LoginCredentials): Promise<AuthResponse> {
+    const response = await this.makeRequest('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+      userIdentifier: credentials.email,
+    });
+    
+    return response.json();
+  }
+  
+  /**
+   * Sign up with credentials
+   */
+  async signup(credentials: SignUpCredentials): Promise<AuthResponse> {
+    const response = await this.makeRequest('/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+      userIdentifier: credentials.email,
+    });
+    
+    return response.json();
+  }
+  
+  /**
+   * Google authentication
+   */
+  async googleAuth(code: string): Promise<AuthResponse> {
+    const response = await this.makeRequest('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+    
+    return response.json();
+  }
+  
+  /**
+   * Refresh authentication token
+   */
+  async refreshToken(): Promise<AuthResponse> {
+    const response = await this.makeRequest('/auth/refresh', {
+      method: 'POST',
+    });
+    
+    return response.json();
+  }
+  
+  /**
+   * Logout
+   */
+  async logout(): Promise<void> {
+    await this.makeRequest('/auth/logout', {
+      method: 'POST',
+    });
+  }
+  
+  /**
+   * Get user profile
+   */
+  async getProfile(): Promise<any> {
+    const response = await this.makeRequest('/user/profile', {
+      method: 'GET',
+    });
+    
+    return response.json();
+  }
+}
+
+// Create singleton instance
+const baseUrl = typeof window !== 'undefined' 
+  ? window.location.origin + '/api' 
+  : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+export const authApi = new SecureApiClient(baseUrl);

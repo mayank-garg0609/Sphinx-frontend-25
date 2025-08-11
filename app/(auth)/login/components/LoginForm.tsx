@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTransitionRouter } from 'next-view-transitions';
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { loginSchema, type LoginFormData } from '@/app/schemas/loginSchema';
 import { useAuth } from '../hooks/useAuth';
 import { useGoogleAuth } from '../hooks/useGoogleAuth';
@@ -31,16 +31,40 @@ export const LoginForm = memo(function LoginForm() {
     },
   });
 
-  const { loginUser } = useAuth(router, reset);
-  const { isGoogleLoading, googlePopupClosed, handleGoogleLogin } = useGoogleAuth(router, clearErrors);
+  const { loginUser, isLocked } = useAuth(router, reset);
+  const { 
+    isGoogleLoading, 
+    googlePopupClosed, 
+    handleGoogleLogin, 
+    isLocked: isGoogleLocked 
+  } = useGoogleAuth(router, clearErrors);
 
   const isFormDisabled = isSubmitting || isGoogleLoading;
+
+  // Security: Clear form on component unmount
+  useEffect(() => {
+    return () => {
+      reset();
+    };
+  }, [reset]);
+
+  // Security: Auto-clear errors after timeout
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      const timer = setTimeout(() => {
+        clearErrors();
+      }, 30000); // Clear errors after 30 seconds
+      
+      return () => clearTimeout(timer);
+    }
+  }, [errors, clearErrors]);
 
   return (
     <form
       onSubmit={handleSubmit(loginUser)}
       className={FORM_STYLES.container}
       style={FORM_STYLES.scrollbar}
+      noValidate // Use custom validation instead of browser validation
     >
       <LoginHeader />
       
@@ -64,6 +88,8 @@ export const LoginForm = memo(function LoginForm() {
         onGoogleLogin={handleGoogleLogin}
         isGoogleLoading={isGoogleLoading}
         googlePopupClosed={googlePopupClosed}
+        isLocked={isLocked}
+        isGoogleLocked={isGoogleLocked}
       />
       
       <SignUpLink />

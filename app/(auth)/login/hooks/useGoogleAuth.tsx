@@ -1,4 +1,3 @@
-// app/(auth)/login/hooks/useGoogleAuth.tsx - UPDATED VERSION
 'use client';
 
 import { useCallback, useState, useRef, useEffect, useTransition } from 'react';
@@ -13,6 +12,7 @@ interface UseGoogleAuthReturn {
   isGoogleLoading: boolean;
   googlePopupClosed: boolean;
   handleGoogleLogin: () => void;
+  isLocked: boolean;
 }
 
 /**
@@ -25,6 +25,7 @@ export function useGoogleAuth(
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [googlePopupClosed, setGooglePopupClosed] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
   const [isPending, startTransition] = useTransition();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const requestIdRef = useRef<string>('');
@@ -39,6 +40,12 @@ export function useGoogleAuth(
 
   const handleGoogleAuth = useCallback(
     async (authResult: { code: string }) => {
+      // Check if locked
+      if (isLocked) {
+        toast.error('Google authentication temporarily locked. Please try again later.');
+        return;
+      }
+
       const requestId = generateRequestId();
       requestIdRef.current = requestId;
       
@@ -48,12 +55,12 @@ export function useGoogleAuth(
 
       startTransition(async () => {
         try {
-          // Validate auth code
+          // Enhanced validation of auth code
           if (!authResult?.code || typeof authResult.code !== 'string') {
             throw new Error('Invalid Google authentication code received');
           }
           
-          // Validate code format (basic validation)
+          // Validate code format
           if (authResult.code.length < 10 || authResult.code.length > 2048) {
             throw new Error('Google authentication code format is invalid');
           }
@@ -61,6 +68,11 @@ export function useGoogleAuth(
           // Check for suspicious patterns in auth code
           if (/<script|javascript:|on\w+=/i.test(authResult.code)) {
             throw new Error('Suspicious authentication code detected');
+          }
+
+          // Additional security checks
+          if (/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(authResult.code)) {
+            throw new Error('Authentication code contains invalid characters');
           }
           
           console.log(`🔍 [${requestId}] Processing Google auth code`);
@@ -79,52 +91,66 @@ export function useGoogleAuth(
           
           toast.success('✅ Logged in successfully with Google!');
           setRetryCount(0);
+          setIsLocked(false);
           
         } catch (error: any) {
           console.error(`❌ [${requestId}] Google auth failed:`, error);
           
+          // Increment retry count
+          const newRetryCount = retryCount + 1;
+          setRetryCount(newRetryCount);
+
+          // Check for lockout
+          if (newRetryCount >= SECURITY_CONFIG.api.maxAttempts) {
+            setIsLocked(true);
+            setTimeout(() => {
+              setIsLocked(false);
+              setRetryCount(0);
+            }, SECURITY_CONFIG.auth.lockoutDuration);
+            toast.error('Google authentication temporarily locked due to too many failed attempts.');
+            return;
+          }
+          
           // Handle different types of errors
           if (error.response && error.data) {
-            // Server error with structured response
             handleGoogleApiError(error.response, error.data, error.security, requestId);
           } else if (error.message) {
-            // Client-side or network error
             if (error.message.includes('Rate limited') || error.message.includes('Too many attempts')) {
               toast.error(`Google Auth: ${error.message}`);
             } else if (error.message.includes('timeout')) {
               toast.error('Google authentication timed out. Please try again.');
             } else if (error.message.includes('Invalid') || error.message.includes('Suspicious')) {
-              toast.error('Google authentication failed. Please try again.');
+              toast.error('Google authentication failed due to security validation. Please try again.');
             } else {
               toast.error('Google authentication error. Please try again.');
             }
           } else {
             toast.error('Google authentication failed. Please try again.');
           }
-          
-          // Increment retry count for tracking
-          if (retryCount < SECURITY_CONFIG.api.maxRetries) {
-            setRetryCount(prev => prev + 1);
-          }
         } finally {
           setIsGoogleLoading(false);
         }
       });
     },
-    [router, retryCount]
+    [router, retryCount, isLocked]
   );
 
   const handleGoogleAuthError = useCallback((error: any) => {
     const requestId = requestIdRef.current || generateRequestId();
     console.error(`🚨 [${requestId}] Google Auth Error:`, error);
     
-    // Categorize Google OAuth errors
+    // Increment retry count for error cases
+    setRetryCount(prev => prev + 1);
+    
+    // Categorize Google OAuth errors with security awareness
     if (error?.error === 'popup_closed_by_user') {
       toast.error('Google sign-in was cancelled. Please try again.');
     } else if (error?.error === 'access_denied') {
       toast.error('Google access denied. Please grant necessary permissions.');
     } else if (error?.error === 'popup_blocked') {
       toast.error('Popup blocked. Please allow popups for this site and try again.');
+    } else if (error?.error === 'invalid_request') {
+      toast.error('Invalid Google authentication request. Please try again.');
     } else {
       toast.error('Google authentication failed. Please try again.');
     }
@@ -143,6 +169,12 @@ export function useGoogleAuth(
   });
 
   const handleGoogleLogin = useCallback(() => {
+    // Check if locked
+    if (isLocked) {
+      toast.error('Google authentication temporarily locked. Please try again later.');
+      return;
+    }
+
     const requestId = generateRequestId();
     requestIdRef.current = requestId;
     
@@ -175,12 +207,13 @@ export function useGoogleAuth(
       setGooglePopupClosed(true);
       toast.error('Failed to open Google sign-in. Please try again.');
     }
-  }, [googleLogin, isGoogleLoading, clearErrors]);
+  }, [googleLogin, isGoogleLoading, clearErrors, isLocked]);
 
   return {
     isGoogleLoading: isGoogleLoading || isPending,
     googlePopupClosed,
     handleGoogleLogin,
+    isLocked,
   };
 }
 

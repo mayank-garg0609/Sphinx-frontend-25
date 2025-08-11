@@ -9,7 +9,7 @@ export const BackgroundImage = memo(function BackgroundImage() {
         src={ascended}
         alt=""
         placeholder="blur"
-        className="h-[600px] sm:h-[650px] md:h-[700px] lg:h-[750px] xl:h-[800px] 2xl:h-[840px] w-auto object-contain absolute bottom-0 left-12 sm:left-16 md:left-24 lg:left-32 xl:left-40 2xl:left-48 hidden lg:block"
+        className="h-[500px] sm:h-[550px] md:h-[600px] lg:h-[650px] xl:h-[750px] 2xl:h-[800px] 3xl:h-[900px] w-auto object-contain absolute bottom-0 left-6 sm:left-8 md:left-12 lg:left-16 xl:left-24 2xl:left-32 3xl:left-40 hidden lg:block"
         priority
         sizes="(min-width: 1024px) 50vw, 0px"
       />
