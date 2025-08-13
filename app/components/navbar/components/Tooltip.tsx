@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from "react";
+import React, { memo, useEffect, useState, useRef } from "react";
 import { TooltipProps } from "../types/navbarTypes";
 
 const TooltipComponent: React.FC<
@@ -14,79 +14,160 @@ const TooltipComponent: React.FC<
   isExpanded = false,
   buttonPosition = { x: 0, y: 0 },
 }) => {
-  const [tooltipElement, setTooltipElement] = useState<HTMLDivElement | null>(
-    null
-  );
+  const [tooltipElement, setTooltipElement] = useState<HTMLDivElement | null>(null);
+  const childRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (show && isExpanded) {
+    if (show && isExpanded && childRef.current) {
       const tooltip = document.createElement("div");
-      tooltip.className = "cyberpunk-tooltip-global";
+      tooltip.className = "portal-tooltip";
       tooltip.textContent = content;
 
-      const dialContainer = document.querySelector(".dial-container");
-      if (dialContainer) {
-        const dialRect = dialContainer.getBoundingClientRect();
-        const tooltipX = dialRect.left + buttonPosition.x + 70;
-        const tooltipY = dialRect.top + dialRect.height / 2 + buttonPosition.y;
+      // Get the position of the child element (the button)
+      const childRect = childRef.current.getBoundingClientRect();
+      const tooltipX = childRect.left + childRect.width / 2;
+      const tooltipY = childRect.bottom + 15; // Position just below the button
 
-        tooltip.style.cssText = `
-          position: fixed;
-          left: ${tooltipX}px;
-          top: ${tooltipY}px;
-          transform: translateY(-50%);
-          background: linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(22, 33, 62, 0.95) 50%, rgba(15, 15, 35, 0.95) 100%);
-          color: #00ffff;
-          padding: 8px 12px;
-          border-radius: 6px;
-          font-size: 12px;
-          font-weight: 600;
-          font-family: 'Courier New', monospace;
-          white-space: nowrap;
-          pointer-events: none;
-          z-index: 99999;
-          border: 1px solid #00ffff;
-          backdrop-filter: blur(8px);
-          box-shadow: 0 0 20px rgba(0, 255, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.1);
-          text-shadow: 0 0 8px #00ffff;
-          letter-spacing: 0.5px;
-          opacity: 0;
-          transition: opacity 0.2s ease-in-out;
+      tooltip.style.cssText = `
+        position: fixed;
+        left: ${tooltipX}px;
+        top: ${tooltipY}px;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, 
+          rgba(26, 26, 46, 0.98) 0%, 
+          rgba(22, 33, 62, 0.98) 50%, 
+          rgba(15, 15, 35, 0.98) 100%
+        );
+        color: #00ffff;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        font-family: 'Courier New', monospace;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 99999;
+        border: 2px solid #00ffff;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow: 
+          0 0 25px rgba(0, 255, 255, 0.5), 
+          inset 0 0 20px rgba(0, 255, 255, 0.1),
+          0 8px 32px rgba(0, 0, 0, 0.4);
+        text-shadow: 0 0 10px #00ffff;
+        letter-spacing: 1px;
+        transform-origin: top center;
+        opacity: 0;
+        animation: portalOpen 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+      `;
+
+      // Add portal arrow effect
+      const arrowBefore = document.createElement("div");
+      arrowBefore.style.cssText = `
+        position: absolute;
+        top: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 8px solid #00ffff;
+        content: '';
+      `;
+      
+      const arrowAfter = document.createElement("div");
+      arrowAfter.style.cssText = `
+        position: absolute;
+        top: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-bottom: 6px solid rgba(26, 26, 46, 0.98);
+        content: '';
+      `;
+
+      tooltip.appendChild(arrowBefore);
+      tooltip.appendChild(arrowAfter);
+
+      document.body.appendChild(tooltip);
+      setTooltipElement(tooltip);
+
+      // Add keyframe animation styles if not already present
+      if (!document.querySelector('#portal-tooltip-styles')) {
+        const style = document.createElement('style');
+        style.id = 'portal-tooltip-styles';
+        style.textContent = `
+          @keyframes portalOpen {
+            0% {
+              opacity: 0;
+              transform: translateX(-50%) scale(0.3) rotateY(90deg);
+              filter: blur(10px);
+            }
+            50% {
+              opacity: 0.7;
+              transform: translateX(-50%) scale(1.1) rotateY(0deg);
+              filter: blur(2px);
+            }
+            100% {
+              opacity: 1;
+              transform: translateX(-50%) scale(1) rotateY(0deg);
+              filter: blur(0px);
+            }
+          }
+
+          @keyframes portalClose {
+            0% {
+              opacity: 1;
+              transform: translateX(-50%) scale(1) rotateY(0deg);
+              filter: blur(0px);
+            }
+            50% {
+              opacity: 0.7;
+              transform: translateX(-50%) scale(1.1) rotateY(45deg);
+              filter: blur(2px);
+            }
+            100% {
+              opacity: 0;
+              transform: translateX(-50%) scale(0.3) rotateY(90deg);
+              filter: blur(10px);
+            }
+          }
         `;
-
-        document.body.appendChild(tooltip);
-
-        requestAnimationFrame(() => {
-          tooltip.style.opacity = "1";
-        });
-
-        setTooltipElement(tooltip);
+        document.head.appendChild(style);
       }
     } else {
       if (tooltipElement) {
-        tooltipElement.style.opacity = "0";
+        tooltipElement.style.animation = 'portalClose 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards';
         setTimeout(() => {
           if (tooltipElement && tooltipElement.parentNode) {
             tooltipElement.parentNode.removeChild(tooltipElement);
           }
-        }, 200);
+        }, 300);
         setTooltipElement(null);
       }
     }
 
     return () => {
       if (tooltipElement) {
-        tooltipElement.style.opacity = "0";
+        tooltipElement.style.animation = 'portalClose 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards';
         setTimeout(() => {
           if (tooltipElement && tooltipElement.parentNode) {
             tooltipElement.parentNode.removeChild(tooltipElement);
           }
-        }, 200);
+        }, 300);
       }
     };
-  }, [show, isExpanded, content, buttonPosition.x, buttonPosition.y]);
+  }, [show, isExpanded, content]);
 
-  return <>{children}</>;
+  return (
+    <div ref={childRef} style={{ width: '100%', height: '100%' }}>
+      {children}
+    </div>
+  );
 };
 
 export const Tooltip = memo(TooltipComponent);

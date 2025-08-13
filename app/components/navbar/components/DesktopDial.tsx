@@ -3,18 +3,13 @@ import {
   FaTimes,
   FaUser,
   FaUserPlus,
-  FaChevronUp,
-  FaChevronDown,
 } from "react-icons/fa";
 import {
   CENTER_SIZE_CLOSED,
   INNER_CIRCLE_SIZE,
   BUTTON_SIZE,
-  VISIBLE_ITEMS,
-  STAGGER_DELAY,
 } from "../utils/constants";
 import { navItems, NAV_ITEMS_COUNT } from "../utils/navItems";
-import { useDesktopDial } from "../hooks/useDesktopDial";
 import { NavButton } from "./NavButton";
 import { Tooltip } from "./Tooltip";
 import type { NavItem } from "../types/navbarTypes";
@@ -43,76 +38,71 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
   onInnerCircleNavigation,
   onHomeNavigation,
 }) => {
-  const {
-    currentRadius,
-    rotation,
-    isRotating,
-    hoveredItem,
-    dialRef,
-    getAllItems,
-    getButtonPosition,
-    rotateNext,
-    rotatePrevious,
-    setHoveredItem,
-  } = useDesktopDial(isExpanded);
-
   const containerRef = useRef<HTMLDivElement>(null);
-  const isOverDial = useRef<boolean>(false);
+  const dialRef = useRef<HTMLDivElement>(null);
+
+  // Get all navigation items without rotation logic
+  const getAllItems = useCallback(() => {
+    return navItems.map((item, index) => ({
+      ...item,
+      displayIndex: index,
+      actualIndex: index,
+    }));
+  }, []);
+
+  // Calculate button positions for full-width layout
+  const getButtonPosition = useCallback((displayIndex: number, containerWidth: number) => {
+    const totalItems = NAV_ITEMS_COUNT;
+    const availableWidth = containerWidth - 200; // Leave space for center and edges
+    const startX = -availableWidth / 2;
+    const spacing = totalItems > 1 ? availableWidth / (totalItems - 1) : 0;
+    
+    const x = startX + displayIndex * spacing;
+    const y = 0; // Keep all buttons on the same horizontal line
+    const zIndex = 100 + displayIndex;
+    
+    return { 
+      x, 
+      y, 
+      zIndex,
+      angle: 0 // No rotation needed
+    };
+  }, []);
 
   const allItems = getAllItems();
-
-  const handleMouseEnter = useCallback(() => {
-    isOverDial.current = true;
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    isOverDial.current = false;
-  }, []);
-
-  const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
-      if (!isExpanded || NAV_ITEMS_COUNT <= VISIBLE_ITEMS) {
-        return;
-      }
-
-      e.preventDefault();
-      e.stopPropagation();
-
-      if (e.deltaY > 0) {
-        rotateNext();
-      } else {
-        rotatePrevious();
-      }
-    },
-    [isExpanded, rotateNext, rotatePrevious]
-  );
 
   const toggleExpanded = useCallback(() => {
     setIsExpanded(!isExpanded);
   }, [isExpanded, setIsExpanded]);
 
   const handleInnerCircleEnter = useCallback(() => {
-    setHoveredItem(isLoggedIn ? "inner-profile" : "inner-signup");
-  }, [isLoggedIn, setHoveredItem]);
+    // Handle hover state if needed
+  }, []);
 
   const handleInnerCircleLeave = useCallback(() => {
-    setHoveredItem(null);
-  }, [setHoveredItem]);
+    // Handle hover state if needed
+  }, []);
 
-  const handleControlHover = useCallback(
-    (controlType: "up" | "down") => {
-      setHoveredItem(`control-${controlType}`);
-    },
-    [setHoveredItem]
-  );
-
-  const handleControlLeave = useCallback(() => {
-    setHoveredItem(null);
-  }, [setHoveredItem]);
-
-  const showRotationControls = isExpanded && NAV_ITEMS_COUNT > VISIBLE_ITEMS;
   const innerCircleHoverId = isLoggedIn ? "inner-profile" : "inner-signup";
-  const isInnerCircleHovered = hoveredItem === innerCircleHoverId;
+
+  // Calculate container dimensions based on screen size and expanded state
+  const getContainerDimensions = useCallback(() => {
+    if (typeof window === 'undefined') return { width: 100, height: 100 };
+    
+    if (isExpanded) {
+      return {
+        width: window.innerWidth,
+        height: 120, // Fixed height for the expanded dial
+      };
+    }
+    
+    return {
+      width: CENTER_SIZE_CLOSED + 40,
+      height: CENTER_SIZE_CLOSED + 40,
+    };
+  }, [isExpanded]);
+
+  const containerDimensions = getContainerDimensions();
 
   return (
     <>
@@ -138,18 +128,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           }
           100% {
             background-position: 0% 50%;
-          }
-        }
-
-        @keyframes controlPulse {
-          0%,
-          100% {
-            box-shadow: 0 0 10px #00ffff40, inset 0 0 10px #00ffff20,
-              0 0 20px #00ffff20;
-          }
-          50% {
-            box-shadow: 0 0 20px #00ffff60, inset 0 0 15px #00ffff30,
-              0 0 30px #00ffff30;
           }
         }
 
@@ -191,6 +169,41 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
         .cyberpunk-dial {
           transform-style: preserve-3d;
           perspective: 1000px;
+          transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .full-width-container {
+          position: fixed;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 100vw;
+          height: 120px;
+          z-index: 50;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(
+            90deg,
+            rgba(26, 26, 46, 0.1) 0%,
+            rgba(26, 26, 46, 0.8) 20%,
+            rgba(26, 26, 46, 0.95) 50%,
+            rgba(26, 26, 46, 0.8) 80%,
+            rgba(26, 26, 46, 0.1) 100%
+          );
+          backdrop-filter: blur(10px);
+          border-top: 1px solid #00ffff20;
+          border-bottom: 1px solid #00ffff20;
+        }
+
+        .collapsed-container {
+          position: fixed;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: ${CENTER_SIZE_CLOSED + 40}px;
+          height: ${CENTER_SIZE_CLOSED + 40}px;
+          z-index: 50;
         }
 
         .neon-glow-cyan {
@@ -208,99 +221,35 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
             inset 0 0 10px #ffbf0020;
         }
 
-        .control-button {
-          position: absolute;
-          width: 32px;
-          height: 24px;
-          background: linear-gradient(
-            135deg,
-            #1a1a2e 0%,
-            #16213e 50%,
-            #0f0f23 100%
-          );
-          border: 1px solid #00ffff;
-          border-radius: 8px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-          animation: controlPulse 3s ease-in-out infinite;
-          backdrop-filter: blur(10px);
-          z-index: 150;
-        }
-
-        .control-button:hover {
-          transform: scale(1.15);
-          background: linear-gradient(
-            135deg,
-            #2a2a4e 0%,
-            #26335e 50%,
-            #1f1f43 100%
-          );
-          box-shadow: 0 0 20px #00ffff80, inset 0 0 20px #00ffff30,
-            0 0 40px #00ffff40;
-          animation: none;
-        }
-
-        .control-button:active {
-          transform: scale(1.05);
-          animation: none;
-        }
-
-        .control-button:active::after {
-          content: "";
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 100%;
-          height: 100%;
-          border: 2px solid #00ffff;
-          border-radius: 8px;
-          transform: translate(-50%, -50%);
-          animation: ripple 0.6s ease-out;
-        }
-
-        .control-up {
-          top: -12px;
-          right: -20px;
-        }
-
-        .control-down {
-          bottom: -12px;
-          right: -20px;
-        }
-
-        .dial-rotation-container {
-          transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-          transform-origin: 0 50%;
-          will-change: transform;
-        }
-
         .cyberpunk-track {
-          background: conic-gradient(
-            from 0deg,
-            #1a1a2e 0deg,
-            #16213e 60deg,
-            #0f0f23 120deg,
-            #16213e 180deg,
-            #1a1a2e 240deg,
-            #0f0f23 300deg,
-            #1a1a2e 360deg
+          background: linear-gradient(
+            90deg,
+            #1a1a2e 0%,
+            #16213e 25%,
+            #0f0f23 50%,
+            #16213e 75%,
+            #1a1a2e 100%
           );
           background-size: 200% 200%;
           animation: gradientShift 8s ease infinite;
+          border-radius: 60px;
+          height: 80px;
+          border: 1px solid #00ffff40;
         }
 
         .cyberpunk-inner-track {
           background: linear-gradient(
-            135deg,
+            90deg,
             #e8e8e8 0%,
             #f5f5f5 50%,
             #ffffff 100%
           );
           position: relative;
           overflow: hidden;
+          border-radius: 50px;
+          height: 60px;
+          border: 1px solid #ffbf0060;
+          cursor: pointer;
         }
 
         .cyberpunk-inner-track::before {
@@ -311,7 +260,7 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           right: 0;
           bottom: 0;
           background: linear-gradient(
-            135deg,
+            90deg,
             transparent 0%,
             #00ffff10 50%,
             transparent 100%
@@ -335,7 +284,8 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
           position: relative;
           overflow: hidden;
-          /* Closed state boundary - visible outline/glow */
+          border-radius: 50%;
+          cursor: pointer;
           box-shadow: 
             0 0 15px #00ffff80,
             inset 0 0 10px #00ffff20,
@@ -389,7 +339,8 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           border: 2px solid #4a90e2;
           position: relative;
           overflow: hidden;
-          /* Default profile state - animated glow */
+          border-radius: 50%;
+          cursor: pointer;
           animation: profileGlow 3s ease-in-out infinite;
         }
 
@@ -429,7 +380,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
             #16a085 100%
           );
           border: 2px solid #28a745;
-          /* Signup state - different animated glow */
           animation: signupGlow 3s ease-in-out infinite;
         }
 
@@ -438,133 +388,75 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
             0 0 40px #28a74540;
           animation: none;
         }
+
+        /* Hide on tablet and mobile */
+        @media (max-width: 1023px) {
+          .dial-container {
+            display: none !important;
+          }
+        }
       `}</style>
 
       <div
-        className="dial-container cyberpunk-dial"
+        className={`dial-container cyberpunk-dial ${
+          isExpanded ? 'full-width-container' : 'collapsed-container'
+        }`}
         ref={containerRef}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onWheel={handleWheel}
       >
         <div
           ref={dialRef}
           className="dial-wrapper"
           style={{
-            width: isExpanded
-              ? currentRadius + BUTTON_SIZE + 120
-              : CENTER_SIZE_CLOSED / 2 + 20,
-            height: isExpanded
-              ? currentRadius * 2 + BUTTON_SIZE + 60
-              : CENTER_SIZE_CLOSED + 20,
+            width: containerDimensions.width,
+            height: containerDimensions.height,
+            position: 'relative',
           }}
         >
-          <div
-            className="dial-static-container"
-            style={{
-              position: "relative",
-              width: "100%",
-              height: "100%",
-            }}
-          >
-            <div
-              className="semicircle-track cyberpunk-track neon-glow-cyan"
-              style={{
-                width: (currentRadius + BUTTON_SIZE / 2 + 10) * 2,
-                height: (currentRadius + BUTTON_SIZE / 2 + 10) * 2,
-                left: -(currentRadius + BUTTON_SIZE / 2 + 10),
-                top: "50%",
-                transform: "translateY(-50%)",
-                borderRadius: "50%",
-                opacity: isExpanded ? 1 : 0.3,
-                transition: "all 0.7s cubic-bezier(0.4, 0, 0.2, 1)",
-                border: "1px solid #00ffff40",
-              }}
-            />
+          {/* Expanded Layout */}
+          {isExpanded && (
+            <>
+              {/* Background Track */}
+              <div
+                className="cyberpunk-track neon-glow-cyan"
+                style={{
+                  position: 'absolute',
+                  width: '90%',
+                  left: '5%',
+                  top: '20px',
+                  opacity: 1,
+                }}
+              />
 
-            <div
-              className="inner-track cyberpunk-inner-track neon-glow-amber"
-              onClick={onHomeNavigation}
-              style={{
-                width: (currentRadius - 20 + BUTTON_SIZE / 2) * 2 - 40,
-                height: (currentRadius - 20 + BUTTON_SIZE / 2) * 2 - 40,
-                left: -(currentRadius - 20 + BUTTON_SIZE / 2) + 20,
-                top: "50%",
-                transform: "translateY(-50%)",
-                borderRadius: "50%",
-                opacity: isExpanded ? 1 : 0.3,
-                cursor: isExpanded ? "pointer" : "default",
-                transition: "all 0.7s cubic-bezier(0.4, 0, 0.2, 1)",
-                border: "1px solid #ffbf0060",
-              }}
-            />
+              {/* Inner Track for Home Navigation */}
+              <div
+                className="cyberpunk-inner-track neon-glow-amber"
+                onClick={onHomeNavigation}
+                style={{
+                  position: 'absolute',
+                  width: '85%',
+                  left: '7.5%',
+                  top: '30px',
+                  opacity: 1,
+                }}
+              />
 
-            {showRotationControls && (
-              <>
-                <button
-                  className="control-button control-up"
-                  onClick={rotatePrevious}
-                  onMouseEnter={() => handleControlHover("up")}
-                  onMouseLeave={handleControlLeave}
-                  disabled={isRotating}
-                  aria-label="Show previous items"
-                  style={{
-                    width: 32,
-                    height: 24,
-                    borderRadius: "8px",
-                    right: -(currentRadius + BUTTON_SIZE / 2 + 30),
-                    top: "45%",
-                    opacity: isRotating ? 0.5 : 1,
-                    cursor: isRotating ? "not-allowed" : "pointer",
-                  }}
-                >
-                  <FaChevronUp className="text-cyan-400" size={12} />
-                </button>
-                <button
-                  className="control-button control-down"
-                  onClick={rotateNext}
-                  onMouseEnter={() => handleControlHover("down")}
-                  onMouseLeave={handleControlLeave}
-                  disabled={isRotating}
-                  aria-label="Show next items"
-                  style={{
-                    width: 32,
-                    height: 24,
-                    borderRadius: "8px",
-                    right: -(currentRadius + BUTTON_SIZE / 2 + 30),
-                    top: "55%",
-                    opacity: isRotating ? 0.5 : 1,
-                    cursor: isRotating ? "not-allowed" : "pointer",
-                  }}
-                >
-                  <FaChevronDown className="text-cyan-400" size={12} />
-                </button>
-              </>
-            )}
-
-            {isExpanded && (
+              {/* Inner Circle for Profile/Signup */}
               <div
                 style={{
-                  position: "absolute",
+                  position: 'absolute',
                   width: INNER_CIRCLE_SIZE,
                   height: INNER_CIRCLE_SIZE,
-                  left: (currentRadius - 60) / 2 - INNER_CIRCLE_SIZE / 2,
-                  top: "50%",
-                  transform: "translateY(-50%)",
+                  right: '20px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
                   zIndex: 180,
                 }}
               >
                 <Tooltip
                   content={isLoggedIn ? "Profile" : "Sign Up"}
-                  show={isInnerCircleHovered}
+                  show={false}
                   isExpanded={isExpanded}
-                  buttonPosition={{
-                    x:
-                      (currentRadius - 60) / 2 -
-                      INNER_CIRCLE_SIZE / 2 +
-                      INNER_CIRCLE_SIZE / 2,
-                    y: 0,
-                  }}
+                  buttonPosition={{ x: 0, y: 0 }}
                 >
                   <button
                     onClick={onInnerCircleNavigation}
@@ -576,16 +468,12 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
                     style={{
                       width: "100%",
                       height: "100%",
-                      borderRadius: "50%",
                       transition: "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                      transitionDelay: "200ms",
                       position: "relative",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       zIndex: 190,
-                      cursor: "pointer",
-                      pointerEvents: "auto",
                     }}
                     aria-label={isLoggedIn ? "Profile" : "Sign Up"}
                   >
@@ -609,74 +497,82 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
                   </button>
                 </Tooltip>
               </div>
-            )}
+            </>
+          )}
 
-            <button
-              onClick={toggleExpanded}
-              className="center-hub-cyberpunk neon-glow-cyan"
-              style={{
-                width: CENTER_SIZE_CLOSED,
-                height: CENTER_SIZE_CLOSED,
-                left: -(CENTER_SIZE_CLOSED / 2),
-                top: "50%",
-                transform: "translateY(-50%)",
-                position: "absolute",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                zIndex: 200,
-              }}
-              aria-label={isExpanded ? "Close navigation" : "Open navigation"}
-            >
-              <Suspense
-                fallback={
-                  <div className="w-6 h-6 bg-gray-400 rounded animate-pulse" />
-                }
-              >
-                {isExpanded ? (
-                  <FaTimes className="text-cyan-400 drop-shadow-lg" size={24} />
-                ) : (
-                  <span className="text-cyan-400 font-bold text-2xl font-mono drop-shadow-lg">
-                    O
-                  </span>
-                )}
-              </Suspense>
-            </button>
-          </div>
-
-          <div
-            className="nav-buttons-container"
+          {/* Center Hub Button */}
+          <button
+            onClick={toggleExpanded}
+            className="center-hub-cyberpunk neon-glow-cyan"
             style={{
-              position: "absolute",
-              width: "100%",
-              height: "100%",
-              top: 0,
-              left: 0,
+              width: CENTER_SIZE_CLOSED,
+              height: CENTER_SIZE_CLOSED,
+              position: 'absolute',
+              left: isExpanded ? '20px' : '50%',
+              top: '50%',
+              transform: isExpanded ? 'translateY(-50%)' : 'translate(-50%, -50%)',
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 200,
+              transition: 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
             }}
+            aria-label={isExpanded ? "Close navigation" : "Open navigation"}
           >
-            {allItems.map((item: Item, index: number) => {
-              const position = getButtonPosition(item.displayIndex);
-              const isActive = pathname === item.link;
-              const isHovered = hoveredItem === item.id;
+            <Suspense
+              fallback={
+                <div className="w-6 h-6 bg-gray-400 rounded animate-pulse" />
+              }
+            >
+              {isExpanded ? (
+                <FaTimes className="text-cyan-400 drop-shadow-lg" size={24} />
+              ) : (
+                <span className="text-cyan-400 font-bold text-2xl font-mono drop-shadow-lg">
+                  O
+                </span>
+              )}
+            </Suspense>
+          </button>
 
-              return (
-                <NavButton
-                  key={`${item.id}-${item.actualIndex}`}
-                  item={item}
-                  position={position}
-                  isActive={isActive}
-                  isExpanded={isExpanded}
-                  isHovered={isHovered}
-                  index={index}
-                  counterRotation={0}
-                  onNavigation={onNavigation}
-                  onMouseEnter={() => setHoveredItem(item.id)}
-                  onMouseLeave={() => setHoveredItem(null)}
-                />
-              );
-            })}
-          </div>
+          {/* Navigation Buttons Container */}
+          {isExpanded && (
+            <div
+              className="nav-buttons-container"
+              style={{
+                position: "absolute",
+                width: "100%",
+                height: "100%",
+                top: 0,
+                left: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingLeft: '120px', // Space for center hub
+                paddingRight: '100px', // Space for profile button
+              }}
+            >
+              {allItems.map((item: Item, index: number) => {
+                const position = getButtonPosition(item.displayIndex, containerDimensions.width - 220);
+                const isActive = pathname === item.link;
+
+                return (
+                  <NavButton
+                    key={`${item.id}-${item.actualIndex}`}
+                    item={item}
+                    position={position}
+                    isActive={isActive}
+                    isExpanded={isExpanded}
+                    isHovered={false}
+                    index={index}
+                    counterRotation={0}
+                    onNavigation={onNavigation}
+                    onMouseEnter={() => {}}
+                    onMouseLeave={() => {}}
+                  />
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -1,16 +1,42 @@
 export const navbarStyles = `
-  /* Core dial container with GPU acceleration */
+  /* Core dial container with GPU acceleration - Updated for top positioning */
   .dial-container {
     position: fixed;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%) translateZ(0);
     z-index: 50;
-    overflow: hidden;
+    overflow: visible;
     contain: layout style paint;
     will-change: transform;
     perspective: 1000px;
     transform-style: preserve-3d;
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  /* Full-width expanded state - positioned at top */
+  .dial-container.full-width-container {
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 120px;
+    background: linear-gradient(
+      90deg,
+      rgba(26, 26, 46, 0.1) 0%,
+      rgba(26, 26, 46, 0.8) 15%,
+      rgba(26, 26, 46, 0.95) 50%,
+      rgba(26, 26, 46, 0.8) 85%,
+      rgba(26, 26, 46, 0.1) 100%
+    );
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Collapsed state - positioned at top left */
+  .dial-container.collapsed-container {
+    left: 20px;
+    top: 20px;
+    width: 110px;
+    height: 110px;
   }
 
   .dial-wrapper {
@@ -21,23 +47,62 @@ export const navbarStyles = `
     will-change: width, height;
   }
 
-  /* Enhanced cyberpunk track styles */
-  .semicircle-track {
-    position: absolute;
-    border-radius: 50%;
+  /* Enhanced cyberpunk track styles for horizontal layout */
+  .cyberpunk-track {
+    background: linear-gradient(
+      90deg,
+      #1a1a2e 0%,
+      #16213e 20%,
+      #0f0f23 40%,
+      #16213e 60%,
+      #1a1a2e 80%,
+      #16213e 100%
+    );
+    background-size: 300% 100%;
+    animation: gradientShift 12s ease infinite;
+    border-radius: 60px;
     transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    contain: layout style paint;
-    transform: translateZ(0);
-    will-change: opacity, transform;
+    will-change: background-position;
   }
 
-  .inner-track {
-    position: absolute;
-    border-radius: 50%;
+  .cyberpunk-inner-track {
+    background: linear-gradient(
+      90deg,
+      #e8e8e8 0%,
+      #f5f5f5 25%,
+      #ffffff 50%,
+      #f5f5f5 75%,
+      #e8e8e8 100%
+    );
+    position: relative;
+    overflow: hidden;
+    border-radius: 50px;
     transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    contain: layout style paint;
+    cursor: pointer;
+  }
+
+  .cyberpunk-inner-track::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(0, 255, 255, 0.1) 25%,
+      rgba(0, 255, 255, 0.2) 50%,
+      rgba(0, 255, 255, 0.1) 75%,
+      transparent 100%
+    );
+    opacity: 0;
+    transition: opacity 0.4s ease;
     transform: translateZ(0);
-    will-change: opacity, transform;
+  }
+
+  .cyberpunk-inner-track:hover::before {
+    opacity: 1;
   }
 
   /* Optimized animations with GPU acceleration */
@@ -54,23 +119,24 @@ export const navbarStyles = `
 
   @keyframes gradientShift {
     0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
+    33% { background-position: 50% 50%; }
+    66% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
   }
 
   @keyframes controlPulse {
     0%, 100% { 
       box-shadow: 
-        0 0 10px #00ffff40,
-        inset 0 0 10px #00ffff20,
-        0 0 20px #00ffff20;
+        0 0 10px rgba(0, 255, 255, 0.4),
+        inset 0 0 10px rgba(0, 255, 255, 0.2),
+        0 0 20px rgba(0, 255, 255, 0.2);
       transform: translateZ(0) scale(1);
     }
     50% { 
       box-shadow: 
-        0 0 20px #00ffff60,
-        inset 0 0 15px #00ffff30,
-        0 0 30px #00ffff30;
+        0 0 20px rgba(0, 255, 255, 0.6),
+        inset 0 0 15px rgba(0, 255, 255, 0.3),
+        0 0 30px rgba(0, 255, 255, 0.3);
       transform: translateZ(0) scale(1.05);
     }
   }
@@ -91,6 +157,28 @@ export const navbarStyles = `
     to { transform: translateZ(0) rotate(360deg); }
   }
 
+  @keyframes signupGlow {
+    0%, 100% {
+      box-shadow: 0 0 15px #28a745, 0 0 30px rgba(40, 167, 69, 0.4), 0 0 45px rgba(40, 167, 69, 0.2),
+        inset 0 0 15px rgba(40, 167, 69, 0.2);
+    }
+    50% {
+      box-shadow: 0 0 25px #28a745, 0 0 50px rgba(40, 167, 69, 0.6), 0 0 75px rgba(40, 167, 69, 0.4),
+        inset 0 0 25px rgba(40, 167, 69, 0.3);
+    }
+  }
+
+  @keyframes profileGlow {
+    0%, 100% {
+      box-shadow: 0 0 15px #4a90e2, 0 0 30px rgba(74, 144, 226, 0.4), 0 0 45px rgba(74, 144, 226, 0.2),
+        inset 0 0 15px rgba(74, 144, 226, 0.2);
+    }
+    50% {
+      box-shadow: 0 0 25px #4a90e2, 0 0 50px rgba(74, 144, 226, 0.6), 0 0 75px rgba(74, 144, 226, 0.4),
+        inset 0 0 25px rgba(74, 144, 226, 0.3);
+    }
+  }
+
   /* Cyberpunk component styles */
   .cyberpunk-dial {
     transform-style: preserve-3d;
@@ -100,109 +188,25 @@ export const navbarStyles = `
   .neon-glow-cyan {
     box-shadow: 
       0 0 10px #00ffff,
-      0 0 20px #00ffff40,
-      0 0 30px #00ffff20,
-      inset 0 0 10px #00ffff20;
+      0 0 20px rgba(0, 255, 255, 0.4),
+      0 0 30px rgba(0, 255, 255, 0.2),
+      inset 0 0 10px rgba(0, 255, 255, 0.2);
   }
 
   .neon-glow-magenta {
     box-shadow: 
       0 0 10px #ff00ff,
-      0 0 20px #ff00ff40,
-      0 0 30px #ff00ff20,
-      inset 0 0 10px #ff00ff20;
+      0 0 20px rgba(255, 0, 255, 0.4),
+      0 0 30px rgba(255, 0, 255, 0.2),
+      inset 0 0 10px rgba(255, 0, 255, 0.2);
   }
 
   .neon-glow-amber {
     box-shadow: 
       0 0 10px #ffbf00,
-      0 0 20px #ffbf0040,
-      0 0 30px #ffbf0020,
-      inset 0 0 10px #ffbf0020;
-  }
-
-  .control-button {
-    position: absolute;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
-    border: 1px solid #00ffff;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    animation: controlPulse 3s ease-in-out infinite;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    transform: translateZ(0);
-    will-change: transform, box-shadow, background;
-  }
-
-  .control-button:hover {
-    transform: translateZ(0) scale(1.15);
-    background: linear-gradient(135deg, #2a2a4e 0%, #26335e 50%, #1f1f43 100%);
-    box-shadow: 
-      0 0 20px #00ffff80,
-      inset 0 0 20px #00ffff30,
-      0 0 40px #00ffff40;
-    animation: none;
-  }
-
-  .control-button:active {
-    transform: translateZ(0) scale(1.05);
-    animation: none;
-  }
-
-  .control-button:active::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 100%;
-    height: 100%;
-    border: 2px solid #00ffff;
-    border-radius: inherit;
-    transform: translate(-50%, -50%);
-    animation: ripple 0.6s ease-out;
-    pointer-events: none;
-  }
-
-  .cyberpunk-track {
-    background: 
-      conic-gradient(from 0deg, 
-        #1a1a2e 0deg, 
-        #16213e 60deg, 
-        #0f0f23 120deg, 
-        #16213e 180deg, 
-        #1a1a2e 240deg, 
-        #0f0f23 300deg, 
-        #1a1a2e 360deg
-      );
-    background-size: 200% 200%;
-    animation: gradientShift 8s ease infinite;
-    will-change: background-position;
-  }
-
-  .cyberpunk-inner-track {
-    background: linear-gradient(135deg, #e8e8e8 0%, #f5f5f5 50%, #ffffff 100%);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .cyberpunk-inner-track::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, transparent 0%, #00ffff10 50%, transparent 100%);
-    opacity: 0;
-    transition: opacity 0.4s ease;
-    transform: translateZ(0);
-  }
-
-  .cyberpunk-inner-track:hover::before {
-    opacity: 1;
+      0 0 20px rgba(255, 191, 0, 0.4),
+      0 0 30px rgba(255, 191, 0, 0.2),
+      inset 0 0 10px rgba(255, 191, 0, 0.2);
   }
 
   .center-hub-cyberpunk {
@@ -213,6 +217,10 @@ export const navbarStyles = `
     overflow: hidden;
     transform: translateZ(0);
     will-change: transform, box-shadow;
+    box-shadow: 
+      0 0 15px rgba(0, 255, 255, 0.8),
+      inset 0 0 10px rgba(0, 255, 255, 0.2),
+      0 0 25px rgba(0, 255, 255, 0.4);
   }
 
   .center-hub-cyberpunk::before {
@@ -222,7 +230,7 @@ export const navbarStyles = `
     left: -50%;
     width: 200%;
     height: 200%;
-    background: conic-gradient(from 0deg, transparent 0deg, #00ffff40 60deg, transparent 120deg);
+    background: conic-gradient(from 0deg, transparent 0deg, rgba(0, 255, 255, 0.4) 60deg, transparent 120deg);
     animation: spin 4s linear infinite;
     opacity: 0;
     transition: opacity 0.4s ease;
@@ -236,17 +244,19 @@ export const navbarStyles = `
   .center-hub-cyberpunk:hover {
     transform: translateZ(0) scale(1.1);
     box-shadow: 
-      0 0 20px #00ffff80,
-      inset 0 0 20px #00ffff20,
-      0 0 40px #00ffff40;
+      0 0 20px rgba(0, 255, 255, 0.8),
+      inset 0 0 20px rgba(0, 255, 255, 0.2),
+      0 0 40px rgba(0, 255, 255, 0.4);
   }
 
   .inner-profile-cyberpunk {
     background: linear-gradient(135deg, #4a90e2 0%, #357abd 50%, #2563eb 100%);
+    border: 2px solid #4a90e2;
     position: relative;
     overflow: hidden;
     transform: translateZ(0);
     will-change: transform, box-shadow;
+    animation: profileGlow 3s ease-in-out infinite;
   }
 
   .inner-profile-cyberpunk::before {
@@ -256,7 +266,7 @@ export const navbarStyles = `
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, transparent 0%, #ffffff20 50%, transparent 100%);
+    background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);
     transform: translateX(-100%);
     transition: transform 0.6s ease;
   }
@@ -268,20 +278,32 @@ export const navbarStyles = `
   .inner-profile-cyberpunk:hover {
     transform: translateZ(0) scale(1.15);
     box-shadow: 
-      0 0 20px #4a90e280,
-      inset 0 0 20px #ffffff20,
-      0 0 40px #4a90e240;
+      0 0 20px rgba(74, 144, 226, 0.8),
+      inset 0 0 20px rgba(255, 255, 255, 0.2),
+      0 0 40px rgba(74, 144, 226, 0.4);
+    animation: none;
   }
 
   .inner-profile-cyberpunk.signup {
     background: linear-gradient(135deg, #28a745 0%, #1e7e34 50%, #16a085 100%);
+    border: 2px solid #28a745;
+    animation: signupGlow 3s ease-in-out infinite;
   }
 
   .inner-profile-cyberpunk.signup:hover {
     box-shadow: 
-      0 0 20px #28a74580,
-      inset 0 0 20px #ffffff20,
-      0 0 40px #28a74540;
+      0 0 20px rgba(40, 167, 69, 0.8),
+      inset 0 0 20px rgba(255, 255, 255, 0.2),
+      0 0 40px rgba(40, 167, 69, 0.4);
+    animation: none;
+  }
+
+  /* Navigation buttons container for horizontal layout */
+  .nav-buttons-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0; /* No gap needed as positions are calculated */
   }
 
   /* Performance optimizations */
@@ -290,21 +312,26 @@ export const navbarStyles = `
   }
 
   /* Hardware acceleration for all animated elements */
-  .semicircle-track,
-  .inner-track,
+  .cyberpunk-track,
+  .cyberpunk-inner-track,
   .center-hub-cyberpunk,
-  .inner-profile-cyberpunk,
-  .control-button {
+  .inner-profile-cyberpunk {
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
     transform: translateZ(0);
   }
 
+  /* Hide on tablet and mobile - Desktop only */
+  @media (max-width: 1023px) {
+    .dial-container {
+      display: none !important;
+    }
+  }
+
   /* Smooth animations with GPU acceleration */
   @media (prefers-reduced-motion: no-preference) {
     .center-hub-cyberpunk,
-    .inner-profile-cyberpunk,
-    .control-button {
+    .inner-profile-cyberpunk {
       transform: translateZ(0);
     }
   }
@@ -312,16 +339,11 @@ export const navbarStyles = `
   /* Respect reduced motion preferences */
   @media (prefers-reduced-motion: reduce) {
     .dial-wrapper,
-    .semicircle-track,
-    .inner-track,
+    .cyberpunk-track,
+    .cyberpunk-inner-track,
     .center-hub-cyberpunk,
-    .inner-profile-cyberpunk,
-    .control-button {
+    .inner-profile-cyberpunk {
       transition: none !important;
-      animation: none !important;
-    }
-    
-    .cyberpunk-track {
       animation: none !important;
     }
     
@@ -333,8 +355,7 @@ export const navbarStyles = `
 
   /* Focus styles for accessibility */
   .center-hub-cyberpunk:focus,
-  .inner-profile-cyberpunk:focus,
-  .control-button:focus {
+  .inner-profile-cyberpunk:focus {
     outline: 2px solid #00ffff;
     outline-offset: 2px;
   }
@@ -352,7 +373,29 @@ export const navbarStyles = `
   /* Dark mode optimizations */
   @media (prefers-color-scheme: dark) {
     .cyberpunk-inner-track {
-      background: linear-gradient(135deg, #d8d8d8 0%, #e5e5e5 50%, #f0f0f0 100%);
+      background: linear-gradient(90deg, #d8d8d8 0%, #e5e5e5 50%, #f0f0f0 100%);
+    }
+  }
+
+  /* Large screen optimizations */
+  @media (min-width: 1920px) {
+    .dial-container.full-width-container {
+      height: 140px;
+    }
+    
+    .cyberpunk-track {
+      height: 100px;
+    }
+    
+    .cyberpunk-inner-track {
+      height: 80px;
+    }
+  }
+
+  /* Ultra-wide screen support */
+  @media (min-width: 2560px) {
+    .dial-container.full-width-container {
+      height: 160px;
     }
   }
 `;

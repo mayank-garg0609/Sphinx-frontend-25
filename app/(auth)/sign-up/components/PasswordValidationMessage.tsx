@@ -11,7 +11,7 @@ export const PasswordValidationMessage = memo(function PasswordValidationMessage
   error,
 }: PasswordValidationMessageProps) {
   if (error) {
-    return <span className="text-red-400 text-xs lg:text-sm">{error}</span>;
+    return null; // Error is handled by FormField component
   }
 
   if (!password) return null;
@@ -28,8 +28,8 @@ export const PasswordValidationMessage = memo(function PasswordValidationMessage
     : "text-red-400";
 
   const message = isShort
-    ? "Password is too short."
+    ? "Password is too short (minimum 8 characters)"
     : `Password Strength: ${strength}`;
 
-  return <span className={`${colorClass} text-xs lg:text-sm`}>{message}</span>;
+  return <span className={`${colorClass}`}>{message}</span>;
 });

@@ -31,22 +31,20 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
   onMouseEnter,
   onMouseLeave,
 }) => {
-  const animationDelay = item.isAnimating ? `${index * 80}ms` : `${index * 40}ms`;
+  const animationDelay = `${index * 40}ms`;
   
   const buttonStyle = {
     position: 'absolute' as const,
     width: 50,
     height: 50,
-    left: 0,
+    left: '50%',
     top: '50%',
     transform: `translate(-50%, -50%) translate(${position.x}px, ${position.y}px)`,
     opacity: isExpanded ? 1 : 0,
     zIndex: position.zIndex,
     transitionProperty: 'all',
-    transitionDuration: item.isAnimating ? '0.6s' : '0.5s',
-    transitionTimingFunction: item.isAnimating 
-      ? 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' 
-      : 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+    transitionDuration: '0.6s',
+    transitionTimingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
     transitionDelay: animationDelay,
   };
 
@@ -130,6 +128,8 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
           transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
           animation: pulseGlow 4s ease-in-out infinite;
           backdrop-filter: blur(5px);
+          width: 100%;
+          height: 100%;
         }
 
         .cyberpunk-nav-button::before {
@@ -246,12 +246,6 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
           className={`cyberpunk-nav-button ${isActive ? 'active' : ''}`}
-          style={{
-            width: '100%',
-            height: '100%',
-            position: 'relative',
-            transform: 'rotate(0deg)',
-          }}
           aria-label={item.label}
         >
           <Suspense fallback={<div className="w-5 h-5 bg-gray-400 rounded animate-pulse" />}>
