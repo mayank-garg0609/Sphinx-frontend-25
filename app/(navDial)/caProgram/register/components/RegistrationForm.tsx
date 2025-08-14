@@ -37,7 +37,7 @@ export const RegistrationForm = memo<RegistrationFormProps>(({ logo }) => {
     reValidateMode: "onChange",
   });
 
-  const { handleRegistration } = useCARegistration(reset); // ✅ using correct hook
+  const { handleRegistration } = useCARegistration(reset); 
 
   const memoizedFormFields = useMemo(
     () =>

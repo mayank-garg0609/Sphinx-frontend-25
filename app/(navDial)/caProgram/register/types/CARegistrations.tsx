@@ -4,9 +4,13 @@ export interface CaRegisterFormData {
   past_experience: string;
   your_strengths: string;
   your_expectations: string;
+  resume: FileList; 
 }
+
 export interface FormField {
   key: keyof CaRegisterFormData;
   label: string;
   placeholder: string;
+  type?: 'text' | 'file'; 
+  accept?: string; 
 }

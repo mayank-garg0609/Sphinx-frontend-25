@@ -1,22 +1,24 @@
 export const navbarStyles = `
-  /* Core dial container with GPU acceleration - Updated for top positioning */
+  /* Core dial container with GPU acceleration - Topmost overlay */
   .dial-container {
     position: fixed;
-    z-index: 50;
+    z-index: 9999; /* Maximum z-index for topmost positioning */
     overflow: visible;
     contain: layout style paint;
     will-change: transform;
     perspective: 1000px;
     transform-style: preserve-3d;
     transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    pointer-events: none; /* Allow clicks to pass through transparent areas */
   }
 
-  /* Full-width expanded state - positioned at top */
+  /* Full-width expanded state - responsive overlay at topmost level */
   .dial-container.full-width-container {
     left: 0;
     top: 0;
     width: 100vw;
-    height: 120px;
+    height: clamp(100px, 12vh, 160px); /* Responsive height */
+    z-index: 9999;
     background: linear-gradient(
       90deg,
       rgba(26, 26, 46, 0.1) 0%,
@@ -29,14 +31,7 @@ export const navbarStyles = `
     -webkit-backdrop-filter: blur(15px);
     border-bottom: 1px solid rgba(0, 255, 255, 0.3);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  }
-
-  /* Collapsed state - positioned at top left */
-  .dial-container.collapsed-container {
-    left: 20px;
-    top: 20px;
-    width: 110px;
-    height: 110px;
+    pointer-events: auto;
   }
 
   .dial-wrapper {
@@ -47,7 +42,7 @@ export const navbarStyles = `
     will-change: width, height;
   }
 
-  /* Enhanced cyberpunk track styles for horizontal layout */
+  /* Enhanced cyberpunk track styles - responsive */
   .cyberpunk-track {
     background: linear-gradient(
       90deg,
@@ -60,7 +55,8 @@ export const navbarStyles = `
     );
     background-size: 300% 100%;
     animation: gradientShift 12s ease infinite;
-    border-radius: 60px;
+    border-radius: clamp(40px, 8vw, 60px);
+    height: clamp(60px, 8vh, 80px);
     transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     will-change: background-position;
   }
@@ -76,7 +72,7 @@ export const navbarStyles = `
     );
     position: relative;
     overflow: hidden;
-    border-radius: 50px;
+    border-radius: clamp(30px, 6vw, 50px);
     transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     cursor: pointer;
   }
@@ -377,6 +373,47 @@ export const navbarStyles = `
     }
   }
 
+  /* Responsive breakpoints for different desktop sizes */
+  @media (min-width: 1024px) and (max-width: 1199px) {
+    .dial-container.full-width-container {
+      height: 100px;
+    }
+    
+    .cyberpunk-track {
+      height: 60px;
+      border-radius: 40px;
+    }
+    
+    .cyberpunk-inner-track {
+      border-radius: 30px;
+    }
+  }
+
+  @media (min-width: 1200px) and (max-width: 1439px) {
+    .dial-container.full-width-container {
+      height: 110px;
+    }
+    
+    .cyberpunk-track {
+      height: 70px;
+      border-radius: 50px;
+    }
+    
+    .cyberpunk-inner-track {
+      border-radius: 40px;
+    }
+  }
+
+  @media (min-width: 1440px) and (max-width: 1919px) {
+    .dial-container.full-width-container {
+      height: 120px;
+    }
+    
+    .cyberpunk-track {
+      height: 80px;
+    }
+  }
+
   /* Large screen optimizations */
   @media (min-width: 1920px) {
     .dial-container.full-width-container {
@@ -396,6 +433,48 @@ export const navbarStyles = `
   @media (min-width: 2560px) {
     .dial-container.full-width-container {
       height: 160px;
+    }
+    
+    .cyberpunk-track {
+      height: 120px;
+    }
+    
+    .cyberpunk-inner-track {
+      height: 100px;
+    }
+  }
+
+  /* Remove body padding - navbar is now a pure overlay */
+  /* No body padding needed since navbar doesn't affect page layout */
+
+  /* Ensure all interactive elements in navbar are clickable */
+  .dial-container button,
+  .dial-container .cyberpunk-inner-track,
+  .dial-container .nav-buttons-container {
+    pointer-events: auto;
+  }
+
+  /* Ensure navbar elements stay above all page content */
+  .center-hub-cyberpunk,
+  .inner-profile-cyberpunk,
+  .nav-buttons-container > * {
+    z-index: 10000;
+    position: relative;
+  }
+
+  /* Smooth fade-in animation when page loads */
+  .dial-container {
+    animation: navbarFadeIn 0.8s ease-out;
+  }
+
+  @keyframes navbarFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 `;

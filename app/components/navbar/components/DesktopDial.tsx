@@ -1,6 +1,5 @@
-import React, { useRef, useCallback, memo, Suspense } from "react";
+import React, { useRef, useCallback, memo, Suspense, useEffect, useState } from "react";
 import {
-  FaTimes,
   FaUser,
   FaUserPlus,
 } from "react-icons/fa";
@@ -30,8 +29,8 @@ interface DesktopDialProps {
 }
 
 const DesktopDialComponent: React.FC<DesktopDialProps> = ({
-  isExpanded,
-  setIsExpanded,
+  isExpanded, // This will always be true now
+  setIsExpanded, // This will be a no-op function
   isLoggedIn,
   pathname,
   onNavigation,
@@ -40,6 +39,17 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const dialRef = useRef<HTMLDivElement>(null);
+  const [windowWidth, setWindowWidth] = useState<number>(typeof window !== 'undefined' ? window.innerWidth : 1200);
+
+  // Handle window resize for responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Get all navigation items without rotation logic
   const getAllItems = useCallback(() => {
@@ -50,30 +60,41 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
     }));
   }, []);
 
-  // Calculate button positions for full-width layout
+  // Calculate button positions for full-width layout with responsive sizing
   const getButtonPosition = useCallback((displayIndex: number, containerWidth: number) => {
     const totalItems = NAV_ITEMS_COUNT;
-    const availableWidth = containerWidth - 200; // Leave space for center and edges
+    
+    // Responsive calculations based on screen width
+    const baseMargin = Math.max(120, containerWidth * 0.08); // 8% margin or minimum 120px
+    const profileSpace = Math.max(80, containerWidth * 0.06); // 6% or minimum 80px
+    const availableWidth = containerWidth - baseMargin - profileSpace;
+    
+    // Adjust spacing based on container width
+    const minSpacing = 60; // Minimum space between items
+    const maxSpacing = 120; // Maximum space between items
+    const calculatedSpacing = Math.min(maxSpacing, Math.max(minSpacing, availableWidth / totalItems));
+    
     const startX = -availableWidth / 2;
-    const spacing = totalItems > 1 ? availableWidth / (totalItems - 1) : 0;
+    const spacing = totalItems > 1 ? Math.min(calculatedSpacing, availableWidth / (totalItems - 1)) : 0;
     
     const x = startX + displayIndex * spacing;
-    const y = 0; // Keep all buttons on the same horizontal line
+    const y = 0;
     const zIndex = 100 + displayIndex;
     
     return { 
       x, 
       y, 
       zIndex,
-      angle: 0 // No rotation needed
+      angle: 0
     };
   }, []);
 
   const allItems = getAllItems();
 
+  // Remove toggle functionality - navbar stays expanded
   const toggleExpanded = useCallback(() => {
-    setIsExpanded(!isExpanded);
-  }, [isExpanded, setIsExpanded]);
+    // No-op: We don't want to allow collapsing
+  }, []);
 
   const handleInnerCircleEnter = useCallback(() => {
     // Handle hover state if needed
@@ -85,22 +106,23 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
 
   const innerCircleHoverId = isLoggedIn ? "inner-profile" : "inner-signup";
 
-  // Calculate container dimensions based on screen size and expanded state
+  // Responsive container dimensions
   const getContainerDimensions = useCallback(() => {
-    if (typeof window === 'undefined') return { width: 100, height: 100 };
+    if (typeof window === 'undefined') return { width: 1200, height: 120 };
     
-    if (isExpanded) {
-      return {
-        width: window.innerWidth,
-        height: 120, // Fixed height for the expanded dial
-      };
-    }
+    const screenWidth = window.innerWidth;
+    
+    // Responsive height based on screen width
+    let height = 120;
+    if (screenWidth >= 2560) height = 160;
+    else if (screenWidth >= 1920) height = 140;
+    else if (screenWidth < 1200) height = 100; // Smaller height for smaller screens
     
     return {
-      width: CENTER_SIZE_CLOSED + 40,
-      height: CENTER_SIZE_CLOSED + 40,
+      width: screenWidth,
+      height: height,
     };
-  }, [isExpanded]);
+  }, []);
 
   const containerDimensions = getContainerDimensions();
 
@@ -175,8 +197,7 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
         .full-width-container {
           position: fixed;
           left: 0;
-          top: 50%;
-          transform: translateY(-50%);
+          top: 0;
           width: 100vw;
           height: 120px;
           z-index: 50;
@@ -192,18 +213,7 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
             rgba(26, 26, 46, 0.1) 100%
           );
           backdrop-filter: blur(10px);
-          border-top: 1px solid #00ffff20;
           border-bottom: 1px solid #00ffff20;
-        }
-
-        .collapsed-container {
-          position: fixed;
-          left: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          width: ${CENTER_SIZE_CLOSED + 40}px;
-          height: ${CENTER_SIZE_CLOSED + 40}px;
-          z-index: 50;
         }
 
         .neon-glow-cyan {
@@ -397,10 +407,9 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
         }
       `}</style>
 
+      {/* Always render as expanded - removed conditional rendering */}
       <div
-        className={`dial-container cyberpunk-dial ${
-          isExpanded ? 'full-width-container' : 'collapsed-container'
-        }`}
+        className="dial-container cyberpunk-dial full-width-container"
         ref={containerRef}
       >
         <div
@@ -412,167 +421,163 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
             position: 'relative',
           }}
         >
-          {/* Expanded Layout */}
-          {isExpanded && (
-            <>
-              {/* Background Track */}
-              <div
-                className="cyberpunk-track neon-glow-cyan"
-                style={{
-                  position: 'absolute',
-                  width: '90%',
-                  left: '5%',
-                  top: '20px',
-                  opacity: 1,
-                }}
-              />
+          {/* Background Track - responsive width and positioning */}
+          <div
+            className="cyberpunk-track neon-glow-cyan"
+            style={{
+              position: 'absolute',
+              width: `${Math.min(90, Math.max(70, (containerDimensions.width - 200) / containerDimensions.width * 100))}%`,
+              left: `${Math.max(5, (200 / containerDimensions.width * 100) / 2)}%`,
+              top: `${containerDimensions.height * 0.167}px`, // 20/120 = 0.167
+              opacity: 1,
+            }}
+          />
 
-              {/* Inner Track for Home Navigation */}
-              <div
-                className="cyberpunk-inner-track neon-glow-amber"
-                onClick={onHomeNavigation}
-                style={{
-                  position: 'absolute',
-                  width: '85%',
-                  left: '7.5%',
-                  top: '30px',
-                  opacity: 1,
-                }}
-              />
+          {/* Inner Track - responsive sizing */}
+          <div
+            className="cyberpunk-inner-track neon-glow-amber"
+            onClick={onHomeNavigation}
+            style={{
+              position: 'absolute',
+              width: `${Math.min(85, Math.max(65, (containerDimensions.width - 240) / containerDimensions.width * 100))}%`,
+              left: `${Math.max(7.5, (240 / containerDimensions.width * 100) / 2)}%`,
+              top: `${containerDimensions.height * 0.25}px`, // 30/120 = 0.25
+              height: `${containerDimensions.height * 0.5}px`, // Responsive height
+              opacity: 1,
+            }}
+          />
 
-              {/* Inner Circle for Profile/Signup */}
-              <div
+          {/* Inner Circle - responsive positioning */}
+          <div
+            style={{
+              position: 'absolute',
+              width: Math.max(50, Math.min(INNER_CIRCLE_SIZE, containerDimensions.width * 0.05)),
+              height: Math.max(50, Math.min(INNER_CIRCLE_SIZE, containerDimensions.width * 0.05)),
+              right: Math.max(15, containerDimensions.width * 0.015) + 'px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 180,
+            }}
+          >
+            <Tooltip
+              content={isLoggedIn ? "Profile" : "Sign Up"}
+              show={false}
+              isExpanded={true} // Always expanded
+              buttonPosition={{ x: 0, y: 0 }}
+            >
+              <button
+                onClick={onInnerCircleNavigation}
+                onMouseEnter={handleInnerCircleEnter}
+                onMouseLeave={handleInnerCircleLeave}
+                className={`inner-profile-cyberpunk ${
+                  !isLoggedIn ? "signup" : ""
+                }`}
                 style={{
-                  position: 'absolute',
-                  width: INNER_CIRCLE_SIZE,
-                  height: INNER_CIRCLE_SIZE,
-                  right: '20px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  zIndex: 180,
+                  width: "100%",
+                  height: "100%",
+                  transition: "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  zIndex: 190,
                 }}
+                aria-label={isLoggedIn ? "Profile" : "Sign Up"}
               >
-                <Tooltip
-                  content={isLoggedIn ? "Profile" : "Sign Up"}
-                  show={false}
-                  isExpanded={isExpanded}
-                  buttonPosition={{ x: 0, y: 0 }}
+                <Suspense
+                  fallback={
+                    <div className="w-5 h-5 bg-gray-400 rounded animate-pulse" />
+                  }
                 >
-                  <button
-                    onClick={onInnerCircleNavigation}
-                    onMouseEnter={handleInnerCircleEnter}
-                    onMouseLeave={handleInnerCircleLeave}
-                    className={`inner-profile-cyberpunk ${
-                      !isLoggedIn ? "signup" : ""
-                    }`}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      transition: "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                      position: "relative",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      zIndex: 190,
-                    }}
-                    aria-label={isLoggedIn ? "Profile" : "Sign Up"}
-                  >
-                    <Suspense
-                      fallback={
-                        <div className="w-5 h-5 bg-gray-400 rounded animate-pulse" />
-                      }
-                    >
-                      {isLoggedIn ? (
-                        <FaUser
-                          className="text-white drop-shadow-lg"
-                          size={20}
-                        />
-                      ) : (
-                        <FaUserPlus
-                          className="text-white drop-shadow-lg"
-                          size={22}
-                        />
-                      )}
-                    </Suspense>
-                  </button>
-                </Tooltip>
-              </div>
-            </>
-          )}
+                  {isLoggedIn ? (
+                    <FaUser
+                      className="text-white drop-shadow-lg"
+                      size={20}
+                    />
+                  ) : (
+                    <FaUserPlus
+                      className="text-white drop-shadow-lg"
+                      size={22}
+                    />
+                  )}
+                </Suspense>
+              </button>
+            </Tooltip>
+          </div>
 
-          {/* Center Hub Button */}
+          {/* Center Hub Button - responsive sizing and positioning */}
           <button
-            onClick={toggleExpanded}
+            onClick={onHomeNavigation}
             className="center-hub-cyberpunk neon-glow-cyan"
             style={{
-              width: CENTER_SIZE_CLOSED,
-              height: CENTER_SIZE_CLOSED,
+              width: Math.max(60, Math.min(CENTER_SIZE_CLOSED, containerDimensions.width * 0.05)),
+              height: Math.max(60, Math.min(CENTER_SIZE_CLOSED, containerDimensions.width * 0.05)),
               position: 'absolute',
-              left: isExpanded ? '20px' : '50%',
+              left: Math.max(15, containerDimensions.width * 0.015) + 'px',
               top: '50%',
-              transform: isExpanded ? 'translateY(-50%)' : 'translate(-50%, -50%)',
+              transform: 'translateY(-50%)',
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               zIndex: 200,
               transition: 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
             }}
-            aria-label={isExpanded ? "Close navigation" : "Open navigation"}
+            aria-label="Go to home"
           >
             <Suspense
               fallback={
                 <div className="w-6 h-6 bg-gray-400 rounded animate-pulse" />
               }
             >
-              {isExpanded ? (
-                <FaTimes className="text-cyan-400 drop-shadow-lg" size={24} />
-              ) : (
-                <span className="text-cyan-400 font-bold text-2xl font-mono drop-shadow-lg">
-                  O
-                </span>
-              )}
+              <span 
+                className="text-cyan-400 font-bold font-mono drop-shadow-lg"
+                style={{ 
+                  fontSize: `${Math.max(16, Math.min(24, containerDimensions.width * 0.018))}px` 
+                }}
+              >
+                S
+              </span>
             </Suspense>
           </button>
 
-          {/* Navigation Buttons Container */}
-          {isExpanded && (
-            <div
-              className="nav-buttons-container"
-              style={{
-                position: "absolute",
-                width: "100%",
-                height: "100%",
-                top: 0,
-                left: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingLeft: '120px', // Space for center hub
-                paddingRight: '100px', // Space for profile button
-              }}
-            >
-              {allItems.map((item: Item, index: number) => {
-                const position = getButtonPosition(item.displayIndex, containerDimensions.width - 220);
-                const isActive = pathname === item.link;
+          {/* Navigation Buttons Container - responsive spacing */}
+          <div
+            className="nav-buttons-container"
+            style={{
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+              top: 0,
+              left: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingLeft: Math.max(90, containerDimensions.width * 0.08) + 'px',
+              paddingRight: Math.max(70, containerDimensions.width * 0.06) + 'px',
+            }}
+          >
+            {allItems.map((item: Item, index: number) => {
+              const availableSpace = containerDimensions.width - Math.max(90, containerDimensions.width * 0.08) - Math.max(70, containerDimensions.width * 0.06);
+              const position = getButtonPosition(item.displayIndex, availableSpace);
+              const isActive = pathname === item.link;
 
-                return (
-                  <NavButton
-                    key={`${item.id}-${item.actualIndex}`}
-                    item={item}
-                    position={position}
-                    isActive={isActive}
-                    isExpanded={isExpanded}
-                    isHovered={false}
-                    index={index}
-                    counterRotation={0}
-                    onNavigation={onNavigation}
-                    onMouseEnter={() => {}}
-                    onMouseLeave={() => {}}
-                  />
-                );
-              })}
-            </div>
-          )}
+              return (
+                <NavButton
+                  key={`${item.id}-${item.actualIndex}`}
+                  item={item}
+                  position={position}
+                  isActive={isActive}
+                  isExpanded={true}
+                  isHovered={false}
+                  index={index}
+                  counterRotation={0}
+                  onNavigation={onNavigation}
+                  onMouseEnter={() => {}}
+                  onMouseLeave={() => {}}
+                />
+              );
+            })}
+          </div>
         </div>
       </div>
     </>

@@ -9,7 +9,8 @@ import { navbarStyles } from "./styles/navbar";
 import { useUser } from "@/app/hooks/useUser/useUser";
 
 const Navbar: React.FC = () => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  // Always start in expanded state for desktop
+  const [isExpanded, setIsExpanded] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isLoggedIn, refreshUserData } = useUser();
   
@@ -41,8 +42,10 @@ const Navbar: React.FC = () => {
   return (
     <>
       <style jsx>{navbarStyles}</style>
-      <div className="flex items-center justify-between px-4 lg:justify-center lg:gap-3 mt-6">
-        {!isDesktop && (
+      
+      {/* Mobile navbar elements - only show on mobile */}
+      {!isDesktop && (
+        <div className="flex items-center justify-between px-4 lg:justify-center lg:gap-3 mt-6">
           <button
             className="text-white hover:text-gray-300 transition-colors"
             onClick={() => setIsMobileMenuOpen(true)}
@@ -50,13 +53,14 @@ const Navbar: React.FC = () => {
           >
             <FaBars size={24} />
           </button>
-        )}
-      </div>
+        </div>
+      )}
       
+      {/* Desktop navbar - overlay at top, doesn't affect layout */}
       {isDesktop && (
         <DesktopDial
-          isExpanded={isExpanded}
-          setIsExpanded={setIsExpanded}
+          isExpanded={true} // Always expanded
+          setIsExpanded={() => {}} // No-op function since we don't want to allow collapsing
           isLoggedIn={isLoggedIn}
           pathname={pathname}
           onNavigation={handleNavigation}
@@ -65,6 +69,7 @@ const Navbar: React.FC = () => {
         />
       )}
       
+      {/* Mobile menu */}
       {!isDesktop && (
         <MobileMenu
           isOpen={isMobileMenuOpen}

@@ -14,13 +14,28 @@ export const registerCAUser = async (
   data: CaRegisterFormData
 ): Promise<RegistrationResponse> => {
   try {
+    // Create FormData for file upload
+    const formData = new FormData();
+    
+    // Add text fields
+    formData.append('how_did_you_find_us', data.how_did_you_find_us);
+    formData.append('why_should_we_choose_you', data.why_should_we_choose_you);
+    formData.append('past_experience', data.past_experience);
+    formData.append('your_strengths', data.your_strengths);
+    formData.append('your_expectations', data.your_expectations);
+    
+    // Add resume file
+    if (data.resume && data.resume.length > 0) {
+      formData.append('resume', data.resume[0]);
+    }
+
     const response = await fetch(`${API_BASE_URL}/ca/register`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
+        // Don't set Content-Type header - let the browser set it with boundary for multipart/form-data
       },
-      body: JSON.stringify(data),
+      body: formData,
     });
 
     if (!response.ok) {

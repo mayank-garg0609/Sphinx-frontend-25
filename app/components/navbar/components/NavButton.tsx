@@ -1,4 +1,4 @@
-import React, { memo, Suspense } from 'react';
+import React, { memo, Suspense, useState, useCallback } from 'react';
 import { NavItem } from '../types/navbarTypes';
 import { Tooltip } from './Tooltip';
 
@@ -24,31 +24,28 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
   position,
   isActive,
   isExpanded,
-  isHovered,
   index,
-  counterRotation,
   onNavigation,
-  onMouseEnter,
-  onMouseLeave,
 }) => {
-  const animationDelay = `${index * 40}ms`;
+  const [isHovered, setIsHovered] = useState(false);
+  const animationDelay = `${index * 60}ms`; // Slightly increased delay for smoother staggered animation
   
   const buttonStyle = {
     position: 'absolute' as const,
-    width: 50,
-    height: 50,
+    width: 54, // Slightly larger for better touch target
+    height: 54,
     left: '50%',
     top: '50%',
     transform: `translate(-50%, -50%) translate(${position.x}px, ${position.y}px)`,
     opacity: isExpanded ? 1 : 0,
     zIndex: position.zIndex,
     transitionProperty: 'all',
-    transitionDuration: '0.6s',
-    transitionTimingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+    transitionDuration: '0.5s', // Smoother transition
+    transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)', // More elegant easing
     transitionDelay: animationDelay,
   };
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     const cleanItem: NavItem = {
       id: item.id,
       label: item.label,
@@ -57,58 +54,68 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
       ...(item.external && { external: item.external })
     };
     onNavigation(cleanItem);
-  };
+  }, [item, onNavigation]);
+
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false);
+  }, []);
 
   return (
     <div style={buttonStyle}>
       <style jsx>{`
-        @keyframes pulseGlow {
+        @keyframes elegantGlow {
           0%, 100% { 
             box-shadow: 
-              0 0 10px #ffffff40,
-              inset 0 0 10px #ffffff20,
-              0 0 20px #ffffff20;
+              0 0 15px rgba(255, 255, 255, 0.3),
+              inset 0 0 15px rgba(255, 255, 255, 0.1),
+              0 0 30px rgba(255, 255, 255, 0.15);
           }
           50% { 
             box-shadow: 
-              0 0 20px #ffffff60,
-              inset 0 0 15px #ffffff30,
-              0 0 30px #ffffff30;
+              0 0 20px rgba(255, 255, 255, 0.4),
+              inset 0 0 20px rgba(255, 255, 255, 0.15),
+              0 0 40px rgba(255, 255, 255, 0.2);
           }
         }
 
-        @keyframes activeGlow {
+        @keyframes activeElegantGlow {
           0%, 100% { 
             box-shadow: 
-              0 0 15px #ff00ff80,
-              inset 0 0 15px #ff00ff30,
-              0 0 30px #ff00ff40;
+              0 0 20px rgba(255, 0, 255, 0.6),
+              inset 0 0 20px rgba(255, 0, 255, 0.25),
+              0 0 40px rgba(255, 0, 255, 0.3);
           }
           50% { 
             box-shadow: 
-              0 0 25px #ff00ff,
-              inset 0 0 20px #ff00ff40,
-              0 0 40px #ff00ff60;
+              0 0 30px rgba(255, 0, 255, 0.8),
+              inset 0 0 25px rgba(255, 0, 255, 0.35),
+              0 0 60px rgba(255, 0, 255, 0.4);
           }
         }
 
-        @keyframes hoverShimmer {
-          0% { background-position: -200% center; }
-          100% { background-position: 200% center; }
-        }
-
-        @keyframes clickRipple {
-          0% {
-            transform: scale(1);
-            opacity: 0.8;
+        @keyframes subtleShimmer {
+          0% { 
+            background-position: -200% center; 
           }
-          100% {
-            transform: scale(1.6);
-            opacity: 0;
+          100% { 
+            background-position: 200% center; 
           }
         }
 
-        .cyberpunk-nav-button {
+        @keyframes gentleFloat {
+          0%, 100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-2px);
+          }
+        }
+
+        .elegant-nav-button {
           background: 
             linear-gradient(135deg, 
               #f8f9fa 0%, 
@@ -117,7 +124,7 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
               #f8f9fa 75%, 
               #e9ecef 100%
             );
-          border: 2px solid #ffffff;
+          border: 2px solid rgba(255, 255, 255, 0.8);
           border-radius: 50%;
           cursor: pointer;
           display: flex;
@@ -125,14 +132,17 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
           justify-content: center;
           position: relative;
           overflow: hidden;
-          transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-          animation: pulseGlow 4s ease-in-out infinite;
-          backdrop-filter: blur(5px);
+          transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+          animation: elegantGlow 4s ease-in-out infinite;
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
           width: 100%;
           height: 100%;
+          transform: translateZ(0);
+          will-change: transform, box-shadow, background;
         }
 
-        .cyberpunk-nav-button::before {
+        .elegant-nav-button::before {
           content: '';
           position: absolute;
           top: 0;
@@ -140,25 +150,26 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
           right: 0;
           bottom: 0;
           background: linear-gradient(
-            135deg,
+            120deg,
             transparent 0%,
-            #00ffff20 25%,
-            #ffffff40 50%,
-            #ff00ff20 75%,
+            rgba(0, 255, 255, 0.1) 25%,
+            rgba(255, 255, 255, 0.2) 50%,
+            rgba(255, 0, 255, 0.1) 75%,
             transparent 100%
           );
-          background-size: 200% 200%;
+          background-size: 300% 300%;
           opacity: 0;
-          transition: opacity 0.3s ease;
+          transition: opacity 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+          border-radius: inherit;
         }
 
-        .cyberpunk-nav-button:hover::before {
+        .elegant-nav-button:hover::before {
           opacity: 1;
-          animation: hoverShimmer 1.5s ease-in-out infinite;
+          animation: subtleShimmer 2s ease-in-out infinite;
         }
 
-        .cyberpunk-nav-button:hover {
-          transform: scale(1.2);
+        .elegant-nav-button:hover {
+          transform: translateZ(0) translateY(-3px);
           background: 
             linear-gradient(135deg, 
               #1a1a2e 0%, 
@@ -169,30 +180,18 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
             );
           border-color: #00ffff;
           box-shadow: 
-            0 0 20px #00ffff80,
-            inset 0 0 20px #00ffff30,
-            0 0 40px #00ffff40;
-          animation: none;
+            0 8px 25px rgba(0, 255, 255, 0.4),
+            inset 0 0 20px rgba(0, 255, 255, 0.15),
+            0 12px 40px rgba(0, 255, 255, 0.2);
+          animation: gentleFloat 2s ease-in-out infinite;
         }
 
-        .cyberpunk-nav-button:active {
-          transform: scale(1.1);
+        .elegant-nav-button:active {
+          transform: translateZ(0) translateY(-1px);
+          transition: transform 0.1s ease-out;
         }
 
-        .cyberpunk-nav-button:active::after {
-          content: '';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 100%;
-          height: 100%;
-          border: 2px solid #00ffff;
-          border-radius: 50%;
-          transform: translate(-50%, -50%);
-          animation: clickRipple 0.6s ease-out;
-        }
-
-        .cyberpunk-nav-button.active {
+        .elegant-nav-button.active {
           background: 
             linear-gradient(135deg, 
               #2d1b69 0%, 
@@ -202,36 +201,64 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
               #2d1b69 100%
             );
           border-color: #ff00ff;
-          animation: activeGlow 2s ease-in-out infinite;
+          animation: activeElegantGlow 2.5s ease-in-out infinite;
         }
 
-        .cyberpunk-nav-button.active:hover {
+        .elegant-nav-button.active:hover {
           box-shadow: 
-            0 0 25px #ff00ff,
-            inset 0 0 20px #ff00ff40,
-            0 0 50px #ff00ff60;
+            0 10px 30px rgba(255, 0, 255, 0.5),
+            inset 0 0 25px rgba(255, 0, 255, 0.2),
+            0 15px 50px rgba(255, 0, 255, 0.3);
+          animation: activeElegantGlow 2.5s ease-in-out infinite, gentleFloat 2s ease-in-out infinite;
         }
 
-        .nav-icon-cyberpunk {
-          transition: all 0.3s ease;
+        .nav-icon-elegant {
+          transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
           color: #333333;
-          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+          filter: drop-shadow(0 1px 3px rgba(0,0,0,0.2));
           z-index: 10;
           position: relative;
+          transform: translateZ(0);
         }
 
-        .cyberpunk-nav-button:hover .nav-icon-cyberpunk {
+        .elegant-nav-button:hover .nav-icon-elegant {
           color: #00ffff;
           filter: 
-            drop-shadow(0 0 5px #00ffff) 
-            drop-shadow(0 0 10px #00ffff40);
+            drop-shadow(0 0 8px rgba(0, 255, 255, 0.6)) 
+            drop-shadow(0 0 15px rgba(0, 255, 255, 0.3));
+          transform: translateZ(0) scale(1.1);
         }
 
-        .cyberpunk-nav-button.active .nav-icon-cyberpunk {
+        .elegant-nav-button.active .nav-icon-elegant {
           color: #ff00ff;
           filter: 
-            drop-shadow(0 0 5px #ff00ff) 
-            drop-shadow(0 0 10px #ff00ff40);
+            drop-shadow(0 0 8px rgba(255, 0, 255, 0.6)) 
+            drop-shadow(0 0 15px rgba(255, 0, 255, 0.3));
+          transform: translateZ(0) scale(1.05);
+        }
+
+        /* Focus styles for accessibility */
+        .elegant-nav-button:focus {
+          outline: 2px solid #00ffff;
+          outline-offset: 4px;
+        }
+
+        .elegant-nav-button.active:focus {
+          outline-color: #ff00ff;
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+          .elegant-nav-button,
+          .elegant-nav-button:hover,
+          .elegant-nav-button.active {
+            animation: none !important;
+            transition: box-shadow 0.2s ease !important;
+          }
+          
+          .elegant-nav-button:hover {
+            transform: translateZ(0) translateY(-1px);
+          }
         }
       `}</style>
       
@@ -243,13 +270,15 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
       >
         <button
           onClick={handleClick}
-          onMouseEnter={onMouseEnter}
-          onMouseLeave={onMouseLeave}
-          className={`cyberpunk-nav-button ${isActive ? 'active' : ''}`}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          className={`elegant-nav-button ${isActive ? 'active' : ''}`}
           aria-label={item.label}
+          onFocus={handleMouseEnter}
+          onBlur={handleMouseLeave}
         >
           <Suspense fallback={<div className="w-5 h-5 bg-gray-400 rounded animate-pulse" />}>
-            <item.icon size={20} className="nav-icon-cyberpunk" />
+            <item.icon size={22} className="nav-icon-elegant" />
           </Suspense>
         </button>
       </Tooltip>
