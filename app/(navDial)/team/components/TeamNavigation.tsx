@@ -8,7 +8,7 @@ interface TeamNavigationProps {
 
 export default function TeamNavigation({ view, setView }: TeamNavigationProps) {
   return (
-    <div className="fixed top-32 right-6 z-20 hidden lg:flex flex-col gap-4 overflow-hidden">
+    <div className="fixed top-36 right-6 z-20 hidden lg:flex flex-col gap-4 overflow-hidden"> {/* Updated top-36 */}
       {SECTION_KEYS.map((key) => (
         <button
           key={key}

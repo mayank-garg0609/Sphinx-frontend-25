@@ -17,7 +17,7 @@ export const MobilePolicySelector: React.FC<MobilePolicySelectorProps> = memo(({
   }, [onPolicySelect]);
 
   return (
-    <div className="lg:hidden fixed top-20 left-0 right-0 z-40 bg-black/90 backdrop-blur-sm border-b border-zinc-800/50 p-4">
+    <div className="lg:hidden fixed top-24 left-0 right-0 z-40 bg-black/90 backdrop-blur-sm border-b border-zinc-800/50 p-4"> 
       <div className="flex items-center justify-center">
         <div 
           className="flex space-x-1 bg-zinc-900/50 rounded-xl p-1 border border-zinc-800/50"

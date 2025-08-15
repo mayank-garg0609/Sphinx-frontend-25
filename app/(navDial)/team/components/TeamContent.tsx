@@ -9,7 +9,7 @@ interface TeamContentProps {
 
 export default function TeamContent({ view }: TeamContentProps) {
   return (
-    <div className="relative z-10 text-white px-6 sm:px-10 flex flex-col items-center justify-center mt-12 lg:mt-24">
+    <div className="relative z-10 text-white px-6 sm:px-10 flex flex-col items-center justify-center mt-32 lg:mt-44"> {/* Updated mt-20 lg:mt-32 */}
       <h1 className="text-4xl font-bold mb-6 text-center">Meet the Team</h1>
       {view === "core" && <CoreTeam />}
       {view === "advisors" && (

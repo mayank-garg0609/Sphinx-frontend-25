@@ -18,7 +18,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = memo(({
   }, [onPolicySelect]);
 
   return (
-    <aside className="hidden lg:block fixed left-10 top-20 bottom-0 w-80 bg-zinc-900/30 backdrop-blur-sm border-r border-zinc-800/50 z-30 overflow-y-auto">
+    <aside className="hidden lg:block fixed left-10 top-40 bottom-0 w-80 bg-zinc-900/30 backdrop-blur-sm border-r border-zinc-800/50 z-30 overflow-y-auto"> 
       <div className="p-6">
         <div className="mb-8">
           <h2 className="text-xl font-bold text-white mb-2">

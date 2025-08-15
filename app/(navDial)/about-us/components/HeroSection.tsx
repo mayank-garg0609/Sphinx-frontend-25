@@ -19,7 +19,7 @@ const HeroSection: React.FC<HeroSectionProps> = React.memo(({ isLoaded }) => {
   );
 
   return (
-    <section className="relative px-6 py-24">
+    <section className="relative px-6 py-24 pt-40 md:pt-45"> 
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-br from-zinc-900/80 via-black/90 to-zinc-900/80"></div>
         <div className="absolute top-20 left-1/4 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl animate-pulse"></div>

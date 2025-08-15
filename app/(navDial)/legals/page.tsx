@@ -124,13 +124,6 @@ export default function LegalsPage() {
         <meta name="twitter:title" content={SEO_DATA.title} />
         <meta name="twitter:description" content={SEO_DATA.description} />
 
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin=""
-        />
-
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1, viewport-fit=cover"
@@ -156,7 +149,7 @@ export default function LegalsPage() {
               onPolicySelect={handlePolicySelect}
             />
             <main className="w-full min-h-screen flex justify-center">
-              <div className="w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-8 pt-32 lg:pt-20 lg:ml-80">
+              <div className="w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-8 pt-48 lg:pt-36 lg:ml-80">
                 {/* Optimized Background Image */}
                 <div className="fixed inset-0 z-0">
                   <Image

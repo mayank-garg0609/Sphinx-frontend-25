@@ -1,4 +1,4 @@
-import { CaRegisterFormData } from "../types/CARegistrations";
+import { CARegisterFormData } from "@/app/schemas/CARegisterSchema";
 import { getAuthToken } from "@/app/hooks/useUser/utils/helperFunctions";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -11,7 +11,7 @@ export interface RegistrationResponse {
 }
 
 export const registerCAUser = async (
-  data: CaRegisterFormData
+  data: CARegisterFormData
 ): Promise<RegistrationResponse> => {
   try {
     // Create FormData for file upload

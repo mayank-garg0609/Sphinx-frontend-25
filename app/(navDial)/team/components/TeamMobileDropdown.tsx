@@ -19,7 +19,7 @@ export default function TeamMobileDropdown({
   setIsDropdownOpen,
 }: TeamMobileDropdownProps) {
   return (
-    <div className="lg:hidden px-4 pt-28 z-20 relative">
+    <div className="lg:hidden px-4 pt-32 z-20 relative"> {/* Updated pt-32 */}
       <div className="relative">
         <button
           onClick={handleDropdownToggle}

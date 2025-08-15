@@ -1,14 +1,7 @@
-export interface CaRegisterFormData {
-  how_did_you_find_us: string;
-  why_should_we_choose_you: string;
-  past_experience: string;
-  your_strengths: string;
-  your_expectations: string;  
-  resume: FileList ; 
-}
+export type { CARegisterFormData } from "@/app/schemas/CARegisterSchema";
 
 export interface FormField {
-  key: keyof CaRegisterFormData;
+  key: keyof import("@/app/schemas/CARegisterSchema").CARegisterFormData;
   label: string;
   placeholder: string;
   type?: 'text' | 'file'; 
