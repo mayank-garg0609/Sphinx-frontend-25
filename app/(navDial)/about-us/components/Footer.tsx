@@ -1,46 +1,56 @@
 import React from "react";
-import { Zap } from "lucide-react";
 
 const Footer: React.FC = React.memo(() => {
   return (
     <footer className="px-6 py-20 bg-gradient-to-b from-zinc-900 to-black">
-      <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-12">
+      <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-12">
+        {/* Quick Links Section */}
         <div>
-          <h3 className="text-3xl font-bold mb-8 bg-gradient-to-r from-yellow-400 to-yellow-300 bg-clip-text text-transparent">
-            SPHINX
-          </h3>
-          <p className="text-zinc-400 mb-8 leading-relaxed">
-            SPHINX is MNIT Jaipur's annual cultural festival — a celebration
-            of creativity, energy, and artistic excellence that brings
-            students from across the nation together.
-          </p>
+          <h4 className="text-xl font-semibold mb-6 text-white">Quick Links</h4>
+          <ul className="space-y-3 text-zinc-400">
+            <li className="hover:text-white transition-colors duration-300">
+              About Us
+            </li>
+            <li className="hover:text-white transition-colors duration-300">
+              Events
+            </li>
+            <li className="hover:text-white transition-colors duration-300">
+              Gallery
+            </li>
+            <li className="hover:text-white transition-colors duration-300">
+              Contact
+            </li>
+          </ul>
         </div>
 
+        {/* Marketing Team */}
         <div>
           <h4 className="text-xl font-semibold mb-6 text-white">
-            Get In Touch
+            Marketing Team
           </h4>
           <div className="space-y-3 text-zinc-400">
             <p className="hover:text-white transition-colors duration-300">
-              3443 Oak Ridge Omaha, GA 45065
+              Lorem Ipsum — +91 98765 43210
             </p>
             <p className="hover:text-white transition-colors duration-300">
-              800-625-4125
-            </p>
-            <p className="hover:text-white transition-colors duration-300">
-              402-245-7543
-            </p>
-            <p className="hover:text-white transition-colors duration-300">
-              hello@digita.com
+              Lorem Ipsum — +91 91234 56789
             </p>
           </div>
         </div>
 
+        {/* Technical Team */}
         <div>
-          <button className="group bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-400 hover:to-yellow-300 text-black px-8 py-3 rounded-full font-bold transition-all duration-500 inline-flex items-center transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-yellow-400/25">
-            Explore
-            <Zap className="w-5 h-5 ml-2 transform transition-transform duration-300 group-hover:rotate-12" />
-          </button>
+          <h4 className="text-xl font-semibold mb-6 text-white">
+            Technical Team
+          </h4>
+          <div className="space-y-3 text-zinc-400">
+            <p className="hover:text-white transition-colors duration-300">
+              Lorem Ipsum — +91 99887 66554
+            </p>
+            <p className="hover:text-white transition-colors duration-300">
+              Lorem Ipsum — +91 99123 45678
+            </p>
+          </div>
         </div>
       </div>
 

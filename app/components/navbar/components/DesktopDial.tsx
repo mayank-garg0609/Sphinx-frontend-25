@@ -7,17 +7,13 @@ import React, {
   useState,
 } from "react";
 import { FaUser, FaUserPlus } from "react-icons/fa";
-import {
-  CENTER_SIZE_CLOSED,
-  INNER_CIRCLE_SIZE,
-  BUTTON_SIZE,
-} from "../utils/constants";
-import { navItems, NAV_ITEMS_COUNT } from "../utils/navItems";
+import { CENTER_SIZE_CLOSED, INNER_CIRCLE_SIZE } from "../utils/constants";
+import { navItems } from "../utils/navItems";
 import { NavButton } from "./NavButton";
 import { Tooltip } from "./Tooltip";
 import type { NavItem } from "../types/navbarTypes";
 import Image from "next/image";
-import logo from "@/public/image/logo.webp";
+import logo from "@/public/image/logo.png";
 
 type Item = NavItem & {
   displayIndex: number;
@@ -221,9 +217,9 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
         .cyberpunk-inner-track {
           background: linear-gradient(
             90deg,
-            #e8e8e8 0%,
-            #f5f5f5 50%,
-            #ffffff 100%
+            #00ffcc 0%,
+            #00ffcc 50%,
+            #00ffcc 100%
           );
           position: relative;
           overflow: hidden;
@@ -375,13 +371,11 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
         }
       `}</style>
 
-      {/* Always render as expanded */}
       <div
         className="dial-container cyberpunk-dial full-width-container h-16 md:h-20 lg:h-24 xl:h-28 2xl:h-32"
         ref={containerRef}
       >
         <div ref={dialRef} className="dial-wrapper w-full h-full relative">
-          {/* Background Track - responsive width and positioning */}
           <div
             className="cyberpunk-track neon-glow-cyan absolute h-12 md:h-16 lg:h-20 xl:h-24 2xl:h-28"
             style={{
@@ -392,7 +386,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
             }}
           />
 
-          {/* Inner Track - responsive sizing */}
           <div
             className="cyberpunk-inner-track neon-glow-amber absolute h-8 md:h-10 lg:h-12 xl:h-16 2xl:h-20 cursor-pointer"
             onClick={handleHomeClick}
@@ -416,7 +409,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
             </Tooltip>
           </div>
 
-          {/* Navigation Buttons Container - Horizontally centered with equal spacing */}
           <div
             className={`absolute inset-0 flex items-center justify-center px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 ${getResponsiveGap(
               windowWidth
@@ -454,7 +446,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
             })}
           </div>
 
-          {/* Inner Circle - responsive positioning */}
           <div
             className="absolute right-2 md:right-4 lg:right-6 xl:right-8 2xl:right-12 top-1/2 transform -translate-y-1/2 z-50"
             style={{
@@ -498,7 +489,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
             </Tooltip>
           </div>
 
-          {/* Center Hub Button - responsive sizing and positioning */}
           <div
             className="absolute left-2 md:left-4 lg:left-6 xl:left-8 2xl:left-12 top-1/2 transform -translate-y-1/2 z-50"
             style={{
@@ -513,7 +503,7 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
             }}
           >
             <Tooltip
-              content="Sphinx'25 Home"
+              content="Home"
               show={hoveredTooltip === "center-hub"}
               isExpanded={true}
               buttonPosition={{ x: 0, y: 0 }}
@@ -522,7 +512,7 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
                 onClick={handleHomeClick}
                 onMouseEnter={() => handleTooltipShow("center-hub")}
                 onMouseLeave={handleTooltipHide}
-                className="center-hub-cyberpunk neon-glow-cyan w-full h-full flex items-center justify-center"
+                className="center-hub-cyberpunk neon-glow-cyan w-full h-full flex items-center justify-center relative overflow-hidden"
                 aria-label="Go to home"
               >
                 <Suspense
@@ -530,19 +520,16 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
                     <div className="w-5 h-5 md:w-6 md:h-6 bg-gray-400 rounded animate-pulse" />
                   }
                 >
-                  <div className="text-cyan-400 font-bold font-mono drop-shadow-lg text-lg md:text-xl lg:text-2xl xl:text-3xl 2xl:text-4xl">
-                    <Image
-                      src={logo}
-                      alt="Sphinx Logo"
-                      width={30}
-                      height={30}
-                      className="bg-white animate-pulse rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)] sm:w-6 sm:h-6"
-                      placeholder="blur"
-                      blurDataURL={logo.blurDataURL}
-                      priority={true}
-                      quality={90}
-                    />
-                  </div>
+                  <Image
+                    src={logo}
+                    alt="Sphinx Logo"
+                    fill
+                    className="object-cover animate-pulse"
+                    placeholder="blur"
+                    blurDataURL={logo.blurDataURL}
+                    priority
+                    quality={90}
+                  />
                 </Suspense>
               </button>
             </Tooltip>

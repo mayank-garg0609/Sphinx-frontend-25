@@ -11,9 +11,9 @@ export const FormHeader = memo<FormHeaderProps>(({ logo }) => (
       <Image
         src={logo}
         alt="Sphinx Logo"
-        width={20}
-        height={20}
-        className="bg-white animate-pulse rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)] sm:w-6 sm:h-6"
+        width={32} // slightly smaller than text
+        height={32}
+        className=" animate-pulse rounded-full  sm:w-7 sm:h-7 lg:w-9 lg:h-9"
         placeholder="blur"
         blurDataURL={logo.blurDataURL}
         priority={true}

@@ -445,6 +445,7 @@ export const navbarStyles = `
   }
 
 
+
   /* Ensure all interactive elements in navbar are clickable */
   .dial-container button,
   .dial-container .cyberpunk-inner-track,

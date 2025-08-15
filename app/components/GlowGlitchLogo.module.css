@@ -406,3 +406,30 @@
     opacity: 0.5;
   }
 }
+.controlsLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.control {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.control.button {
+  background: radial-gradient(circle, #ff4040, #800000);
+  box-shadow: 0 0 6px 2px rgba(255, 0, 0, 0.6);
+}
+
+.control.dial {
+  border: 2px solid cyan;
+  border-radius: 50%;
+  box-shadow: 0 0 8px 2px rgba(0, 255, 255, 0.5);
+}
+
+.control.slider {
+  border-radius: 3px;
+  background: linear-gradient(to right, #ffaa00, #ffdd55);
+  box-shadow: 0 0 4px 1px rgba(255, 200, 0, 0.6);
+}

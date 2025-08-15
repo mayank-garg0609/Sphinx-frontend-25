@@ -50,11 +50,13 @@ const AboutSection: React.FC<AboutSectionProps> = React.memo(({ isLoaded }) => {
             <span className="text-yellow-400">The Best</span>
           </h2>
           <p className="text-zinc-400 text-lg leading-relaxed mb-10 font-light">
-            SPHINX is the cultural heartbeat of MNIT Jaipur — a festival that
-            blends art, music, dance, literature, and expression into an
-            electrifying celebration. Experience unforgettable performances,
-            workshops, and creative brilliance at one of India's premier campus
-            fests.
+            SPHINX, MNIT Jaipur's crown jewel, is Rajasthan’s largest
+            Techno-Management fest, attracting 60,000+ innovators and
+            problem-solvers from IITs, NITs, and across India. By day, it drives
+            breakthroughs with high-intensity Hackathons, Robowars, and
+            cutting-edge challenges; by night, it captivates with icons like
+            Mithoon and Jubin Nautiyal — a grand fusion of technology,
+            creativity, and unforgettable experiences.
           </p>
         </div>
       </div>

@@ -1,4 +1,3 @@
-// components/GlowGlitchLogo.tsx
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
@@ -12,14 +11,14 @@ interface GlowGlitchLogoProps {
   duration?: number;
 }
 
-interface Particle {
+interface ControlElement {
   id: number;
   x: number;
   y: number;
-  vx: number;
-  vy: number;
-  life: number;
-  maxLife: number;
+  size: number;
+  type: "button" | "dial" | "slider";
+  angle?: number;
+  pulse?: number;
 }
 
 const GlowGlitchLogo: React.FC<GlowGlitchLogoProps> = ({
@@ -30,57 +29,59 @@ const GlowGlitchLogo: React.FC<GlowGlitchLogoProps> = ({
   duration = 4000,
 }) => {
   const [isAnimating, setIsAnimating] = useState(autoPlay);
-  const [particles, setParticles] = useState<Particle[]>([]);
+  const [controls, setControls] = useState<ControlElement[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>(0);
-  const particleIdRef = useRef(0);
+  const controlIdRef = useRef(0);
 
-  const generateParticles = () => {
-    const newParticles: Particle[] = [];
-    for (let i = 0; i < 20; i++) {
-      newParticles.push({
-        id: particleIdRef.current++,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        vx: (Math.random() - 0.5) * 2,
-        vy: (Math.random() - 0.5) * 2,
-        life: Math.random() * 100,
-        maxLife: 100,
+  const generateControls = () => {
+    const newControls: ControlElement[] = [];
+    for (let i = 0; i < 8; i++) {
+      const type = ["button", "dial", "slider"][
+        Math.floor(Math.random() * 3)
+      ] as ControlElement["type"];
+
+      newControls.push({
+        id: controlIdRef.current++,
+        x: Math.random() * 90,
+        y: Math.random() * 90,
+        size: 6 + Math.random() * 8,
+        type,
+        angle: type === "dial" ? Math.random() * 360 : undefined,
+        pulse: type === "button" ? Math.random() : undefined,
       });
     }
-    return newParticles;
+    return newControls;
   };
 
-  const animateParticles = () => {
-    setParticles((prev) => {
-      const updatedParticles = prev
-        .map((particle) => ({
-          ...particle,
-          x: Math.max(0, Math.min(100, particle.x + particle.vx)),
-          y: Math.max(0, Math.min(100, particle.y + particle.vy)),
-          life: particle.life - 1,
-        }))
-        .filter((particle) => particle.life > 0);
-
-      // Add new particles occasionally, but limit total count
-      if (Math.random() < 0.1 && updatedParticles.length < 30) {
-        return [...updatedParticles, ...generateParticles().slice(0, 2)];
-      }
-
-      return updatedParticles;
-    });
+  const animateControls = () => {
+    setControls((prev) =>
+      prev.map((ctrl) => {
+        if (ctrl.type === "dial") {
+          return { ...ctrl, angle: (ctrl.angle! + 1) % 360 };
+        }
+        if (ctrl.type === "button") {
+          return {
+            ...ctrl,
+            pulse: Math.abs(Math.sin(Date.now() / 300 + ctrl.id)),
+          };
+        }
+        if (ctrl.type === "slider") {
+          return { ...ctrl, x: (ctrl.x + 0.3) % 100 };
+        }
+        return ctrl;
+      })
+    );
 
     if (isAnimating) {
-      animationRef.current = requestAnimationFrame(animateParticles);
+      animationRef.current = requestAnimationFrame(animateControls);
     }
   };
 
   const startAnimation = () => {
     setIsAnimating(true);
-    setParticles(generateParticles());
-    animateParticles();
-
-    // Complete animation after duration
+    setControls(generateControls());
+    animateControls();
     setTimeout(() => {
       setIsAnimating(false);
       if (animationRef.current) {
@@ -90,23 +91,10 @@ const GlowGlitchLogo: React.FC<GlowGlitchLogoProps> = ({
     }, duration);
   };
 
-  const replayAnimation = () => {
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-    }
-    setParticles([]);
-    setTimeout(() => startAnimation(), 100);
-  };
-
   useEffect(() => {
-    if (autoPlay) {
-      startAnimation();
-    }
-
+    if (autoPlay) startAnimation();
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
   }, []);
 
@@ -114,31 +102,8 @@ const GlowGlitchLogo: React.FC<GlowGlitchLogoProps> = ({
     <div
       ref={containerRef}
       className={`${styles.logoContainer} ${className}`}
-      onClick={!isAnimating ? replayAnimation : undefined}
+      onClick={!isAnimating ? startAnimation : undefined}
     >
-      <div
-        className={`${styles.glowEffect} ${isAnimating ? styles.animate : ""}`}
-      />
-
-      <div
-        className={`${styles.scanlines} ${isAnimating ? styles.animate : ""}`}
-      />
-
-      <div className={styles.electricLines}>
-        {[...Array(5)].map((_, i) => (
-          <div
-            key={i}
-            className={`${styles.electricLine} ${
-              isAnimating ? styles.animate : ""
-            }`}
-            style={{
-              left: `${20 + i * 15}%`,
-              animationDelay: `${i * 0.2}s`,
-            }}
-          />
-        ))}
-      </div>
-
       <h1
         className={`${styles.logoText} ${isAnimating ? styles.animate : ""}`}
         data-text={text}
@@ -146,15 +111,23 @@ const GlowGlitchLogo: React.FC<GlowGlitchLogoProps> = ({
         {text}
       </h1>
 
-      <div className={styles.particles}>
-        {particles.map((particle) => (
+      {/* Time Machine Control Elements */}
+      <div className={styles.controlsLayer}>
+        {controls.map((ctrl) => (
           <div
-            key={particle.id}
-            className={styles.particle}
+            key={ctrl.id}
+            className={`${styles.control} ${styles[ctrl.type]}`}
             style={{
-              left: `${particle.x}%`,
-              top: `${particle.y}%`,
-              opacity: particle.life / particle.maxLife,
+              left: `${ctrl.x}%`,
+              top: `${ctrl.y}%`,
+              width: `${ctrl.size}px`,
+              height: `${ctrl.size}px`,
+              transform:
+                ctrl.type === "dial"
+                  ? `rotate(${ctrl.angle}deg)`
+                  : ctrl.type === "button"
+                  ? `scale(${0.8 + ctrl.pulse! * 0.4})`
+                  : undefined,
             }}
           />
         ))}
@@ -162,5 +135,4 @@ const GlowGlitchLogo: React.FC<GlowGlitchLogoProps> = ({
     </div>
   );
 };
-
 export default GlowGlitchLogo;

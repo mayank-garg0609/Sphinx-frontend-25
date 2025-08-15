@@ -11,24 +11,20 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 const Navbar = lazy(() => import("./components/navbar/navbar"));
 const CursorTracker = lazy(() => import("../app/animations/glowingCursor"));
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import homeBG from "@/public/image/homeBG.webp";
 import upcomingBG from "@/public/image/upcomingBG.webp";
 import mobileBG from "@/public/image/mobileBG.webp";
 
-// ========== CONSTANTS ==========
 const NO_BG_PATHS = new Set([
   "/login",
   "/sign-up",
   "/caProgram",
   "/caProgram/register",
   "/update",
+  "/devTeam",
 ]);
 
 const UPCOMING_PATHS = new Set([
-  "/about-us",
   "/accommodation",
-  "/team",
-  "/dev-team",
   "/workshops",
   "/events",
   "/competition",

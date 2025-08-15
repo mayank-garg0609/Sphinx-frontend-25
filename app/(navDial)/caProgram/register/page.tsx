@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Image from "next/image";
-import logo from "@/public/image/logo.webp";
+import logo from "@/public/image/logo.png";
 import caRegister from "@/public/image/caRegister.webp";
 import { RegistrationForm } from "./components/RegistrationForm";
 import { Suspense } from "react";

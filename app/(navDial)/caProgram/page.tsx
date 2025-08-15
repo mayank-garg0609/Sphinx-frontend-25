@@ -9,7 +9,7 @@ import FAQSection from "./components/FAQSection";
 import { InteractiveBackground } from "./components/InteractiveBackground";
 import { ReactLenis } from "@studio-freight/react-lenis";
 import { useRef } from "react";
-import bgOverlay from "@/public/image/invLOGO.webp";
+import bgOverlay from "@/public/image/logo.png";
 import { useTransitionRouter } from "next-view-transitions";
 import { slideInOut } from "@/app/animations/pageTrans";
 
@@ -68,10 +68,8 @@ export default function CAProgramPage() {
       `}</style>
 
       <div className="relative min-h-screen w-full overflow-hidden">
-        {/* Interactive Background (existing) */}
         <InteractiveBackground />
 
-        {/* Fixed Blinking Background Overlay - Center Portion */}
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[5] w-[60vw] h-[60vh] sm:w-[50vw] sm:h-[50vh] lg:w-[40vw] lg:h-[40vh]">
           <Image
             src={bgOverlay}
