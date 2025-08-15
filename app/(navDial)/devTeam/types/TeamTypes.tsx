@@ -11,6 +11,7 @@ export interface TeamMember {
   description: string;
   linkedIn: string;
   Instagram: string;
+  Github: string;
 }
 
 export type TeamMemberIndex = number;

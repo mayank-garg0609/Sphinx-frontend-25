@@ -31,8 +31,6 @@ interface DesktopDialProps {
 }
 
 const DesktopDialComponent: React.FC<DesktopDialProps> = ({
-  isExpanded,
-  setIsExpanded,
   isLoggedIn,
   pathname,
   onNavigation,
@@ -76,7 +74,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
 
   const allItems = getAllItems();
 
-  // Handle tooltip visibility
   const handleTooltipShow = useCallback((itemId: string) => {
     setHoveredTooltip(itemId);
   }, []);
@@ -87,7 +84,7 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
 
   const handleNavClick = useCallback(
     (item: any) => {
-      setHoveredTooltip(null); // Hide tooltip immediately on click
+      setHoveredTooltip(null); 
       onNavigation(item);
     },
     [onNavigation]

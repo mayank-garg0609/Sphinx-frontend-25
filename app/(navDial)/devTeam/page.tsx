@@ -6,12 +6,19 @@ import { TeamData } from "./types/teamData";
 import TeamHeader from "./component/TeamHeader";
 import TeamMemberCard from "./component/TeamMemberCard";
 import NavigationDots from "./component/NavigationDots";
+import MobileTeamView from "./component/MobileTeamView";
 import { ScrollStyles } from "./styles/scrollbar";
-
-// Enhanced constants for smoother interactions
+import { useMediaQuery } from "./hooks/useMediaQuery";
 const SCROLL_DEBOUNCE_DELAY = 100;
 const INTERSECTION_THRESHOLD = [0.1, 0.25, 0.5, 0.75, 0.9];
-const ROOT_MARGIN = "-30% 0px -30% 0px";
+
+const ROOT_MARGINS = {
+  mobile: "-20% 0px -20% 0px",
+  tablet: "-25% 0px -25% 0px",
+  desktop: "-30% 0px -30% 0px",
+  large: "-35% 0px -35% 0px",
+};
+
 const SCROLL_BEHAVIOR_CONFIG = {
   behavior: "smooth" as ScrollBehavior,
   block: "center" as ScrollLogicalPosition,
@@ -23,12 +30,26 @@ const TeamPage: React.FC = () => {
   const [hoveredIndex, setHoveredIndex] = useState<TeamMemberIndex | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   
+  // Media queries for responsive behavior
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isTablet = useMediaQuery("(min-width: 769px) and (max-width: 1024px)");
+  const isLargeDesktop = useMediaQuery("(min-width: 1440px)");
+  const isExtraLarge = useMediaQuery("(min-width: 1920px)");
+  
   const railRef = useRef<HTMLUListElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
 
   const activeMember = useMemo(() => TeamData[activeIndex], [activeIndex]);
+
+  // Get appropriate root margin based on screen size
+  const getRootMargin = useCallback(() => {
+    if (isMobile) return ROOT_MARGINS.mobile;
+    if (isTablet) return ROOT_MARGINS.tablet;
+    if (isExtraLarge) return ROOT_MARGINS.large;
+    return ROOT_MARGINS.desktop;
+  }, [isMobile, isTablet, isExtraLarge]);
 
   // Clear timeout utility
   const clearScrollTimeout = useCallback(() => {
@@ -40,7 +61,7 @@ const TeamPage: React.FC = () => {
 
   // Enhanced intersection observer for better active element detection
   const setupIntersectionObserver = useCallback(() => {
-    if (!railRef.current) return;
+    if (!railRef.current || isMobile) return; // Skip for mobile
 
     // Cleanup existing observer
     if (observerRef.current) {
@@ -49,10 +70,8 @@ const TeamPage: React.FC = () => {
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        // Don't update active index during user scrolling to prevent conflicts
         if (isUserScrolling) return;
 
-        // Find the element with the highest intersection ratio (most visible)
         let maxVisibleElement = { index: 0, ratio: 0 };
         
         entries.forEach((entry) => {
@@ -63,25 +82,23 @@ const TeamPage: React.FC = () => {
           }
         });
 
-        // Only update if the element is sufficiently visible (> 50%)
         if (maxVisibleElement.ratio > 0.5) {
           setActiveIndex(maxVisibleElement.index);
         }
       },
       {
         root: railRef.current,
-        rootMargin: ROOT_MARGIN,
+        rootMargin: getRootMargin(),
         threshold: INTERSECTION_THRESHOLD,
       }
     );
 
-    // Observe all items
     itemRefs.current.forEach((item) => {
       if (item) {
         observerRef.current?.observe(item);
       }
     });
-  }, [isUserScrolling]);
+  }, [isUserScrolling, getRootMargin, isMobile]);
 
   // Handle scroll events with improved debouncing
   const handleScrollDebounced = useCallback(() => {
@@ -95,7 +112,7 @@ const TeamPage: React.FC = () => {
 
   // Initialize intersection observer and scroll handler
   useEffect(() => {
-    if (!isInitialized) return;
+    if (!isInitialized || isMobile) return;
 
     setupIntersectionObserver();
 
@@ -111,11 +128,10 @@ const TeamPage: React.FC = () => {
       observerRef.current?.disconnect();
       clearScrollTimeout();
     };
-  }, [setupIntersectionObserver, handleScrollDebounced, clearScrollTimeout, isInitialized]);
+  }, [setupIntersectionObserver, handleScrollDebounced, clearScrollTimeout, isInitialized, isMobile]);
 
-  // Initialize after component mount to prevent SSR issues
+  // Initialize after component mount
   useEffect(() => {
-    // Use requestAnimationFrame to ensure DOM is ready
     const initializeComponent = () => {
       setIsInitialized(true);
     };
@@ -130,31 +146,29 @@ const TeamPage: React.FC = () => {
     const targetItem = itemRefs.current[index];
     if (!targetItem) return;
 
-    // Prevent observer updates during programmatic scroll
     setIsUserScrolling(true);
-    
-    // Update active index immediately for UI responsiveness
     setActiveIndex(index);
 
-    // Perform smooth scroll
     targetItem.scrollIntoView(SCROLL_BEHAVIOR_CONFIG);
 
-    // Reset scrolling state after animation completes
     clearScrollTimeout();
     scrollTimeoutRef.current = setTimeout(() => {
       setIsUserScrolling(false);
-    }, 800); // Slightly longer to account for scroll animation
+    }, 800);
   }, [clearScrollTimeout]);
 
   const handleMouseEnter = useCallback((index: TeamMemberIndex) => {
-    setHoveredIndex(index);
-  }, []);
+    if (!isMobile) { // Disable hover effects on mobile
+      setHoveredIndex(index);
+    }
+  }, [isMobile]);
 
   const handleMouseLeave = useCallback(() => {
-    setHoveredIndex(null);
-  }, []);
+    if (!isMobile) {
+      setHoveredIndex(null);
+    }
+  }, [isMobile]);
 
-  // Ref callback to store item references
   const setItemRef = useCallback((index: number) => {
     return (el: HTMLLIElement | null) => {
       itemRefs.current[index] = el;
@@ -162,7 +176,6 @@ const TeamPage: React.FC = () => {
   }, []);
 
   if (!isInitialized) {
-    // Return a loading state to prevent hydration mismatches
     return (
       <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
         <div className="animate-pulse text-white/60">Loading...</div>
@@ -170,15 +183,28 @@ const TeamPage: React.FC = () => {
     );
   }
 
+  // Render mobile version
+  if (isMobile) {
+    return (
+      <MobileTeamView 
+        teamData={TeamData}
+        activeIndex={activeIndex}
+        onIndexChange={setActiveIndex}
+      />
+    );
+  }
+
+  // Desktop/Tablet responsive layout
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white relative overflow-hidden">
-      {/* Subtle Grid Background */}
       <ScrollStyles/>
+      
+      {/* Subtle Grid Background */}
       <div
         className="fixed inset-0 opacity-[0.015] pointer-events-none"
         style={{
           backgroundImage: `radial-gradient(circle, #ffffff 0.5px, transparent 0.5px)`,
-          backgroundSize: "40px 40px",
+          backgroundSize: `${isExtraLarge ? '50px 50px' : '40px 40px'}`,
         }}
         aria-hidden="true"
       />
@@ -187,15 +213,29 @@ const TeamPage: React.FC = () => {
       <TeamHeader />
 
       {/* Main Content */}
-      <main className="pt-24 h-screen">
-        <div className="max-w-[1920px] mx-auto px-12 min-h-screen flex items-center">
-          <div className="w-full grid grid-cols-12 gap-16 items-center py-12">
+      <main className="pt-20 md:pt-24 h-screen">
+        <div className={`
+          max-w-full mx-auto min-h-screen flex items-center
+          ${isExtraLarge ? 'px-16' : isLargeDesktop ? 'px-12' : 'px-8'}
+        `}>
+          <div className={`
+            w-full items-center py-8 md:py-12
+            ${isTablet ? 'grid grid-cols-1 gap-8' : 'grid grid-cols-12 gap-8 lg:gap-16'}
+          `}>
+            
             {/* Left Section */}
-            <div className="col-span-3 relative min-h-[800px] flex flex-col justify-center">
+            <div className={`
+              relative flex flex-col justify-center
+              ${isTablet ? 'order-2 min-h-[400px]' : 'col-span-12 lg:col-span-3 min-h-[600px] xl:min-h-[800px]'}
+            `}>
               {/* Giant Age Number Background */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
                 <span
-                  className="text-[40rem] font-black leading-none opacity-[0.08] font-mono text-white/20 transition-all duration-1000 ease-out"
+                  className={`
+                    font-black leading-none opacity-[0.08] font-mono text-white/20 
+                    transition-all duration-1000 ease-out
+                    ${isExtraLarge ? 'text-[45rem]' : isLargeDesktop ? 'text-[35rem]' : isTablet ? 'text-[20rem]' : 'text-[25rem]'}
+                  `}
                   style={{
                     lineHeight: 0.6,
                     transform: `translateY(${activeIndex * -2}px)`,
@@ -207,20 +247,34 @@ const TeamPage: React.FC = () => {
               </div>
 
               {/* Title and Description */}
-              <div className="relative z-10 space-y-8">
-                <div className="space-y-6">
-                  <div className="w-24 h-[1px] bg-gradient-to-r from-blue-400 via-cyan-400 to-transparent opacity-80" />
-                  <div className="space-y-4">
-                    <h1 className="text-6xl font-black uppercase tracking-[0.15em] text-white leading-[0.9] transition-all duration-700">
+              <div className={`relative z-10 ${isTablet ? 'text-center' : 'space-y-6 lg:space-y-8'}`}>
+                <div className={`${isTablet ? 'space-y-4' : 'space-y-6'}`}>
+                  <div className={`
+                    bg-gradient-to-r from-blue-400 via-cyan-400 to-transparent opacity-80
+                    ${isTablet ? 'w-16 h-[1px] mx-auto' : 'w-20 lg:w-24 h-[1px]'}
+                  `} />
+                  <div className={`${isTablet ? 'space-y-2' : 'space-y-4'}`}>
+                    <h1 className={`
+                      font-black uppercase tracking-[0.15em] text-white leading-[0.9] 
+                      transition-all duration-700
+                      ${isExtraLarge ? 'text-7xl' : isLargeDesktop ? 'text-6xl' : isTablet ? 'text-4xl' : 'text-5xl'}
+                    `}>
                       {activeMember.designation}
                     </h1>
-                    <p className="text-white/70 leading-relaxed max-w-[32ch] text-lg font-light tracking-wide transition-all duration-700">
+                    <p className={`
+                      text-white/70 leading-relaxed font-light tracking-wide 
+                      transition-all duration-700
+                      ${isExtraLarge ? 'text-xl max-w-[40ch]' : isLargeDesktop ? 'text-lg max-w-[32ch]' : isTablet ? 'text-base max-w-[50ch] mx-auto' : 'text-lg max-w-[32ch]'}
+                    `}>
                       {activeMember.description}
                     </p>
                   </div>
                 </div>
 
-                <nav className="flex items-center gap-8 text-sm text-white/60 pt-4" aria-label="Social links">
+                <nav className={`
+                  flex items-center gap-6 lg:gap-8 text-sm text-white/60 pt-4
+                  ${isTablet ? 'justify-center' : ''}
+                `} aria-label="Social links">
                   <Link
                     className="hover:text-blue-400 cursor-pointer transition-all duration-300 hover:tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-400"
                     href={activeMember.linkedIn}
@@ -243,11 +297,20 @@ const TeamPage: React.FC = () => {
             </div>
 
             {/* Center Section - Team Photos */}
-            <div className="col-span-6 flex justify-center">
-              <div className="relative w-full max-w-lg">
+            <div className={`
+              flex justify-center
+              ${isTablet ? 'order-1' : 'col-span-12 lg:col-span-6'}
+            `}>
+              <div className={`
+                relative w-full
+                ${isExtraLarge ? 'max-w-2xl' : isLargeDesktop ? 'max-w-xl' : isTablet ? 'max-w-lg' : 'max-w-lg'}
+              `}>
                 <ul
                   ref={railRef}
-                  className="h-[700px] overflow-y-auto scroll-smooth space-y-8 py-12 scrollbar-hide"
+                  className={`
+                    overflow-y-auto scroll-smooth space-y-6 lg:space-y-8 scrollbar-hide
+                    ${isExtraLarge ? 'h-[800px] py-16' : isLargeDesktop ? 'h-[700px] py-12' : isTablet ? 'h-[600px] py-10' : 'h-[700px] py-12'}
+                  `}
                   style={{
                     scrollSnapType: "y mandatory",
                     scrollPadding: "35% 0",
@@ -272,36 +335,48 @@ const TeamPage: React.FC = () => {
                 </ul>
 
                 {/* Gradient fades */}
-                <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-[#0a0a0a] to-transparent pointer-events-none z-10" />
-                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none z-10" />
+                <div className="absolute top-0 left-0 right-0 h-20 lg:h-24 bg-gradient-to-b from-[#0a0a0a] to-transparent pointer-events-none z-10" />
+                <div className="absolute bottom-0 left-0 right-0 h-20 lg:h-24 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none z-10" />
               </div>
             </div>
 
             {/* Right Section - Active Member Details */}
-            <div className="col-span-3 flex flex-col justify-center min-h-[700px] space-y-8">
-              <div className="space-y-8 transition-all duration-700" id={`team-member-${activeIndex}`}>
-                <div className="space-y-6">
-                  <h2 className="text-5xl font-black uppercase tracking-[0.1em] text-white leading-tight transition-all duration-700">
-                    {activeMember.name}
-                  </h2>
-                  <p className="text-blue-400 font-medium uppercase tracking-[0.15em] text-xl transition-all duration-700">
-                    {activeMember.branch}
-                  </p>
+            {!isTablet && (
+              <div className="col-span-12 lg:col-span-3 flex flex-col justify-center min-h-[600px] xl:min-h-[700px] space-y-6 lg:space-y-8">
+                <div className="space-y-6 lg:space-y-8 transition-all duration-700" id={`team-member-${activeIndex}`}>
+                  <div className="space-y-4 lg:space-y-6">
+                    <h2 className={`
+                      font-black uppercase tracking-[0.1em] text-white leading-tight 
+                      transition-all duration-700
+                      ${isExtraLarge ? 'text-6xl' : isLargeDesktop ? 'text-5xl' : 'text-4xl'}
+                    `}>
+                      {activeMember.name}
+                    </h2>
+                    <p className={`
+                      text-blue-400 font-medium uppercase tracking-[0.15em] 
+                      transition-all duration-700
+                      ${isExtraLarge ? 'text-2xl' : isLargeDesktop ? 'text-xl' : 'text-lg'}
+                    `}>
+                      {activeMember.branch}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
-        {/* Navigation Component */}
-        <NavigationDots
-          teamData={TeamData}
-          activeIndex={activeIndex}
-          hoveredIndex={hoveredIndex}
-          onScrollToIndex={scrollToIndex}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-        />
+        {/* Navigation Component - Hidden on tablet */}
+        {!isTablet && (
+          <NavigationDots
+            teamData={TeamData}
+            activeIndex={activeIndex}
+            hoveredIndex={hoveredIndex}
+            onScrollToIndex={scrollToIndex}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          />
+        )}
       </main>
     </div>
   );

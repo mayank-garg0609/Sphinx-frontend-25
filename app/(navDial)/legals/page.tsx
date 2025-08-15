@@ -9,10 +9,8 @@ import React, {
 } from "react";
 import dynamic from "next/dynamic";
 import Head from "next/head";
-import Image from "next/image";
 import { FloatingCursor } from "./components/FloatingCursor";
 import { BackgroundEffects } from "./components/BackgroundEffects";
-import { PolicyHeader } from "./components/PolicyHeader";
 import { CustomStyles } from "./components/CustomStyles";
 import { useMouseTracker } from "./hooks/useMouseTracker";
 import { POLICIES } from "./utils/constants";
@@ -46,17 +44,23 @@ const MobilePolicySelector = dynamic(
   }
 );
 
-const PolicyContent = dynamic(
+// Import the new MainContentArea component
+const MainContentArea = dynamic(
   () =>
-    import("./components/PolicyContent").then((mod) => ({
-      default: mod.PolicyContent,
+    import("./components/MainContentArea").then((mod) => ({
+      default: mod.MainContentArea,
     })),
   {
     loading: () => (
-      <div className="space-y-8 animate-pulse">
-        <div className="h-24 bg-zinc-900/30 rounded-xl"></div>
-        <div className="h-96 bg-zinc-900/30 rounded-xl"></div>
-      </div>
+      <main className="w-full min-h-screen flex justify-center">
+        <div className="w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-8 pt-48 lg:pt-36 lg:ml-80 animate-pulse">
+          <div className="h-32 bg-zinc-900/30 rounded-xl mb-12"></div>
+          <div className="space-y-8">
+            <div className="h-24 bg-zinc-900/30 rounded-xl"></div>
+            <div className="h-96 bg-zinc-900/30 rounded-xl"></div>
+          </div>
+        </div>
+      </main>
     ),
   }
 );
@@ -134,7 +138,6 @@ export default function LegalsPage() {
       <div className="min-h-screen bg-black text-white overflow-x-hidden relative">
         <ReactLenis root ref={lenisRef}>
           <FloatingCursor position={mousePosition} />
-
           <BackgroundEffects />
 
           <div className="flex min-h-screen relative z-10">
@@ -148,32 +151,13 @@ export default function LegalsPage() {
               selectedPolicy={selectedPolicy}
               onPolicySelect={handlePolicySelect}
             />
-            <main className="w-full min-h-screen flex justify-center">
-              <div className="w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-8 pt-48 lg:pt-36 lg:ml-80">
-                {/* Optimized Background Image */}
-                <div className="fixed inset-0 z-0">
-                  <Image
-                    src={legalsBG}
-                    alt="Legal documents background"
-                    fill
-                    className="object-fill opacity-30"
-                    sizes="100vw"
-                    priority
-                    quality={75}
-                    placeholder="blur"
-                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-transparent to-black/70" />
-                </div>
-
-                <PolicyHeader policy={currentPolicy} isLoaded={isLoaded} />
-
-                <PolicyContent
-                  content={currentPolicy.content}
-                  isLoaded={isLoaded}
-                />
-              </div>
-            </main>
+            
+            {/* Use the new MainContentArea component */}
+            <MainContentArea
+              currentPolicy={currentPolicy}
+              isLoaded={isLoaded}
+              legalsBG={legalsBG}
+            />
           </div>
 
           <Footer />
