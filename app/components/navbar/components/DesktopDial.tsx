@@ -1,8 +1,12 @@
-import React, { useRef, useCallback, memo, Suspense, useEffect, useState } from "react";
-import {
-  FaUser,
-  FaUserPlus,
-} from "react-icons/fa";
+import React, {
+  useRef,
+  useCallback,
+  memo,
+  Suspense,
+  useEffect,
+  useState,
+} from "react";
+import { FaUser, FaUserPlus } from "react-icons/fa";
 import {
   CENTER_SIZE_CLOSED,
   INNER_CIRCLE_SIZE,
@@ -12,6 +16,8 @@ import { navItems, NAV_ITEMS_COUNT } from "../utils/navItems";
 import { NavButton } from "./NavButton";
 import { Tooltip } from "./Tooltip";
 import type { NavItem } from "../types/navbarTypes";
+import Image from "next/image";
+import logo from "@/public/image/logo.webp";
 
 type Item = NavItem & {
   displayIndex: number;
@@ -39,7 +45,9 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const dialRef = useRef<HTMLDivElement>(null);
-  const [windowWidth, setWindowWidth] = useState<number>(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  const [windowWidth, setWindowWidth] = useState<number>(
+    typeof window !== "undefined" ? window.innerWidth : 1200
+  );
   const [hoveredTooltip, setHoveredTooltip] = useState<string | null>(null);
 
   // Handle window resize for responsive behavior
@@ -48,8 +56,8 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
       setWindowWidth(window.innerWidth);
     };
 
-    window.addEventListener('resize', handleResize, { passive: true });
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize, { passive: true });
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // Get all navigation items without rotation logic
@@ -63,11 +71,11 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
 
   // Calculate responsive gap between items
   const getResponsiveGap = useCallback((containerWidth: number) => {
-    if (containerWidth >= 2560) return 'gap-x-8'; // Ultra-wide
-    if (containerWidth >= 1920) return 'gap-x-6'; // Large desktop
-    if (containerWidth >= 1440) return 'gap-x-5'; // Desktop
-    if (containerWidth >= 1200) return 'gap-x-4'; // Small desktop
-    return 'gap-x-3'; // Tablet
+    if (containerWidth >= 2560) return "gap-x-8"; // Ultra-wide
+    if (containerWidth >= 1920) return "gap-x-6"; // Large desktop
+    if (containerWidth >= 1440) return "gap-x-5"; // Desktop
+    if (containerWidth >= 1200) return "gap-x-4"; // Small desktop
+    return "gap-x-3"; // Tablet
   }, []);
 
   const allItems = getAllItems();
@@ -81,10 +89,13 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
     setHoveredTooltip(null);
   }, []);
 
-  const handleNavClick = useCallback((item: any) => {
-    setHoveredTooltip(null); // Hide tooltip immediately on click
-    onNavigation(item);
-  }, [onNavigation]);
+  const handleNavClick = useCallback(
+    (item: any) => {
+      setHoveredTooltip(null); // Hide tooltip immediately on click
+      onNavigation(item);
+    },
+    [onNavigation]
+  );
 
   const handleInnerCircleClick = useCallback(() => {
     setHoveredTooltip(null); // Hide tooltip immediately on click
@@ -217,7 +228,7 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           position: relative;
           overflow: hidden;
           border-radius: 45px;
-          border: 1px solid #ffbf0060;
+          border: 0.5px solid #ffbf0060;
           cursor: pointer;
         }
 
@@ -255,9 +266,7 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           overflow: hidden;
           border-radius: 50%;
           cursor: pointer;
-          box-shadow: 
-            0 0 15px #00ffff80,
-            inset 0 0 10px #00ffff20,
+          box-shadow: 0 0 15px #00ffff80, inset 0 0 10px #00ffff20,
             0 0 25px #00ffff40;
         }
 
@@ -371,18 +380,15 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
         className="dial-container cyberpunk-dial full-width-container h-16 md:h-20 lg:h-24 xl:h-28 2xl:h-32"
         ref={containerRef}
       >
-        <div
-          ref={dialRef}
-          className="dial-wrapper w-full h-full relative"
-        >
+        <div ref={dialRef} className="dial-wrapper w-full h-full relative">
           {/* Background Track - responsive width and positioning */}
           <div
             className="cyberpunk-track neon-glow-cyan absolute h-12 md:h-16 lg:h-20 xl:h-24 2xl:h-28"
             style={{
-              width: '85%',
-              left: '7.5%',
-              top: '50%',
-              transform: 'translateY(-50%)',
+              width: "85%",
+              left: "7.5%",
+              top: "50%",
+              transform: "translateY(-50%)",
             }}
           />
 
@@ -393,10 +399,11 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
             onMouseEnter={() => handleTooltipShow(homeHoverId)}
             onMouseLeave={handleTooltipHide}
             style={{
-              width: '80%',
-              left: '10%',
-              top: '50%',
-              transform: 'translateY(-50%)',
+              width: "80%",
+              left: "10%",
+              top: "50%",
+              transform: "translateY(-50%)",
+              height: "60%",
             }}
           >
             <Tooltip
@@ -411,7 +418,9 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
 
           {/* Navigation Buttons Container - Horizontally centered with equal spacing */}
           <div
-            className={`absolute inset-0 flex items-center justify-center px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 ${getResponsiveGap(windowWidth)}`}
+            className={`absolute inset-0 flex items-center justify-center px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 ${getResponsiveGap(
+              windowWidth
+            )}`}
             style={{
               paddingLeft: `${Math.max(80, windowWidth * 0.06)}px`,
               paddingRight: `${Math.max(80, windowWidth * 0.06)}px`,
@@ -421,7 +430,7 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
               const isActive = pathname === item.link;
 
               return (
-                <div 
+                <div
                   key={`${item.id}-${item.actualIndex}`}
                   className="flex-shrink-0"
                 >
@@ -449,8 +458,14 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           <div
             className="absolute right-2 md:right-4 lg:right-6 xl:right-8 2xl:right-12 top-1/2 transform -translate-y-1/2 z-50"
             style={{
-              width: `clamp(40px, ${Math.min(INNER_CIRCLE_SIZE, windowWidth * 0.04)}px, 60px)`,
-              height: `clamp(40px, ${Math.min(INNER_CIRCLE_SIZE, windowWidth * 0.04)}px, 60px)`,
+              width: `clamp(40px, ${Math.min(
+                INNER_CIRCLE_SIZE,
+                windowWidth * 0.04
+              )}px, 60px)`,
+              height: `clamp(40px, ${Math.min(
+                INNER_CIRCLE_SIZE,
+                windowWidth * 0.04
+              )}px, 60px)`,
             }}
           >
             <Tooltip
@@ -474,13 +489,9 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
                   }
                 >
                   {isLoggedIn ? (
-                    <FaUser
-                      className="text-white drop-shadow-lg text-sm md:text-base lg:text-lg"
-                    />
+                    <FaUser className="text-white drop-shadow-lg text-sm md:text-base lg:text-lg" />
                   ) : (
-                    <FaUserPlus
-                      className="text-white drop-shadow-lg text-sm md:text-base lg:text-lg"
-                    />
+                    <FaUserPlus className="text-white drop-shadow-lg text-sm md:text-base lg:text-lg" />
                   )}
                 </Suspense>
               </button>
@@ -491,8 +502,14 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           <div
             className="absolute left-2 md:left-4 lg:left-6 xl:left-8 2xl:left-12 top-1/2 transform -translate-y-1/2 z-50"
             style={{
-              width: `clamp(50px, ${Math.min(CENTER_SIZE_CLOSED, windowWidth * 0.05)}px, 70px)`,
-              height: `clamp(50px, ${Math.min(CENTER_SIZE_CLOSED, windowWidth * 0.05)}px, 70px)`,
+              width: `clamp(50px, ${Math.min(
+                CENTER_SIZE_CLOSED,
+                windowWidth * 0.05
+              )}px, 70px)`,
+              height: `clamp(50px, ${Math.min(
+                CENTER_SIZE_CLOSED,
+                windowWidth * 0.05
+              )}px, 70px)`,
             }}
           >
             <Tooltip
@@ -513,11 +530,19 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
                     <div className="w-5 h-5 md:w-6 md:h-6 bg-gray-400 rounded animate-pulse" />
                   }
                 >
-                  <span 
-                    className="text-cyan-400 font-bold font-mono drop-shadow-lg text-lg md:text-xl lg:text-2xl xl:text-3xl 2xl:text-4xl"
-                  >
-                    S
-                  </span>
+                  <div className="text-cyan-400 font-bold font-mono drop-shadow-lg text-lg md:text-xl lg:text-2xl xl:text-3xl 2xl:text-4xl">
+                    <Image
+                      src={logo}
+                      alt="Sphinx Logo"
+                      width={30}
+                      height={30}
+                      className="bg-white animate-pulse rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)] sm:w-6 sm:h-6"
+                      placeholder="blur"
+                      blurDataURL={logo.blurDataURL}
+                      priority={true}
+                      quality={90}
+                    />
+                  </div>
                 </Suspense>
               </button>
             </Tooltip>

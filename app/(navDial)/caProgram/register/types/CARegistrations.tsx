@@ -3,8 +3,8 @@ export interface CaRegisterFormData {
   why_should_we_choose_you: string;
   past_experience: string;
   your_strengths: string;
-  your_expectations: string;
-  resume: FileList; 
+  your_expectations: string;  
+  resume: FileList ; 
 }
 
 export interface FormField {

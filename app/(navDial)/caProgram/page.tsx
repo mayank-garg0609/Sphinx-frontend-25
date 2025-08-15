@@ -10,6 +10,8 @@ import { InteractiveBackground } from "./components/InteractiveBackground";
 import { ReactLenis } from "@studio-freight/react-lenis";
 import { useRef } from "react";
 import bgOverlay from "@/public/image/invLOGO.webp";
+import { useTransitionRouter } from "next-view-transitions";
+import { slideInOut } from "@/app/animations/pageTrans";
 
 function SectionSkeleton() {
   return (
@@ -30,6 +32,14 @@ export default function CAProgramPage() {
   const handleOverlayLoad = useCallback(() => {
     setOverlayLoaded(true);
   }, []);
+  const router = useTransitionRouter();
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.preventDefault();
+      router.push("/caProgram/register", { onTransitionReady: slideInOut });
+    },
+    [router]
+  );
 
   return (
     <>
@@ -40,7 +50,8 @@ export default function CAProgramPage() {
         }
 
         @keyframes blinkFade {
-          0%, 100% {
+          0%,
+          100% {
             opacity: 0.15;
           }
           50% {
@@ -59,7 +70,7 @@ export default function CAProgramPage() {
       <div className="relative min-h-screen w-full overflow-hidden">
         {/* Interactive Background (existing) */}
         <InteractiveBackground />
-        
+
         {/* Fixed Blinking Background Overlay - Center Portion */}
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[5] w-[60vw] h-[60vh] sm:w-[50vw] sm:h-[50vh] lg:w-[40vw] lg:h-[40vh]">
           <Image
@@ -75,8 +86,8 @@ export default function CAProgramPage() {
             onLoad={handleOverlayLoad}
             role="presentation"
             style={{
-              objectFit: 'cover',
-              objectPosition: 'center',
+              objectFit: "cover",
+              objectPosition: "center",
             }}
           />
         </div>
@@ -91,8 +102,8 @@ export default function CAProgramPage() {
                 <p className="text-gray-100 text-sm xs:text-base sm:text-lg lg:text-xl leading-relaxed max-w-3xl mx-auto drop-shadow-lg px-2">
                   Join our nationwide network of student leaders and become the
                   voice of{" "}
-                  <span className="text-yellow-300 font-semibold">Sphinx</span> at
-                  your campus
+                  <span className="text-yellow-300 font-semibold">Sphinx</span>{" "}
+                  at your campus
                 </p>
               </header>
 
@@ -106,11 +117,12 @@ export default function CAProgramPage() {
                       <span className="text-yellow-300 font-semibold">
                         Sphinx
                       </span>
-                      , MNIT Jaipur's flagship technical festival, brings together
-                      thousands of students from across India. Our Campus
-                      Ambassador Program (CAP) is the backbone of this nationwide
-                      reach, connecting passionate students who help promote and
-                      coordinate fest activities at their respective institutions.
+                      , MNIT Jaipur's flagship technical festival, brings
+                      together thousands of students from across India. Our
+                      Campus Ambassador Program (CAP) is the backbone of this
+                      nationwide reach, connecting passionate students who help
+                      promote and coordinate fest activities at their respective
+                      institutions.
                     </p>
                     <p>
                       As a Campus Ambassador, you'll work directly with Team
@@ -142,15 +154,16 @@ export default function CAProgramPage() {
                     Ready to Make an Impact?
                   </h3>
                   <p className="text-sm sm:text-base lg:text-lg text-gray-200 mb-4 sm:mb-6 max-w-2xl mx-auto">
-                    Join hundreds of students who are already making a difference
-                    at their campuses. Applications are reviewed on a rolling
-                    basis, so apply early to secure your spot!
+                    Join hundreds of students who are already making a
+                    difference at their campuses. Applications are reviewed on a
+                    rolling basis, so apply early to secure your spot!
                   </p>
 
                   <Link
                     href="/caProgram/register"
                     className="inline-block"
                     prefetch={true}
+                    onClick={handleClick}
                   >
                     <button
                       type="button"

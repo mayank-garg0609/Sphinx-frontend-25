@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import GlowGlitchLogo from "@/app/components/GlowGlitchLogo";
-import home from "@/public/image/BG.png"; // Use WebP or AVIF for better compression
+import ParticleEffect from "@/app/animations/particleEffects";
 
 export default function HomePage() {
   const [showMainContent, setShowMainContent] = useState(false);
@@ -10,7 +10,7 @@ export default function HomePage() {
   const [targetDate, setTargetDate] = useState<Date>(
     new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
   );
-  
+
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -88,7 +88,15 @@ export default function HomePage() {
     return (value / max) * 100;
   };
 
-  const CircularTimer = ({ value, max, label }: { value: number; max: number; label: string }) => {
+  const CircularTimer = ({
+    value,
+    max,
+    label,
+  }: {
+    value: number;
+    max: number;
+    label: string;
+  }) => {
     const progress = getProgress(value, max);
     const circumference = 2 * Math.PI * 45;
     const strokeDashoffset = circumference - (progress / 100) * circumference;
@@ -128,7 +136,7 @@ export default function HomePage() {
               </linearGradient>
             </defs>
           </svg>
-          
+
           {/* Center value */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
@@ -137,11 +145,11 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-          
+
           {/* Glowing effect */}
           <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400/10 to-purple-500/10 animate-pulse"></div>
         </div>
-        
+
         {/* Label */}
         <div className="text-xs md:text-sm text-cyan-400/80 font-mono tracking-wider mt-3 text-center">
           {label}
@@ -156,63 +164,49 @@ export default function HomePage() {
       <div className="fixed inset-0 z-0">
         {/* Main background image */}
         <Image
-          src={home} // Use WebP or AVIF for better compression
+          src="/image/BG.png"
           alt="Futuristic Background"
           fill
           className="object-cover opacity-40"
           priority
           quality={85}
           placeholder="blur"
-          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+          blurDataURL="data:image/jpeg;base64,/9j/..."
           sizes="100vw"
         />
-        
-        {/* Animated gradient overlays */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-black/80"></div>
-        
-        {/* Cinematic vignette effect */}
-        <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-black/50"></div>
-        
-        {/* Animated color overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-cyan-900/10 via-transparent to-purple-900/10 animate-pulse"></div>
-        
-        {/* Moving light effects */}
-        <div className="absolute inset-0 opacity-30">
-          {/* Horizontal light sweep */}
-          <div className="absolute top-1/3 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent animate-light-sweep"></div>
-          
-          {/* Vertical light sweep */}
-          <div className="absolute top-0 left-1/3 w-1 h-full bg-gradient-to-b from-transparent via-purple-400/30 to-transparent animate-light-sweep-vertical"></div>
-          
-          {/* Diagonal light beams */}
-          <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
-            <div className="absolute -top-1/2 -left-1/2 w-full h-2 bg-gradient-to-r from-transparent via-pink-400/20 to-transparent rotate-45 animate-diagonal-sweep"></div>
-          </div>
-        </div>
-        
-        {/* Particle effect simulation */}
-        <div className="absolute inset-0 opacity-20">
-          {Array.from({ length: 50 }).map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-cyan-400 rounded-full animate-float"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 10}s`,
-                animationDuration: `${8 + Math.random() * 4}s`,
-              }}
-            />
-          ))}
+      </div>
+
+      {/* Animated gradient overlays */}
+      <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-black/80"></div>
+
+      {/* Cinematic vignette effect */}
+      <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-black/50"></div>
+
+      {/* Animated color overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-cyan-900/10 via-transparent to-purple-900/10 animate-pulse"></div>
+
+      {/* Moving light effects */}
+      <div className="absolute inset-0 opacity-30">
+        {/* Horizontal light sweep */}
+        <div className="absolute top-1/3 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent animate-light-sweep"></div>
+
+        {/* Vertical light sweep */}
+        <div className="absolute top-0 left-1/3 w-1 h-full bg-gradient-to-b from-transparent via-purple-400/30 to-transparent animate-light-sweep-vertical"></div>
+
+        {/* Diagonal light beams */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
+          <div className="absolute -top-1/2 -left-1/2 w-full h-2 bg-gradient-to-r from-transparent via-pink-400/20 to-transparent rotate-45 animate-diagonal-sweep"></div>
         </div>
       </div>
+
+      <ParticleEffect />
 
       <section className="relative h-screen flex items-center justify-center overflow-hidden z-10">
         <GlowGlitchLogo
           text="SPHINX"
           onAnimationComplete={handleAnimationComplete}
           autoPlay={true}
-          duration={4000}
+          duration={1000}
           className="absolute inset-0"
         />
 
@@ -236,8 +230,8 @@ export default function HomePage() {
                 <div className="absolute inset-0 opacity-10">
                   <div className="grid grid-cols-16 grid-rows-16 w-full h-full animate-grid-pulse">
                     {Array.from({ length: 256 }).map((_, i) => (
-                      <div 
-                        key={i} 
+                      <div
+                        key={i}
                         className="border border-cyan-400/20"
                         style={{
                           animationDelay: `${(i * 0.1) % 5}s`,
@@ -252,45 +246,51 @@ export default function HomePage() {
                   {/* Multiple outer glow rings for depth */}
                   <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400/30 via-purple-500/30 to-pink-500/30 blur-2xl animate-glow-pulse"></div>
                   <div className="absolute inset-2 rounded-full bg-gradient-to-r from-purple-400/20 via-cyan-400/20 to-pink-400/20 blur-xl animate-glow-pulse-reverse"></div>
-                  
+
                   {/* Main circular container with glassmorphism */}
                   <div className="relative bg-black/90 backdrop-blur-xl rounded-full p-8 md:p-12 border border-cyan-400/40 shadow-2xl shadow-cyan-400/20">
                     {/* Multiple inner decorative rings */}
                     <div className="absolute inset-3 rounded-full border-2 border-dashed border-cyan-400/30 animate-spin-slow"></div>
                     <div className="absolute inset-6 rounded-full border border-dotted border-purple-400/25 animate-reverse-spin"></div>
                     <div className="absolute inset-9 rounded-full border border-solid border-pink-400/15 animate-spin-slower"></div>
-                    
+
                     {/* Enhanced status indicator */}
                     <div className="text-cyan-400 text-xs md:text-sm font-mono mb-6 flex items-center justify-center gap-3">
                       <div className="flex gap-1">
                         <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                        <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></span>
-                        <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></span>
+                        <span
+                          className="w-2 h-2 bg-green-400 rounded-full animate-pulse"
+                          style={{ animationDelay: "0.2s" }}
+                        ></span>
+                        <span
+                          className="w-2 h-2 bg-green-400 rounded-full animate-pulse"
+                          style={{ animationDelay: "0.4s" }}
+                        ></span>
                       </div>
                       SYSTEM ONLINE - COUNTDOWN ACTIVE
                     </div>
 
                     {/* Circular timer grid */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mb-8">
-                      <CircularTimer 
-                        value={timeLeft.days} 
-                        max={365} 
-                        label="DAYS" 
+                      <CircularTimer
+                        value={timeLeft.days}
+                        max={365}
+                        label="DAYS"
                       />
-                      <CircularTimer 
-                        value={timeLeft.hours} 
-                        max={24} 
-                        label="HOURS" 
+                      <CircularTimer
+                        value={timeLeft.hours}
+                        max={24}
+                        label="HOURS"
                       />
-                      <CircularTimer 
-                        value={timeLeft.minutes} 
-                        max={60} 
-                        label="MINS" 
+                      <CircularTimer
+                        value={timeLeft.minutes}
+                        max={60}
+                        label="MINS"
                       />
-                      <CircularTimer 
-                        value={timeLeft.seconds} 
-                        max={60} 
-                        label="SECS" 
+                      <CircularTimer
+                        value={timeLeft.seconds}
+                        max={60}
+                        label="SECS"
                       />
                     </div>
 
@@ -312,9 +312,18 @@ export default function HomePage() {
 
                   {/* Enhanced corner decorations */}
                   <div className="absolute -top-3 -left-3 w-8 h-8 border-t-2 border-l-2 border-cyan-400 animate-corner-glow"></div>
-                  <div className="absolute -top-3 -right-3 w-8 h-8 border-t-2 border-r-2 border-cyan-400 animate-corner-glow" style={{ animationDelay: '0.2s' }}></div>
-                  <div className="absolute -bottom-3 -left-3 w-8 h-8 border-b-2 border-l-2 border-cyan-400 animate-corner-glow" style={{ animationDelay: '0.4s' }}></div>
-                  <div className="absolute -bottom-3 -right-3 w-8 h-8 border-b-2 border-r-2 border-cyan-400 animate-corner-glow" style={{ animationDelay: '0.6s' }}></div>
+                  <div
+                    className="absolute -top-3 -right-3 w-8 h-8 border-t-2 border-r-2 border-cyan-400 animate-corner-glow"
+                    style={{ animationDelay: "0.2s" }}
+                  ></div>
+                  <div
+                    className="absolute -bottom-3 -left-3 w-8 h-8 border-b-2 border-l-2 border-cyan-400 animate-corner-glow"
+                    style={{ animationDelay: "0.4s" }}
+                  ></div>
+                  <div
+                    className="absolute -bottom-3 -right-3 w-8 h-8 border-b-2 border-r-2 border-cyan-400 animate-corner-glow"
+                    style={{ animationDelay: "0.6s" }}
+                  ></div>
                 </div>
               </div>
             )}

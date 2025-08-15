@@ -444,8 +444,6 @@ export const navbarStyles = `
     }
   }
 
-  /* Remove body padding - navbar is now a pure overlay */
-  /* No body padding needed since navbar doesn't affect page layout */
 
   /* Ensure all interactive elements in navbar are clickable */
   .dial-container button,

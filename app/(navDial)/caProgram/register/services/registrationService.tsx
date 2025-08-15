@@ -1,4 +1,4 @@
-import { CaRegisterFormData } from "../types/CARegistrations"; 
+import { CaRegisterFormData } from "../types/CARegistrations";
 import { getAuthToken } from "@/app/hooks/useUser/utils/helperFunctions";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -16,18 +16,14 @@ export const registerCAUser = async (
   try {
     // Create FormData for file upload
     const formData = new FormData();
-    
+
     // Add text fields
-    formData.append('how_did_you_find_us', data.how_did_you_find_us);
-    formData.append('why_should_we_choose_you', data.why_should_we_choose_you);
-    formData.append('past_experience', data.past_experience);
-    formData.append('your_strengths', data.your_strengths);
-    formData.append('your_expectations', data.your_expectations);
-    
-    // Add resume file
-    if (data.resume && data.resume.length > 0) {
-      formData.append('resume', data.resume[0]);
-    }
+    formData.append("how_did_you_find_us", data.how_did_you_find_us);
+    formData.append("why_should_we_choose_you", data.why_should_we_choose_you);
+    formData.append("past_experience", data.past_experience);
+    formData.append("your_strengths", data.your_strengths);
+    formData.append("your_expectations", data.your_expectations);
+    formData.append("resume", data.resume[0]);
 
     const response = await fetch(`${API_BASE_URL}/ca/register`, {
       method: "POST",

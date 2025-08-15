@@ -3,6 +3,7 @@
 import { memo, useCallback } from 'react';
 import Link from 'next/link';
 import { useTransitionRouter } from 'next-view-transitions';
+import { slideInOut } from '@/app/animations/pageTrans';
 
 export const LoginLink = memo(function LoginLink() {
   const router = useTransitionRouter();
@@ -10,7 +11,7 @@ export const LoginLink = memo(function LoginLink() {
   const handleLoginClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
       e.preventDefault();
-      router.push('/login');
+      router.push('/login' , { onTransitionReady: slideInOut });
     },
     [router]
   );

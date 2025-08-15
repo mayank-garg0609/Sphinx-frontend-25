@@ -33,7 +33,7 @@ export const FORM_FIELDS: FormField[] = [
   },
   {
     key: "resume",
-    label: "Resume (PDF only) *",
+    label: "Resume (PDF only)",
     placeholder: "Upload your resume in PDF format",
     type: "file",
     accept: ".pdf,application/pdf",
