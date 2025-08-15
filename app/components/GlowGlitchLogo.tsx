@@ -48,8 +48,8 @@ const GlowGlitchLogo: React.FC<GlowGlitchLogoProps> = ({
   const particleAnimationRef = useRef<number>(0);
   const controlIdRef = useRef(0);
   const particleIdRef = useRef(0);
-  const timeoutRef = useRef<NodeJS.Timeout>();
-  const intervalRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const intervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const lastFrameTime = useRef<number>(0);
 
   // Memoized control types array to avoid recreation
