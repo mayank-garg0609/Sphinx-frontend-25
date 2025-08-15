@@ -1,4 +1,4 @@
-import React, { memo, Suspense, useState, useCallback } from 'react';
+import React, { memo, Suspense, useCallback } from 'react';
 import { NavItem } from '../types/navbarTypes';
 import { Tooltip } from './Tooltip';
 
@@ -17,6 +17,9 @@ interface NavButtonProps {
   readonly onNavigation: (item: NavItem) => void;
   readonly onMouseEnter: () => void;
   readonly onMouseLeave: () => void;
+  readonly hoveredTooltip?: string | null;
+  readonly onTooltipShow?: (itemId: string) => void;
+  readonly onTooltipHide?: () => void;
 }
 
 const NavButtonComponent: React.FC<NavButtonProps> = ({
@@ -26,26 +29,20 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
   isExpanded,
   index,
   onNavigation,
+  onMouseEnter,
+  onMouseLeave,
+  hoveredTooltip,
+  onTooltipShow,
+  onTooltipHide,
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const animationDelay = `${index * 60}ms`; // Slightly increased delay for smoother staggered animation
+  const animationDelay = `${index * 60}ms`;
   
-  const buttonStyle = {
-    position: 'absolute' as const,
-    width: 54, // Slightly larger for better touch target
-    height: 54,
-    left: '50%',
-    top: '50%',
-    transform: `translate(-50%, -50%) translate(${position.x}px, ${position.y}px)`,
-    opacity: isExpanded ? 1 : 0,
-    zIndex: position.zIndex,
-    transitionProperty: 'all',
-    transitionDuration: '0.5s', // Smoother transition
-    transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)', // More elegant easing
-    transitionDelay: animationDelay,
-  };
-
   const handleClick = useCallback(() => {
+    // Hide tooltip immediately on click
+    if (onTooltipHide) {
+      onTooltipHide();
+    }
+    
     const cleanItem: NavItem = {
       id: item.id,
       label: item.label,
@@ -54,18 +51,26 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
       ...(item.external && { external: item.external })
     };
     onNavigation(cleanItem);
-  }, [item, onNavigation]);
+  }, [item, onNavigation, onTooltipHide]);
 
   const handleMouseEnter = useCallback(() => {
-    setIsHovered(true);
-  }, []);
+    onMouseEnter();
+    if (onTooltipShow) {
+      onTooltipShow(item.id);
+    }
+  }, [onMouseEnter, onTooltipShow, item.id]);
 
   const handleMouseLeave = useCallback(() => {
-    setIsHovered(false);
-  }, []);
+    onMouseLeave();
+    if (onTooltipHide) {
+      onTooltipHide();
+    }
+  }, [onMouseLeave, onTooltipHide]);
+
+  const isTooltipVisible = hoveredTooltip === item.id;
 
   return (
-    <div style={buttonStyle}>
+    <div className="relative">
       <style jsx>{`
         @keyframes elegantGlow {
           0%, 100% { 
@@ -136,8 +141,6 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
           animation: elegantGlow 4s ease-in-out infinite;
           backdrop-filter: blur(10px);
           -webkit-backdrop-filter: blur(10px);
-          width: 100%;
-          height: 100%;
           transform: translateZ(0);
           will-change: transform, box-shadow, background;
         }
@@ -264,21 +267,31 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
       
       <Tooltip 
         content={item.label} 
-        show={isHovered}
+        show={isTooltipVisible}
         isExpanded={isExpanded}
-        buttonPosition={position}
+        buttonPosition={{ x: 0, y: 0 }}
       >
         <button
           onClick={handleClick}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
-          className={`elegant-nav-button ${isActive ? 'active' : ''}`}
+          className={`elegant-nav-button ${isActive ? 'active' : ''} w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 xl:w-16 xl:h-16 2xl:w-18 2xl:h-18`}
           aria-label={item.label}
           onFocus={handleMouseEnter}
           onBlur={handleMouseLeave}
+          style={{
+            opacity: isExpanded ? 1 : 0,
+            transitionProperty: 'all',
+            transitionDuration: '0.5s',
+            transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)',
+            transitionDelay: animationDelay,
+          }}
         >
-          <Suspense fallback={<div className="w-5 h-5 bg-gray-400 rounded animate-pulse" />}>
-            <item.icon size={22} className="nav-icon-elegant" />
+          <Suspense fallback={<div className="w-4 h-4 md:w-5 md:h-5 bg-gray-400 rounded animate-pulse" />}>
+            <item.icon 
+              size={16} 
+              className="nav-icon-elegant text-xs md:text-sm lg:text-base xl:text-lg 2xl:text-xl" 
+            />
           </Suspense>
         </button>
       </Tooltip>

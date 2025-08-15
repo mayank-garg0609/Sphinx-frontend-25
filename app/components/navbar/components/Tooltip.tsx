@@ -27,7 +27,7 @@ const TooltipComponent: React.FC<
     
     timeoutRef.current = setTimeout(() => {
       setIsVisible(visible);
-    }, visible ? 100 : 200); // Slight delay for show, longer for hide
+    }, visible ? 100 : 200);
   }, []);
 
   useEffect(() => {
@@ -69,9 +69,9 @@ const TooltipComponent: React.FC<
           rgba(15, 15, 35, 0.98) 100%
         );
         color: #00ffff;
-        padding: 10px 16px;
-        border-radius: 8px;
-        font-size: 12px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 11px;
         font-weight: 600;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         white-space: nowrap;
@@ -92,6 +92,21 @@ const TooltipComponent: React.FC<
         max-width: 200px;
         text-align: center;
       `;
+
+      // Responsive font size based on screen width
+      if (window.innerWidth >= 1920) {
+        tooltip.style.fontSize = '13px';
+        tooltip.style.padding = '10px 16px';
+      } else if (window.innerWidth >= 1440) {
+        tooltip.style.fontSize = '12px';
+        tooltip.style.padding = '9px 14px';
+      } else if (window.innerWidth >= 1200) {
+        tooltip.style.fontSize = '11px';
+        tooltip.style.padding = '8px 12px';
+      } else {
+        tooltip.style.fontSize = '10px';
+        tooltip.style.padding = '7px 10px';
+      }
 
       // Create elegant arrow
       const arrow = document.createElement("div");
@@ -161,6 +176,56 @@ const TooltipComponent: React.FC<
             -ms-user-select: none;
           }
 
+          /* Dark theme support */
+          @media (prefers-color-scheme: dark) {
+            .elegant-tooltip {
+              background: linear-gradient(135deg, 
+                rgba(26, 26, 46, 0.98) 0%, 
+                rgba(22, 33, 62, 0.98) 50%, 
+                rgba(15, 15, 35, 0.98) 100%
+              ) !important;
+              color: #00ffff !important;
+              border-color: rgba(0, 255, 255, 0.4) !important;
+            }
+          }
+
+          /* Light theme support */
+          @media (prefers-color-scheme: light) {
+            .elegant-tooltip {
+              background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.95) 0%, 
+                rgba(248, 250, 252, 0.95) 50%, 
+                rgba(241, 245, 249, 0.95) 100%
+              ) !important;
+              color: #1e293b !important;
+              border-color: rgba(0, 0, 0, 0.1) !important;
+              text-shadow: none !important;
+              box-shadow: 
+                0 4px 20px rgba(0, 0, 0, 0.1),
+                0 0 40px rgba(0, 0, 0, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+            }
+            .tooltip-arrow {
+              border-bottom-color: rgba(255, 255, 255, 0.95) !important;
+              filter: drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.1)) !important;
+            }
+          }
+
+          /* High contrast mode support */
+          @media (prefers-contrast: high) {
+            .elegant-tooltip {
+              background: #000000 !important;
+              color: #ffffff !important;
+              border: 2px solid #ffffff !important;
+              text-shadow: none !important;
+              box-shadow: 0 4px 8px rgba(0, 0, 0, 0.8) !important;
+            }
+            .tooltip-arrow {
+              border-bottom-color: #000000 !important;
+              filter: none !important;
+            }
+          }
+
           /* Reduced motion support */
           @media (prefers-reduced-motion: reduce) {
             .elegant-tooltip {
@@ -169,6 +234,50 @@ const TooltipComponent: React.FC<
               transform: translateX(-50%) translateY(0) scale(1) !important;
               filter: none !important;
               transition: opacity 0.2s ease !important;
+            }
+          }
+
+          /* Responsive tooltip sizing */
+          @media (min-width: 2560px) {
+            .elegant-tooltip {
+              font-size: 14px !important;
+              padding: 12px 18px !important;
+            }
+            .tooltip-arrow {
+              border-width: 7px 7px 7px transparent !important;
+              top: -7px !important;
+            }
+          }
+
+          @media (min-width: 1920px) and (max-width: 2559px) {
+            .elegant-tooltip {
+              font-size: 13px !important;
+              padding: 10px 16px !important;
+            }
+          }
+
+          @media (min-width: 1440px) and (max-width: 1919px) {
+            .elegant-tooltip {
+              font-size: 12px !important;
+              padding: 9px 14px !important;
+            }
+          }
+
+          @media (min-width: 1200px) and (max-width: 1439px) {
+            .elegant-tooltip {
+              font-size: 11px !important;
+              padding: 8px 12px !important;
+            }
+          }
+
+          @media (max-width: 1199px) {
+            .elegant-tooltip {
+              font-size: 10px !important;
+              padding: 7px 10px !important;
+            }
+            .tooltip-arrow {
+              border-width: 5px 5px 5px transparent !important;
+              top: -5px !important;
             }
           }
         `;
@@ -214,6 +323,21 @@ const TooltipComponent: React.FC<
         
         tooltipElement.style.left = `${adjustedX}px`;
         tooltipElement.style.top = `${tooltipY}px`;
+
+        // Update responsive sizing on resize
+        if (window.innerWidth >= 1920) {
+          tooltipElement.style.fontSize = '13px';
+          tooltipElement.style.padding = '10px 16px';
+        } else if (window.innerWidth >= 1440) {
+          tooltipElement.style.fontSize = '12px';
+          tooltipElement.style.padding = '9px 14px';
+        } else if (window.innerWidth >= 1200) {
+          tooltipElement.style.fontSize = '11px';
+          tooltipElement.style.padding = '8px 12px';
+        } else {
+          tooltipElement.style.fontSize = '10px';
+          tooltipElement.style.padding = '7px 10px';
+        }
       }
     };
 
@@ -223,14 +347,26 @@ const TooltipComponent: React.FC<
     }
   }, [tooltipElement, content]);
 
+  // Handle clicks to hide tooltip immediately
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      // If clicking anywhere in the navbar area, hide the tooltip
+      const target = e.target as Element;
+      if (target && (target.closest('.dial-container') || target.closest('button'))) {
+        setIsVisible(false);
+      }
+    };
+
+    if (isVisible) {
+      document.addEventListener('click', handleClick, { passive: true });
+      return () => document.removeEventListener('click', handleClick);
+    }
+  }, [isVisible]);
+
   return (
     <div 
       ref={childRef} 
-      style={{ 
-        width: '100%', 
-        height: '100%',
-        position: 'relative',
-      }}
+      className="w-full h-full relative"
     >
       {children}
     </div>

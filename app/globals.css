@@ -30,8 +30,6 @@ body {
   filter: blur(12px);
 }
 
-/*  */
-
 /* Scrollbar */
 .scrollbar-thin {
   scrollbar-width: thin;
@@ -56,9 +54,7 @@ body {
   background-color: rgba(156, 163, 175, 0.7);
 }
 
-/*  */
-
-/* Tupewriter animation */
+/* Typewriter animation */
 .typewriter {
   overflow: hidden;
   white-space: nowrap;
@@ -96,9 +92,76 @@ body {
   }
 }
 
-/*  */
+/* Custom animations for circular timer */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 
-/* page transition */
+@keyframes reverse-spin {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(6, 182, 212, 0.6), 0 0 60px rgba(139, 92, 246, 0.3);
+  }
+}
+
+/* Animation utility classes */
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+.animate-reverse-spin {
+  animation: reverse-spin 15s linear infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out forwards;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Custom background utilities */
+.bg-radial-gradient {
+  background: radial-gradient(circle at center, transparent 0%, transparent 60%, rgba(0, 0, 0, 0.4) 100%);
+}
+
+/* Video performance optimizations */
+video {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Page transition */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none !important;
@@ -122,5 +185,3 @@ body {
   z-index: 1;
   animation: none !important;
 }
-
-/*  */

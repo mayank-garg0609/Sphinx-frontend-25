@@ -29,8 +29,8 @@ interface DesktopDialProps {
 }
 
 const DesktopDialComponent: React.FC<DesktopDialProps> = ({
-  isExpanded, // This will always be true now
-  setIsExpanded, // This will be a no-op function
+  isExpanded,
+  setIsExpanded,
   isLoggedIn,
   pathname,
   onNavigation,
@@ -40,6 +40,7 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const dialRef = useRef<HTMLDivElement>(null);
   const [windowWidth, setWindowWidth] = useState<number>(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  const [hoveredTooltip, setHoveredTooltip] = useState<string | null>(null);
 
   // Handle window resize for responsive behavior
   useEffect(() => {
@@ -60,71 +61,43 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
     }));
   }, []);
 
-  // Calculate button positions for full-width layout with responsive sizing
-  const getButtonPosition = useCallback((displayIndex: number, containerWidth: number) => {
-    const totalItems = NAV_ITEMS_COUNT;
-    
-    // Responsive calculations based on screen width
-    const baseMargin = Math.max(120, containerWidth * 0.08); // 8% margin or minimum 120px
-    const profileSpace = Math.max(80, containerWidth * 0.06); // 6% or minimum 80px
-    const availableWidth = containerWidth - baseMargin - profileSpace;
-    
-    // Adjust spacing based on container width
-    const minSpacing = 60; // Minimum space between items
-    const maxSpacing = 120; // Maximum space between items
-    const calculatedSpacing = Math.min(maxSpacing, Math.max(minSpacing, availableWidth / totalItems));
-    
-    const startX = -availableWidth / 2;
-    const spacing = totalItems > 1 ? Math.min(calculatedSpacing, availableWidth / (totalItems - 1)) : 0;
-    
-    const x = startX + displayIndex * spacing;
-    const y = 0;
-    const zIndex = 100 + displayIndex;
-    
-    return { 
-      x, 
-      y, 
-      zIndex,
-      angle: 0
-    };
+  // Calculate responsive gap between items
+  const getResponsiveGap = useCallback((containerWidth: number) => {
+    if (containerWidth >= 2560) return 'gap-x-8'; // Ultra-wide
+    if (containerWidth >= 1920) return 'gap-x-6'; // Large desktop
+    if (containerWidth >= 1440) return 'gap-x-5'; // Desktop
+    if (containerWidth >= 1200) return 'gap-x-4'; // Small desktop
+    return 'gap-x-3'; // Tablet
   }, []);
 
   const allItems = getAllItems();
 
-  // Remove toggle functionality - navbar stays expanded
-  const toggleExpanded = useCallback(() => {
-    // No-op: We don't want to allow collapsing
+  // Handle tooltip visibility
+  const handleTooltipShow = useCallback((itemId: string) => {
+    setHoveredTooltip(itemId);
   }, []);
 
-  const handleInnerCircleEnter = useCallback(() => {
-    // Handle hover state if needed
+  const handleTooltipHide = useCallback(() => {
+    setHoveredTooltip(null);
   }, []);
 
-  const handleInnerCircleLeave = useCallback(() => {
-    // Handle hover state if needed
-  }, []);
+  const handleNavClick = useCallback((item: any) => {
+    setHoveredTooltip(null); // Hide tooltip immediately on click
+    onNavigation(item);
+  }, [onNavigation]);
+
+  const handleInnerCircleClick = useCallback(() => {
+    setHoveredTooltip(null); // Hide tooltip immediately on click
+    onInnerCircleNavigation();
+  }, [onInnerCircleNavigation]);
+
+  const handleHomeClick = useCallback(() => {
+    setHoveredTooltip(null); // Hide tooltip immediately on click
+    onHomeNavigation();
+  }, [onHomeNavigation]);
 
   const innerCircleHoverId = isLoggedIn ? "inner-profile" : "inner-signup";
-
-  // Responsive container dimensions
-  const getContainerDimensions = useCallback(() => {
-    if (typeof window === 'undefined') return { width: 1200, height: 120 };
-    
-    const screenWidth = window.innerWidth;
-    
-    // Responsive height based on screen width
-    let height = 120;
-    if (screenWidth >= 2560) height = 160;
-    else if (screenWidth >= 1920) height = 140;
-    else if (screenWidth < 1200) height = 100; // Smaller height for smaller screens
-    
-    return {
-      width: screenWidth,
-      height: height,
-    };
-  }, []);
-
-  const containerDimensions = getContainerDimensions();
+  const homeHoverId = "home-button";
 
   return (
     <>
@@ -150,17 +123,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           }
           100% {
             background-position: 0% 50%;
-          }
-        }
-
-        @keyframes ripple {
-          0% {
-            transform: scale(1);
-            opacity: 1;
-          }
-          100% {
-            transform: scale(1.4);
-            opacity: 0;
           }
         }
 
@@ -199,7 +161,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           left: 0;
           top: 0;
           width: 100vw;
-          height: 120px;
           z-index: 50;
           display: flex;
           align-items: center;
@@ -243,7 +204,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           background-size: 200% 200%;
           animation: gradientShift 8s ease infinite;
           border-radius: 60px;
-          height: 80px;
           border: 1px solid #00ffff40;
         }
 
@@ -256,8 +216,7 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           );
           position: relative;
           overflow: hidden;
-          border-radius: 50px;
-          height: 60px;
+          border-radius: 45px;
           border: 1px solid #ffbf0060;
           cursor: pointer;
         }
@@ -407,97 +366,120 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
         }
       `}</style>
 
-      {/* Always render as expanded - removed conditional rendering */}
+      {/* Always render as expanded */}
       <div
-        className="dial-container cyberpunk-dial full-width-container"
+        className="dial-container cyberpunk-dial full-width-container h-16 md:h-20 lg:h-24 xl:h-28 2xl:h-32"
         ref={containerRef}
       >
         <div
           ref={dialRef}
-          className="dial-wrapper"
-          style={{
-            width: containerDimensions.width,
-            height: containerDimensions.height,
-            position: 'relative',
-          }}
+          className="dial-wrapper w-full h-full relative"
         >
           {/* Background Track - responsive width and positioning */}
           <div
-            className="cyberpunk-track neon-glow-cyan"
+            className="cyberpunk-track neon-glow-cyan absolute h-12 md:h-16 lg:h-20 xl:h-24 2xl:h-28"
             style={{
-              position: 'absolute',
-              width: `${Math.min(90, Math.max(70, (containerDimensions.width - 200) / containerDimensions.width * 100))}%`,
-              left: `${Math.max(5, (200 / containerDimensions.width * 100) / 2)}%`,
-              top: `${containerDimensions.height * 0.167}px`, // 20/120 = 0.167
-              opacity: 1,
+              width: '85%',
+              left: '7.5%',
+              top: '50%',
+              transform: 'translateY(-50%)',
             }}
           />
 
           {/* Inner Track - responsive sizing */}
           <div
-            className="cyberpunk-inner-track neon-glow-amber"
-            onClick={onHomeNavigation}
+            className="cyberpunk-inner-track neon-glow-amber absolute h-8 md:h-10 lg:h-12 xl:h-16 2xl:h-20 cursor-pointer"
+            onClick={handleHomeClick}
+            onMouseEnter={() => handleTooltipShow(homeHoverId)}
+            onMouseLeave={handleTooltipHide}
             style={{
-              position: 'absolute',
-              width: `${Math.min(85, Math.max(65, (containerDimensions.width - 240) / containerDimensions.width * 100))}%`,
-              left: `${Math.max(7.5, (240 / containerDimensions.width * 100) / 2)}%`,
-              top: `${containerDimensions.height * 0.25}px`, // 30/120 = 0.25
-              height: `${containerDimensions.height * 0.5}px`, // Responsive height
-              opacity: 1,
+              width: '80%',
+              left: '10%',
+              top: '50%',
+              transform: 'translateY(-50%)',
             }}
-          />
+          >
+            <Tooltip
+              content="Go to Home"
+              show={hoveredTooltip === homeHoverId}
+              isExpanded={true}
+              buttonPosition={{ x: 0, y: 0 }}
+            >
+              <div className="w-full h-full" />
+            </Tooltip>
+          </div>
+
+          {/* Navigation Buttons Container - Horizontally centered with equal spacing */}
+          <div
+            className={`absolute inset-0 flex items-center justify-center px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 ${getResponsiveGap(windowWidth)}`}
+            style={{
+              paddingLeft: `${Math.max(80, windowWidth * 0.06)}px`,
+              paddingRight: `${Math.max(80, windowWidth * 0.06)}px`,
+            }}
+          >
+            {allItems.map((item: Item, index: number) => {
+              const isActive = pathname === item.link;
+
+              return (
+                <div 
+                  key={`${item.id}-${item.actualIndex}`}
+                  className="flex-shrink-0"
+                >
+                  <NavButton
+                    item={item}
+                    position={{ x: 0, y: 0, zIndex: 100 + index, angle: 0 }}
+                    isActive={isActive}
+                    isExpanded={true}
+                    isHovered={hoveredTooltip === item.id}
+                    index={index}
+                    counterRotation={0}
+                    onNavigation={handleNavClick}
+                    onMouseEnter={() => handleTooltipShow(item.id)}
+                    onMouseLeave={handleTooltipHide}
+                    hoveredTooltip={hoveredTooltip}
+                    onTooltipShow={handleTooltipShow}
+                    onTooltipHide={handleTooltipHide}
+                  />
+                </div>
+              );
+            })}
+          </div>
 
           {/* Inner Circle - responsive positioning */}
           <div
+            className="absolute right-2 md:right-4 lg:right-6 xl:right-8 2xl:right-12 top-1/2 transform -translate-y-1/2 z-50"
             style={{
-              position: 'absolute',
-              width: Math.max(50, Math.min(INNER_CIRCLE_SIZE, containerDimensions.width * 0.05)),
-              height: Math.max(50, Math.min(INNER_CIRCLE_SIZE, containerDimensions.width * 0.05)),
-              right: Math.max(15, containerDimensions.width * 0.015) + 'px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              zIndex: 180,
+              width: `clamp(40px, ${Math.min(INNER_CIRCLE_SIZE, windowWidth * 0.04)}px, 60px)`,
+              height: `clamp(40px, ${Math.min(INNER_CIRCLE_SIZE, windowWidth * 0.04)}px, 60px)`,
             }}
           >
             <Tooltip
               content={isLoggedIn ? "Profile" : "Sign Up"}
-              show={false}
-              isExpanded={true} // Always expanded
+              show={hoveredTooltip === innerCircleHoverId}
+              isExpanded={true}
               buttonPosition={{ x: 0, y: 0 }}
             >
               <button
-                onClick={onInnerCircleNavigation}
-                onMouseEnter={handleInnerCircleEnter}
-                onMouseLeave={handleInnerCircleLeave}
+                onClick={handleInnerCircleClick}
+                onMouseEnter={() => handleTooltipShow(innerCircleHoverId)}
+                onMouseLeave={handleTooltipHide}
                 className={`inner-profile-cyberpunk ${
                   !isLoggedIn ? "signup" : ""
-                }`}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  transition: "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                  position: "relative",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  zIndex: 190,
-                }}
+                } w-full h-full flex items-center justify-center`}
                 aria-label={isLoggedIn ? "Profile" : "Sign Up"}
               >
                 <Suspense
                   fallback={
-                    <div className="w-5 h-5 bg-gray-400 rounded animate-pulse" />
+                    <div className="w-4 h-4 md:w-5 md:h-5 bg-gray-400 rounded animate-pulse" />
                   }
                 >
                   {isLoggedIn ? (
                     <FaUser
-                      className="text-white drop-shadow-lg"
-                      size={20}
+                      className="text-white drop-shadow-lg text-sm md:text-base lg:text-lg"
                     />
                   ) : (
                     <FaUserPlus
-                      className="text-white drop-shadow-lg"
-                      size={22}
+                      className="text-white drop-shadow-lg text-sm md:text-base lg:text-lg"
                     />
                   )}
                 </Suspense>
@@ -506,77 +488,39 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           </div>
 
           {/* Center Hub Button - responsive sizing and positioning */}
-          <button
-            onClick={onHomeNavigation}
-            className="center-hub-cyberpunk neon-glow-cyan"
-            style={{
-              width: Math.max(60, Math.min(CENTER_SIZE_CLOSED, containerDimensions.width * 0.05)),
-              height: Math.max(60, Math.min(CENTER_SIZE_CLOSED, containerDimensions.width * 0.05)),
-              position: 'absolute',
-              left: Math.max(15, containerDimensions.width * 0.015) + 'px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 200,
-              transition: 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-            }}
-            aria-label="Go to home"
-          >
-            <Suspense
-              fallback={
-                <div className="w-6 h-6 bg-gray-400 rounded animate-pulse" />
-              }
-            >
-              <span 
-                className="text-cyan-400 font-bold font-mono drop-shadow-lg"
-                style={{ 
-                  fontSize: `${Math.max(16, Math.min(24, containerDimensions.width * 0.018))}px` 
-                }}
-              >
-                S
-              </span>
-            </Suspense>
-          </button>
-
-          {/* Navigation Buttons Container - responsive spacing */}
           <div
-            className="nav-buttons-container"
+            className="absolute left-2 md:left-4 lg:left-6 xl:left-8 2xl:left-12 top-1/2 transform -translate-y-1/2 z-50"
             style={{
-              position: "absolute",
-              width: "100%",
-              height: "100%",
-              top: 0,
-              left: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              paddingLeft: Math.max(90, containerDimensions.width * 0.08) + 'px',
-              paddingRight: Math.max(70, containerDimensions.width * 0.06) + 'px',
+              width: `clamp(50px, ${Math.min(CENTER_SIZE_CLOSED, windowWidth * 0.05)}px, 70px)`,
+              height: `clamp(50px, ${Math.min(CENTER_SIZE_CLOSED, windowWidth * 0.05)}px, 70px)`,
             }}
           >
-            {allItems.map((item: Item, index: number) => {
-              const availableSpace = containerDimensions.width - Math.max(90, containerDimensions.width * 0.08) - Math.max(70, containerDimensions.width * 0.06);
-              const position = getButtonPosition(item.displayIndex, availableSpace);
-              const isActive = pathname === item.link;
-
-              return (
-                <NavButton
-                  key={`${item.id}-${item.actualIndex}`}
-                  item={item}
-                  position={position}
-                  isActive={isActive}
-                  isExpanded={true}
-                  isHovered={false}
-                  index={index}
-                  counterRotation={0}
-                  onNavigation={onNavigation}
-                  onMouseEnter={() => {}}
-                  onMouseLeave={() => {}}
-                />
-              );
-            })}
+            <Tooltip
+              content="Sphinx'25 Home"
+              show={hoveredTooltip === "center-hub"}
+              isExpanded={true}
+              buttonPosition={{ x: 0, y: 0 }}
+            >
+              <button
+                onClick={handleHomeClick}
+                onMouseEnter={() => handleTooltipShow("center-hub")}
+                onMouseLeave={handleTooltipHide}
+                className="center-hub-cyberpunk neon-glow-cyan w-full h-full flex items-center justify-center"
+                aria-label="Go to home"
+              >
+                <Suspense
+                  fallback={
+                    <div className="w-5 h-5 md:w-6 md:h-6 bg-gray-400 rounded animate-pulse" />
+                  }
+                >
+                  <span 
+                    className="text-cyan-400 font-bold font-mono drop-shadow-lg text-lg md:text-xl lg:text-2xl xl:text-3xl 2xl:text-4xl"
+                  >
+                    S
+                  </span>
+                </Suspense>
+              </button>
+            </Tooltip>
           </div>
         </div>
       </div>
