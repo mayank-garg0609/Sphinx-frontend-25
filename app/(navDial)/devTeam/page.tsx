@@ -1,30 +1,36 @@
 "use client";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { TeamMemberIndex } from "./types/TeamTypes";
 import { TeamData } from "./types/teamData";
-import { 
-  SCROLL_TIMEOUT_DELAY, 
-  ACTIVE_SCROLL_TIMEOUT, 
-  OBSERVER_THRESHOLD, 
-  ROOT_MARGIN 
-} from "./types/constant";
 import TeamHeader from "./component/TeamHeader";
 import TeamMemberCard from "./component/TeamMemberCard";
 import NavigationDots from "./component/NavigationDots";
+import { ScrollStyles } from "./styles/scrollbar";
+
+// Enhanced constants for smoother interactions
+const SCROLL_DEBOUNCE_DELAY = 100;
+const INTERSECTION_THRESHOLD = [0.1, 0.25, 0.5, 0.75, 0.9];
+const ROOT_MARGIN = "-30% 0px -30% 0px";
+const SCROLL_BEHAVIOR_CONFIG = {
+  behavior: "smooth" as ScrollBehavior,
+  block: "center" as ScrollLogicalPosition,
+};
 
 const TeamPage: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState<TeamMemberIndex>(0);
-  const [isScrolling, setIsScrolling] = useState(false);
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<TeamMemberIndex | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   const railRef = useRef<HTMLUListElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
 
-  const activeMember = TeamData[activeIndex];
+  const activeMember = useMemo(() => TeamData[activeIndex], [activeIndex]);
 
-  // Cleanup timeouts function
+  // Clear timeout utility
   const clearScrollTimeout = useCallback(() => {
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
@@ -32,85 +38,112 @@ const TeamPage: React.FC = () => {
     }
   }, []);
 
-  // Setup intersection observer with proper cleanup
-  useEffect(() => {
+  // Enhanced intersection observer for better active element detection
+  const setupIntersectionObserver = useCallback(() => {
     if (!railRef.current) return;
+
+    // Cleanup existing observer
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        if (isScrolling) return;
+        // Don't update active index during user scrolling to prevent conflicts
+        if (isUserScrolling) return;
 
-        let maxRatio = 0;
-        let maxIndex = 0;
-
+        // Find the element with the highest intersection ratio (most visible)
+        let maxVisibleElement = { index: 0, ratio: 0 };
+        
         entries.forEach((entry) => {
-          if (entry.intersectionRatio > maxRatio) {
-            maxRatio = entry.intersectionRatio;
-            const index = parseInt(entry.target.getAttribute("data-index") || "0", 10);
-            maxIndex = index;
+          const index = parseInt(entry.target.getAttribute("data-index") || "0", 10);
+          
+          if (entry.intersectionRatio > maxVisibleElement.ratio) {
+            maxVisibleElement = { index, ratio: entry.intersectionRatio };
           }
         });
 
-        if (maxRatio > 0.75) {
-          setActiveIndex(maxIndex);
+        // Only update if the element is sufficiently visible (> 50%)
+        if (maxVisibleElement.ratio > 0.5) {
+          setActiveIndex(maxVisibleElement.index);
         }
       },
       {
         root: railRef.current,
         rootMargin: ROOT_MARGIN,
-        threshold: OBSERVER_THRESHOLD,
+        threshold: INTERSECTION_THRESHOLD,
       }
     );
 
-    const items = railRef.current.querySelectorAll("li");
-    items.forEach((item) => observerRef.current?.observe(item));
+    // Observe all items
+    itemRefs.current.forEach((item) => {
+      if (item) {
+        observerRef.current?.observe(item);
+      }
+    });
+  }, [isUserScrolling]);
 
-    return () => {
-      observerRef.current?.disconnect();
-      clearScrollTimeout();
-    };
-  }, [isScrolling, clearScrollTimeout]);
+  // Handle scroll events with improved debouncing
+  const handleScrollDebounced = useCallback(() => {
+    setIsUserScrolling(true);
+    clearScrollTimeout();
 
-  // Handle scroll events with proper cleanup
+    scrollTimeoutRef.current = setTimeout(() => {
+      setIsUserScrolling(false);
+    }, SCROLL_DEBOUNCE_DELAY);
+  }, [clearScrollTimeout]);
+
+  // Initialize intersection observer and scroll handler
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolling(true);
-      clearScrollTimeout();
+    if (!isInitialized) return;
 
-      scrollTimeoutRef.current = setTimeout(() => {
-        setIsScrolling(false);
-      }, SCROLL_TIMEOUT_DELAY);
-    };
+    setupIntersectionObserver();
 
     const rail = railRef.current;
     if (rail) {
-      rail.addEventListener("scroll", handleScroll, { passive: true });
-      return () => {
-        rail.removeEventListener("scroll", handleScroll);
-        clearScrollTimeout();
-      };
+      rail.addEventListener("scroll", handleScrollDebounced, { passive: true });
     }
-  }, [clearScrollTimeout]);
 
+    return () => {
+      if (rail) {
+        rail.removeEventListener("scroll", handleScrollDebounced);
+      }
+      observerRef.current?.disconnect();
+      clearScrollTimeout();
+    };
+  }, [setupIntersectionObserver, handleScrollDebounced, clearScrollTimeout, isInitialized]);
+
+  // Initialize after component mount to prevent SSR issues
+  useEffect(() => {
+    // Use requestAnimationFrame to ensure DOM is ready
+    const initializeComponent = () => {
+      setIsInitialized(true);
+    };
+
+    requestAnimationFrame(initializeComponent);
+  }, []);
+
+  // Smooth scroll to specific index
   const scrollToIndex = useCallback((index: number) => {
     if (!railRef.current || index < 0 || index >= TeamData.length) return;
 
-    const items = railRef.current.children;
-    const targetItem = items[index] as HTMLElement;
+    const targetItem = itemRefs.current[index];
+    if (!targetItem) return;
 
-    if (targetItem) {
-      setIsScrolling(true);
-      targetItem.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+    // Prevent observer updates during programmatic scroll
+    setIsUserScrolling(true);
+    
+    // Update active index immediately for UI responsiveness
+    setActiveIndex(index);
 
-      clearScrollTimeout();
-      scrollTimeoutRef.current = setTimeout(() => {
-        setActiveIndex(index);
-        setIsScrolling(false);
-      }, ACTIVE_SCROLL_TIMEOUT);
-    }
+    // Perform smooth scroll
+    targetItem.scrollIntoView(SCROLL_BEHAVIOR_CONFIG);
+
+    // Reset scrolling state after animation completes
+    clearScrollTimeout();
+    scrollTimeoutRef.current = setTimeout(() => {
+      setIsUserScrolling(false);
+    }, 800); // Slightly longer to account for scroll animation
   }, [clearScrollTimeout]);
 
   const handleMouseEnter = useCallback((index: TeamMemberIndex) => {
@@ -121,9 +154,26 @@ const TeamPage: React.FC = () => {
     setHoveredIndex(null);
   }, []);
 
+  // Ref callback to store item references
+  const setItemRef = useCallback((index: number) => {
+    return (el: HTMLLIElement | null) => {
+      itemRefs.current[index] = el;
+    };
+  }, []);
+
+  if (!isInitialized) {
+    // Return a loading state to prevent hydration mismatches
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
+        <div className="animate-pulse text-white/60">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white relative overflow-hidden">
       {/* Subtle Grid Background */}
+      <ScrollStyles/>
       <div
         className="fixed inset-0 opacity-[0.015] pointer-events-none"
         style={{
@@ -136,12 +186,12 @@ const TeamPage: React.FC = () => {
       {/* Header */}
       <TeamHeader />
 
-      {/* Main Content with improved accessibility */}
+      {/* Main Content */}
       <main className="pt-24 h-screen">
         <div className="max-w-[1920px] mx-auto px-12 min-h-screen flex items-center">
           <div className="w-full grid grid-cols-12 gap-16 items-center py-12">
-            {/* Left Section - Fixed CSS class */}
-            <div className="col-span-3 relative min-h-[750px] w-[45vw] flex flex-col justify-center">
+            {/* Left Section */}
+            <div className="col-span-3 relative min-h-[800px] flex flex-col justify-center">
               {/* Giant Age Number Background */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
                 <span
@@ -209,6 +259,7 @@ const TeamPage: React.FC = () => {
                   {TeamData.map((member, index) => (
                     <TeamMemberCard
                       key={member.id}
+                      ref={setItemRef(index)}
                       member={member}
                       index={index}
                       isActive={activeIndex === index}
