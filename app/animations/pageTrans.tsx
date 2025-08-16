@@ -13,7 +13,7 @@
         },
       ],
       {
-        duration: 1000,
+        duration: 500,
         easing: "cubic-bezier(0.76, 0, 0.24, 1)",
         fill: "forwards",
         pseudoElement: "::view-transition-old(root)",
@@ -30,7 +30,7 @@
         },
       ],
       {
-        duration: 1500,
+        duration: 1000,
         easing: "cubic-bezier(0.87, 0, 0.13, 1)",
         fill: "forwards",
         pseudoElement: "::view-transition-new(root)",
