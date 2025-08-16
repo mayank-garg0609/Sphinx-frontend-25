@@ -6,33 +6,9 @@ import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import type { LoginFormData } from '@/app/schemas/loginSchema';
 import type { FormField as FormFieldType } from '../utils/constants';
 import { ACCESSIBILITY, SECURITY, MESSAGES } from '../utils/constants';
+import {Input} from "@/components/ui/input"
+import {Label} from "@/components/ui/label"
 
-// Simple UI Components (replacing missing imports)
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  className?: string;
-}
-
-const Input = memo(function Input({ className = '', ...props }: InputProps) {
-  return (
-    <input
-      className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-      {...props}
-    />
-  );
-});
-
-interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
-  className?: string;
-}
-
-const Label = memo(function Label({ className = '', ...props }: LabelProps) {
-  return (
-    <label
-      className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${className}`}
-      {...props}
-    />
-  );
-});
 
 interface FormFieldProps {
   readonly field: FormFieldType;

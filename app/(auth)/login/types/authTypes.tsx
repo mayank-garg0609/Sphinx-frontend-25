@@ -14,7 +14,6 @@ export interface LoginResponse extends ApiResponse {
     expiresIn: number;
     user: User;
   };
-  // Flat structure fallback for backward compatibility
   accessToken?: string;
   refreshToken?: string;
   expiresIn?: number;
@@ -78,17 +77,14 @@ export const UserSchema = z.object({
   _id: z.string().optional(),
 });
 
-// Updated schema to handle both nested and flat response structures
 export const LoginResponseSchema = z.object({
   success: z.boolean(),
-  // Nested data structure (preferred)
   data: z.object({
     accessToken: z.string().min(1),
     refreshToken: z.string().min(1),
     expiresIn: z.number().positive(),
     user: UserSchema,
   }).optional(),
-  // Flat structure fallback
   accessToken: z.string().min(1).optional(),
   refreshToken: z.string().min(1).optional(),
   expiresIn: z.number().positive().optional(),
@@ -96,7 +92,6 @@ export const LoginResponseSchema = z.object({
   error: z.string().optional(),
   message: z.string().optional(),
 }).refine((data) => {
-  // Ensure either nested data or flat structure is present
   const hasNestedData = data.data && 
     data.data.accessToken && 
     data.data.refreshToken && 
@@ -125,7 +120,6 @@ export const CSRFResponseSchema = z.object({
   csrfToken: z.string().min(1),
 });
 
-// Error types
 export interface AuthError extends Error {
   code: string;
   status?: number;

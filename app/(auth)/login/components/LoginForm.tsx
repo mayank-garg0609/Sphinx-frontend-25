@@ -1,4 +1,3 @@
-// app/(auth)/login/components/LoginForm.tsx
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -16,7 +15,6 @@ import { ErrorBoundary } from './ErrorBoundary';
 import { FORM_FIELDS, FORM_STYLES, ACCESSIBILITY, MESSAGES } from '../utils/constants';
 import { handleComponentError } from '../utils/errorHandlers';
 
-// Error Fallback Component
 interface ErrorFallbackProps {
   error: Error;
   resetErrorBoundary: () => void;
@@ -74,7 +72,6 @@ const ErrorFallback = memo(function ErrorFallback({ error, resetErrorBoundary }:
   );
 });
 
-// Main Login Form Component
 const LoginFormInner = memo(function LoginFormInner() {
   const router = useTransitionRouter();
   
@@ -106,10 +103,8 @@ const LoginFormInner = memo(function LoginFormInner() {
   const isFormDisabled = isSubmitting || isGoogleLoading || isPending;
   const isAnyRateLimited = isRateLimited || isGoogleRateLimited;
 
-  // Watch form values for additional client-side validation
   const watchedValues = watch();
 
-  // Enhanced form submission handler
   const onSubmit = useCallback(async (data: LoginFormData) => {
     if (isAnyRateLimited) {
       return;
@@ -119,11 +114,9 @@ const LoginFormInner = memo(function LoginFormInner() {
       await loginUser(data);
     } catch (error) {
       console.error('Form submission error:', error);
-      // Error is already handled in the useAuth hook
     }
   }, [loginUser, isAnyRateLimited]);
 
-  // Form validation status for accessibility
   const getFormAriaDescribedBy = useCallback(() => {
     const describedBy = [];
     if (Object.keys(errors).length > 0) {
@@ -140,16 +133,14 @@ const LoginFormInner = memo(function LoginFormInner() {
       onSubmit={handleSubmit(onSubmit)}
       className={FORM_STYLES.container}
       style={FORM_STYLES.scrollbar}
-      noValidate // We handle validation with react-hook-form and zod
+      noValidate 
       role="form"
       aria-label={ACCESSIBILITY.ARIA_LABELS.LOGIN_FORM}
       aria-describedby={getFormAriaDescribedBy()}
       data-testid="login-form"
     >
-      {/* Form Header */}
       <LoginHeader />
       
-      {/* Form Fields Section */}
       <fieldset 
         disabled={isFormDisabled}
         className="space-y-3 sm:space-y-4 md:space-y-5 lg:space-y-6 xl:space-y-7 2xl:space-y-8 pt-3 sm:pt-4 md:pt-5 lg:pt-6 xl:pt-7 2xl:pt-8 pb-3 sm:pb-4 md:pb-5 lg:pb-6 xl:pb-7 2xl:pb-8"
@@ -171,7 +162,6 @@ const LoginFormInner = memo(function LoginFormInner() {
         />
       </fieldset>
       
-      {/* Action Buttons */}
       <ActionButtons
         isSubmitting={isSubmitting || isPending}
         onGoogleLogin={handleGoogleLogin}
@@ -182,10 +172,8 @@ const LoginFormInner = memo(function LoginFormInner() {
         googleError={googleError}
       />
       
-      {/* Sign Up Link */}
       <SignUpLink />
       
-      {/* Form Status Messages */}
       {retryCount > 0 && (
         <div 
           className="text-yellow-400 text-xs sm:text-sm text-center"
@@ -196,7 +184,6 @@ const LoginFormInner = memo(function LoginFormInner() {
         </div>
       )}
       
-      {/* Form Errors Summary for Screen Readers */}
       {Object.keys(errors).length > 0 && (
         <div 
           id="form-errors"
@@ -210,7 +197,6 @@ const LoginFormInner = memo(function LoginFormInner() {
         </div>
       )}
       
-      {/* Loading Status for Screen Readers */}
       {(isSubmitting || isGoogleLoading || isPending) && (
         <div 
           className="sr-only"
@@ -224,7 +210,6 @@ const LoginFormInner = memo(function LoginFormInner() {
   );
 });
 
-// Exported component with Error Boundary
 export const LoginForm = memo(function LoginForm() {
   const handleError = useCallback((error: Error, errorInfo: any) => {
     handleComponentError(error, errorInfo);

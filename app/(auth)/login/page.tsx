@@ -70,13 +70,6 @@ export default function LoginPage() {
 
   return (
     <main className={MOBILE_STYLES.container} role="main">
-      <a
-        href="#login-form"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-white text-black px-4 py-2 rounded z-50"
-      >
-        Skip to login form
-      </a>
-
       <section aria-hidden="true" className="absolute inset-0">
         <BackgroundImage />
         <div className="absolute inset-0 bg-black/20 lg:bg-gradient-to-r lg:from-black/40 lg:via-black/20 lg:to-transparent" />
