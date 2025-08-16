@@ -11,8 +11,38 @@ export const CustomStyles: React.FC = memo(() => (
       }
     }
 
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideInLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
     .animate-float {
       animation: float 3s ease-in-out infinite;
+    }
+
+    .animate-slide-in-right {
+      animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    .animate-slide-in-left {
+      animation: slideInLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     }
 
     /* Custom scrollbar for sidebar */
@@ -64,11 +94,23 @@ export const CustomStyles: React.FC = memo(() => (
       will-change: transform, opacity;
     }
 
-    /* Fixed: Better performance for frequent animations */
-    .animate-spin,
-    .animate-float {
-      will-change: transform;
-      transform: translateZ(0); /* Force GPU acceleration */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      
+      html {
+        scroll-behavior: auto;
+      }
+
+      .animate-slide-in-right,
+      .animate-slide-in-left {
+        animation: none;
+        opacity: 1;
+        transform: translateX(0);
+      }
     }
 
     /* Fixed: Smooth scrolling improvements */
@@ -85,6 +127,13 @@ export const CustomStyles: React.FC = memo(() => (
       
       html {
         scroll-behavior: auto;
+      }
+
+      .animate-slide-in-right,
+      .animate-slide-in-left {
+        animation: none;
+        opacity: 1;
+        transform: translateX(0);
       }
     }
   `}</style>

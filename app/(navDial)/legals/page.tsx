@@ -15,7 +15,8 @@ import { CustomStyles } from "./styles/CustomStyles";
 import { useMouseTracker } from "./hooks/useMouseTracker";
 import { POLICIES } from "./utils/constants";
 import type { PolicyKey } from "./types/legal";
-import { ReactLenis } from "@studio-freight/react-lenis";
+// Remove ReactLenis import to eliminate scrolling delay
+// import { ReactLenis } from "@studio-freight/react-lenis";
 import legalsBG from "@/public/image/legalsBG.png";
 
 const SidebarNavigation = dynamic(
@@ -39,7 +40,7 @@ const MobilePolicySelector = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="lg:hidden fixed top-20 left-0 right-0 z-40 h-16 bg-black/90 animate-pulse" />
+      <div className="lg:hidden fixed top-20 right-4 h-16 bg-black/90 animate-pulse rounded-xl w-48" />
     ),
   }
 );
@@ -83,7 +84,8 @@ const SEO_DATA = {
 export default function LegalsPage() {
   const [selectedPolicy, setSelectedPolicy] = useState<PolicyKey>("privacy");
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
-  const lenisRef = useRef(null);
+  // Remove lenis ref as we're not using it anymore
+  // const lenisRef = useRef(null);
 
   const mousePosition = useMouseTracker();
 
@@ -136,33 +138,32 @@ export default function LegalsPage() {
       </Head>
 
       <div className="min-h-screen bg-black text-white overflow-x-hidden relative">
-        <ReactLenis root ref={lenisRef}>
-          <FloatingCursor position={mousePosition} />
-          <BackgroundEffects />
+        {/* Remove ReactLenis wrapper to eliminate scrolling delay */}
+        <FloatingCursor position={mousePosition} />
+        <BackgroundEffects />
 
-          <div className="flex min-h-screen relative z-10">
-            <SidebarNavigation
-              policies={POLICIES}
-              selectedPolicy={selectedPolicy}
-              onPolicySelect={handlePolicySelect}
-            />
-            <MobilePolicySelector
-              policies={POLICIES}
-              selectedPolicy={selectedPolicy}
-              onPolicySelect={handlePolicySelect}
-            />
-            
-            {/* Use the new MainContentArea component */}
-            <MainContentArea
-              currentPolicy={currentPolicy}
-              isLoaded={isLoaded}
-              legalsBG={legalsBG}
-            />
-          </div>
+        <div className="flex min-h-screen relative z-10">
+          <SidebarNavigation
+            policies={POLICIES}
+            selectedPolicy={selectedPolicy}
+            onPolicySelect={handlePolicySelect}
+          />
+          <MobilePolicySelector
+            policies={POLICIES}
+            selectedPolicy={selectedPolicy}
+            onPolicySelect={handlePolicySelect}
+          />
+          
+          {/* Use the new MainContentArea component */}
+          <MainContentArea
+            currentPolicy={currentPolicy}
+            isLoaded={isLoaded}
+            legalsBG={legalsBG}
+          />
+        </div>
 
-          <Footer />
-          <CustomStyles />
-        </ReactLenis>
+        <Footer />
+        <CustomStyles />
       </div>
     </>
   );

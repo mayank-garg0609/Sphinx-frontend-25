@@ -39,7 +39,9 @@ export const MainContentArea: React.FC<MainContentAreaProps> = memo(
   ({ currentPolicy, isLoaded, legalsBG }) => {
     return (
       <main className="w-full min-h-screen flex justify-center relative">
-        <div className="fixed inset-0 z-0 lg:mt-44 lg:ml-[280px]">
+        <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-transparent to-black/80" />
+
+        <div className="fixed inset-0 z-0 lg:mt-0 lg:ml-[280px]">
           <Image
             src={legalsBG}
             alt="Legal documents background with legal scales and documents"
