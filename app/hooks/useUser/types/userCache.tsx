@@ -8,3 +8,9 @@ export interface UserData {
   created_at?: string;
   last_login?: string;
 }
+
+export interface AuthStatus {
+  isAuthenticated: boolean;
+  hasValidToken: boolean;
+  tokenExpiry: number | null;
+}
