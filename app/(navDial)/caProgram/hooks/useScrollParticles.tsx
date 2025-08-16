@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import type { Particle } from '../tupes/caProgram'
+import type { Particle } from '../types/caProgram'
+
+const MAX_PARTICLES = 100
 
 export function useScrollParticles() {
   const [particles, setParticles] = useState<Particle[]>([])
@@ -9,13 +11,16 @@ export function useScrollParticles() {
   const lastScrollY = useRef(0)
 
   const createParticle = useCallback((scrollVelocity: number): Particle => {
+    const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 1920
+    const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 1080
+    
     const side = Math.random() > 0.5 ? 'left' : 'right'
     const colors = ['#fbbf24', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b']
     
     return {
       id: particleIdRef.current++,
-      x: side === 'left' ? -10 : (typeof window !== 'undefined' ? window.innerWidth + 10 : 1000),
-      y: typeof window !== 'undefined' ? Math.random() * window.innerHeight : Math.random() * 800,
+      x: side === 'left' ? -10 : windowWidth + 10,
+      y: Math.random() * windowHeight,
       vx: side === 'left' ? 
         2 + Math.abs(scrollVelocity) * 0.1 : 
         -2 - Math.abs(scrollVelocity) * 0.1,
@@ -36,13 +41,19 @@ export function useScrollParticles() {
     setParticles(prev => {
       let newParticles = [...prev]
 
-      if (Math.abs(scrollVelocity) > 2) {
-        const numNewParticles = Math.min(Math.floor(Math.abs(scrollVelocity) / 5), 3)
+      // Add new particles if scrolling fast and under limit
+      if (Math.abs(scrollVelocity) > 2 && newParticles.length < MAX_PARTICLES) {
+        const numNewParticles = Math.min(
+          Math.floor(Math.abs(scrollVelocity) / 5), 
+          3,
+          MAX_PARTICLES - newParticles.length
+        )
         for (let i = 0; i < numNewParticles; i++) {
           newParticles.push(createParticle(scrollVelocity))
         }
       }
 
+      // Update existing particles
       newParticles = newParticles.map(particle => ({
         ...particle,
         x: particle.x + particle.vx,
@@ -52,8 +63,9 @@ export function useScrollParticles() {
         vy: particle.vy * 0.98 // Add some drag
       }))
 
-      const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 1000
-      const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 800
+      // Filter out expired or out-of-bounds particles
+      const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 1920
+      const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 1080
       
       return newParticles.filter(particle => 
         particle.life < particle.maxLife && 
@@ -66,6 +78,8 @@ export function useScrollParticles() {
   }, [createParticle])
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+
     const handleScroll = () => {
       updateParticles(window.scrollY)
     }

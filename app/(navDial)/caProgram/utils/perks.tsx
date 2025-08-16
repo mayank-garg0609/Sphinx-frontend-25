@@ -1,4 +1,4 @@
-import type { PerkItem } from '../tupes/caProgram'
+import type { PerkItem } from '../types/caProgram'
 
 export const perks: readonly PerkItem[] = [
   {

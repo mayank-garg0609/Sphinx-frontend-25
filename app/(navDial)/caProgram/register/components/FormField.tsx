@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { UseFormRegister, FieldError } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { inputClasses, fileInputClasses } from "../utils/constants";
@@ -14,21 +15,21 @@ export interface FormFieldDefinition {
 
 export interface FormFieldProps {
   field: FormFieldDefinition;
-  register: any;
-  error?: any;
+  register: UseFormRegister<CARegisterFormData>;
+  error?: FieldError;
 }
 
 export const FormField = memo<FormFieldProps>(({ field, register, error }) => {
   const isFileInput = field.type === 'file';
   
-  // All fields are now required
   const getValidationRules = () => {
     if (isFileInput) {
       return {
         required: 'Resume is required',
-        validate: (files: FileList) => {
+        validate: (files: FileList | null) => {
           if (!files || files.length === 0) return 'Please select a PDF file';
           const file = files[0];
+          if (!file) return 'Please select a valid file';
           if (file.type !== 'application/pdf') {
             return 'Only PDF files are allowed';
           }
@@ -40,7 +41,6 @@ export const FormField = memo<FormFieldProps>(({ field, register, error }) => {
       };
     }
     
-    // Text field validation based on field requirements
     const getTextFieldValidation = (key: string) => {
       switch (key) {
         case 'how_did_you_find_us':
@@ -85,7 +85,7 @@ export const FormField = memo<FormFieldProps>(({ field, register, error }) => {
     <div className="relative flex flex-col gap-1.5 sm:gap-2 text-zinc-300">
       <Label 
         htmlFor={field.key} 
-        className={`text-sm sm:text-base font-medium `}
+        className="text-sm sm:text-base font-medium"
       >
         {field.label}
         <span className="text-red-400 ml-1">*</span>

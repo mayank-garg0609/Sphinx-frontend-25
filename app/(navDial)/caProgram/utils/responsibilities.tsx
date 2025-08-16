@@ -1,4 +1,4 @@
-import type { ResponsibilityItem } from '../tupes/caProgram'
+import type { ResponsibilityItem } from '../types/caProgram'
 
 export const responsibilities: readonly ResponsibilityItem[] = [
   {

@@ -1,4 +1,4 @@
-import type { Applicant } from '../tupes/caProgram'
+import type { Applicant } from '../types/caProgram'
 
 export const ambassadors: readonly Applicant[] = [
   {

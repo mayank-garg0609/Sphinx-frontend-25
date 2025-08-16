@@ -1,18 +1,18 @@
 'use client'
 
-import { useEffect } from 'react'
-import { RefObject } from 'react'
+import { useEffect, useRef } from 'react'
 
-export function useFluidBackground(canvasRef: React.RefObject<HTMLCanvasElement | null>)  {
+export function useFluidBackground(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
+  const animationFrameRef = useRef<number | null>(null)
+  
   useEffect(() => {
     const canvas = canvasRef.current
     const ctx = canvas?.getContext("2d")
-    let w = window.innerWidth
-    let h = window.innerHeight
+    let w = typeof window !== 'undefined' ? window.innerWidth : 1920
+    let h = typeof window !== 'undefined' ? window.innerHeight : 1080
     let mouse = { x: w / 2, y: h / 2 }
-    let animationId: number
 
-    if (!canvas || !ctx) return
+    if (!canvas || !ctx || typeof window === 'undefined') return
 
     const updateCanvasSize = () => {
       w = window.innerWidth
@@ -40,6 +40,8 @@ export function useFluidBackground(canvasRef: React.RefObject<HTMLCanvasElement 
     }
 
     const animate = () => {
+      if (!canvas || !ctx) return
+      
       ctx.clearRect(0, 0, w, h)
 
       const grad = ctx.createRadialGradient(
@@ -53,10 +55,10 @@ export function useFluidBackground(canvasRef: React.RefObject<HTMLCanvasElement 
       ctx.fillStyle = grad
       ctx.fillRect(0, 0, w, h)
 
-      animationId = requestAnimationFrame(animate)
+      animationFrameRef.current = requestAnimationFrame(animate)
     }
 
-    window.addEventListener("mousemove", handleMouseMove)
+    window.addEventListener("mousemove", handleMouseMove, { passive: true })
     window.addEventListener("resize", handleResize)
     window.addEventListener("touchmove", handleTouchMove, { passive: true })
 
@@ -66,8 +68,9 @@ export function useFluidBackground(canvasRef: React.RefObject<HTMLCanvasElement 
       window.removeEventListener("mousemove", handleMouseMove)
       window.removeEventListener("resize", handleResize)
       window.removeEventListener("touchmove", handleTouchMove)
-      if (animationId) {
-        cancelAnimationFrame(animationId)
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
       }
     }
   }, [canvasRef])

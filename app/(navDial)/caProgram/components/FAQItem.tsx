@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import type { FAQ } from "../tupes/caProgram";
+import type { FAQ } from "../types/caProgram";
 
 interface FAQItemProps {
   readonly faq: FAQ;
@@ -17,8 +17,11 @@ const FAQItem = memo<FAQItemProps>(function FAQItem({ faq, isOpen, onToggle }) {
         className="flex justify-between items-center w-full px-3 sm:px-4 py-3 text-sm sm:text-base font-medium text-white text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-opacity-50 rounded-lg"
         aria-expanded={isOpen}
         aria-controls={`faq-answer-${faq.id}`}
+        aria-describedby={`faq-question-${faq.id}`}
       >
-        <span className="drop-shadow-sm pr-2">{faq.question}</span>
+        <span id={`faq-question-${faq.id}`} className="drop-shadow-sm pr-2">
+          {faq.question}
+        </span>
         <svg
           className={`w-4 h-4 sm:w-5 sm:h-5 text-yellow-300 transform transition-transform duration-200 flex-shrink-0 ${
             isOpen ? "rotate-180" : ""
@@ -40,6 +43,8 @@ const FAQItem = memo<FAQItemProps>(function FAQItem({ faq, isOpen, onToggle }) {
         <div
           id={`faq-answer-${faq.id}`}
           className="px-3 sm:px-4 pb-3 pt-1 text-sm sm:text-base text-gray-200 leading-relaxed"
+          role="region"
+          aria-labelledby={`faq-question-${faq.id}`}
         >
           {faq.answer}
         </div>

@@ -1,8 +1,9 @@
 import { memo } from "react";
 import Image from "next/image";
+import type { StaticImageData } from "next/image";
 
 interface FormHeaderProps {
-  logo: any;
+  logo: StaticImageData;
 }
 
 export const FormHeader = memo<FormHeaderProps>(({ logo }) => (
@@ -11,11 +12,10 @@ export const FormHeader = memo<FormHeaderProps>(({ logo }) => (
       <Image
         src={logo}
         alt="Sphinx Logo"
-        width={32} // slightly smaller than text
+        width={32}
         height={32}
-        className=" animate-pulse rounded-full  sm:w-7 sm:h-7 lg:w-9 lg:h-9"
+        className="animate-pulse rounded-full sm:w-7 sm:h-7 lg:w-9 lg:h-9"
         placeholder="blur"
-        blurDataURL={logo.blurDataURL}
         priority={true}
         quality={90}
       />

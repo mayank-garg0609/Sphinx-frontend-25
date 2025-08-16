@@ -1,17 +1,19 @@
 "use client";
-import { Suspense, useState, useCallback } from "react";
+
+import { Suspense, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import type { StaticImageData } from "next/image";
 import PerksSection from "./components/PerksSection";
 import ResponsibilitiesSection from "./components/ResponsibilitiesSection";
 import AmbassadorsSection from "./components/AmbassadorsSection";
 import FAQSection from "./components/FAQSection";
 import { InteractiveBackground } from "./components/InteractiveBackground";
 import { ReactLenis } from "@studio-freight/react-lenis";
-import { useRef } from "react";
 import bgOverlay from "@/public/image/logo.png";
 import { useTransitionRouter } from "next-view-transitions";
 import { slideInOut } from "@/app/animations/pageTrans";
+const typedBgOverlay: StaticImageData = bgOverlay;
 
 function SectionSkeleton() {
   return (
@@ -28,11 +30,12 @@ function SectionSkeleton() {
 export default function CAProgramPage() {
   const lenisRef = useRef(null);
   const [overlayLoaded, setOverlayLoaded] = useState(false);
+  const router = useTransitionRouter();
 
   const handleOverlayLoad = useCallback(() => {
     setOverlayLoaded(true);
   }, []);
-  const router = useTransitionRouter();
+
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
       e.preventDefault();
@@ -72,7 +75,7 @@ export default function CAProgramPage() {
 
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[5] w-[60vw] h-[60vh] sm:w-[50vw] sm:h-[50vh] lg:w-[40vw] lg:h-[40vh]">
           <Image
-            src={bgOverlay}
+            src={typedBgOverlay}
             alt=""
             fill
             className={`object-cover rounded-lg transition-opacity duration-700 ${

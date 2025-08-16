@@ -1,8 +1,9 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, FieldError } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { StaticImageData } from "next/image";
 import {
   CARegisterFormData,
   CAregisterSchema,
@@ -18,7 +19,7 @@ import { useTransitionRouter } from "next-view-transitions";
 import { slideInOut } from "@/app/animations/pageTrans";
 
 interface RegistrationFormProps {
-  logo: any;
+  logo: StaticImageData;
 }
 
 export const RegistrationForm = memo<RegistrationFormProps>(({ logo }) => {
@@ -37,7 +38,7 @@ export const RegistrationForm = memo<RegistrationFormProps>(({ logo }) => {
     reValidateMode: "onChange",
   });
 
-  const { handleRegistration } = useCARegistration(reset); 
+  const { handleRegistration } = useCARegistration(reset);
 
   const memoizedFormFields = useMemo(
     () =>
@@ -46,14 +47,7 @@ export const RegistrationForm = memo<RegistrationFormProps>(({ logo }) => {
           key={field.key}
           field={field}
           register={register}
-          error={
-            errors[field.key as keyof typeof errors] as
-              | {
-                  message?: string;
-                  type?: string;
-                }
-              | undefined
-          }
+          error={errors[field.key as keyof typeof errors] as FieldError | undefined}
         />
       )),
     [register, errors]

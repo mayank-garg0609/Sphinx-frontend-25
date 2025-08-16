@@ -1,13 +1,15 @@
 import { memo } from 'react'
 import Image from "next/image"
-import type { Applicant } from '../tupes/caProgram'
+import type { Applicant } from '../types/caProgram'
 
 interface AmbassadorCardProps {
   readonly applicant: Applicant
+  readonly priority?: boolean
 }
 
 const AmbassadorCard = memo<AmbassadorCardProps>(function AmbassadorCard({ 
-  applicant 
+  applicant,
+  priority = false 
 }) {
   return (
     <article className="group relative overflow-hidden bg-gradient-to-br from-black/50 via-black/40 to-transparent backdrop-blur-md rounded-2xl p-4 sm:p-5 lg:p-6 shadow-2xl hover:shadow-yellow-300/20 transition-all duration-300 hover:scale-105 border border-yellow-300/20 hover:border-yellow-300/40">
@@ -20,7 +22,8 @@ const AmbassadorCard = memo<AmbassadorCardProps>(function AmbassadorCard({
             alt={`${applicant.name} - Campus Ambassador from ${applicant.college}`}
             fill
             className="object-cover"
-            loading="lazy"
+            loading={priority ? "eager" : "lazy"}
+            priority={priority}
             sizes="(max-width: 640px) 80px, (max-width: 1024px) 96px, 112px"
             quality={60}
           />

@@ -39,22 +39,25 @@ export const MainContentArea: React.FC<MainContentAreaProps> = memo(
   ({ currentPolicy, isLoaded, legalsBG }) => {
     return (
       <main className="w-full min-h-screen flex justify-center relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-transparent to-black/80" />
+        {/* Background gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-transparent to-black/80 z-0" />
 
+        {/* Background image */}
         <div className="fixed inset-0 z-0 lg:mt-0 lg:ml-[280px]">
           <Image
             src={legalsBG}
             alt="Legal documents background with legal scales and documents"
             fill
-            className="object-cover opacity-30" // Fixed: object-cover instead of object-fill for better aspect ratio
+            className="object-cover opacity-30"
             sizes="(max-width: 1024px) 100vw, 80vw"
-            quality={85} // Fixed: increased quality for better visual
+            quality={85}
             placeholder="blur"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-transparent to-black/80" />
         </div>
 
-        <div className="w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-8 pt-48 lg:pt-36 lg:ml-[360px] relative z-10">
+        {/* Main content - no extra spacing needed since nav is truly floating */}
+        <div className="w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-8 pt-24 lg:pt-36 lg:ml-[360px] relative z-10">
           <PolicyHeader policy={currentPolicy} isLoaded={isLoaded} />
           <PolicyContent content={currentPolicy.content} isLoaded={isLoaded} />
         </div>

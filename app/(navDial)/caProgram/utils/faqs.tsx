@@ -1,4 +1,4 @@
-import type { FAQ } from '../tupes/caProgram'
+import type { FAQ } from '../types/caProgram'
 
 export const faqs: readonly FAQ[] = [
   {

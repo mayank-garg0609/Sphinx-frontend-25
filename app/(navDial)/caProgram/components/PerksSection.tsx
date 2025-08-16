@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { perks } from '../utils/perks'
-import type { IconProps } from '../tupes/caProgram'
+import type { IconProps } from '../types/caProgram'
 import { iconPaths } from '../utils/icons'
 
 const Icon = memo<IconProps>(function Icon({
@@ -26,6 +26,7 @@ const Icon = memo<IconProps>(function Icon({
     </svg>
   )
 })
+
 const PerksSection = memo(function PerksSection() {
   return (
     <section className="mb-6 sm:mb-8">

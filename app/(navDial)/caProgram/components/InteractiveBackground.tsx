@@ -7,7 +7,6 @@ import { useScrollParticles } from '../hooks/useScrollParticles'
 export function InteractiveBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   
-  
   useFluidBackground(canvasRef)
   const particles = useScrollParticles()
 
@@ -35,6 +34,7 @@ export function InteractiveBackground() {
               opacity: particle.opacity,
               boxShadow: `0 0 ${particle.size * 2}px ${particle.color}40`,
               transform: `scale(${1 - particle.life / particle.maxLife})`,
+              willChange: 'transform, opacity',
             }}
           />
         ))}
