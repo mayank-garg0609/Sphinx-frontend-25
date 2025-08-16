@@ -1,10 +1,11 @@
-import React, { memo } from 'react';
-import Image from 'next/image';
-import dynamic from 'next/dynamic';
-import type { Policy } from '../types/legal';
+import React, { memo } from "react";
+import Image from "next/image";
+import { StaticImageData } from "next/image";
+import dynamic from "next/dynamic";
+import type { Policy } from "../types/legal";
 
 const PolicyHeader = dynamic(
-  () => import('./PolicyHeader').then((mod) => ({ default: mod.PolicyHeader })),
+  () => import("./PolicyHeader").then((mod) => ({ default: mod.PolicyHeader })),
   {
     loading: () => (
       <div className="mb-12 md:mb-16 text-center animate-pulse">
@@ -16,7 +17,8 @@ const PolicyHeader = dynamic(
 );
 
 const PolicyContent = dynamic(
-  () => import('./PolicyContent').then((mod) => ({ default: mod.PolicyContent })),
+  () =>
+    import("./PolicyContent").then((mod) => ({ default: mod.PolicyContent })),
   {
     loading: () => (
       <div className="space-y-8 animate-pulse">
@@ -30,40 +32,33 @@ const PolicyContent = dynamic(
 interface MainContentAreaProps {
   readonly currentPolicy: Policy;
   readonly isLoaded: boolean;
-  readonly legalsBG: any; // StaticImageData from Next.js
+  readonly legalsBG: StaticImageData;
 }
 
-export const MainContentArea: React.FC<MainContentAreaProps> = memo(({
-  currentPolicy,
-  isLoaded,
-  legalsBG
-}) => {
-  return (
-    <main className="w-full min-h-screen flex justify-center relative">
-      {/* Background Image Container */}
-      <div className="fixed inset-0 z-0 lg:mt-44 lg:ml-70">
-        <Image
-          src={legalsBG}
-          alt="Legal documents background"
-          fill
-          className="object-fill opacity-30"
-          sizes="80vw"
-          priority
-          quality={75}
-          placeholder="blur"
-          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-        />
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-transparent to-black/70" />
-      </div>
+export const MainContentArea: React.FC<MainContentAreaProps> = memo(
+  ({ currentPolicy, isLoaded, legalsBG }) => {
+    return (
+      <main className="w-full min-h-screen flex justify-center relative">
+        <div className="fixed inset-0 z-0 lg:mt-44 lg:ml-[280px]">
+          <Image
+            src={legalsBG}
+            alt="Legal documents background with legal scales and documents"
+            fill
+            className="object-cover opacity-30" // Fixed: object-cover instead of object-fill for better aspect ratio
+            sizes="(max-width: 1024px) 100vw, 80vw"
+            quality={85} // Fixed: increased quality for better visual
+            placeholder="blur"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-transparent to-black/80" />
+        </div>
 
-      {/* Content Container */}
-      <div className="w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-8 pt-48 lg:pt-36 lg:ml-80 relative z-10">
-        <PolicyHeader policy={currentPolicy} isLoaded={isLoaded} />
-        <PolicyContent content={currentPolicy.content} isLoaded={isLoaded} />
-      </div>
-    </main>
-  );
-});
+        <div className="w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-8 pt-48 lg:pt-36 lg:ml-[360px] relative z-10">
+          <PolicyHeader policy={currentPolicy} isLoaded={isLoaded} />
+          <PolicyContent content={currentPolicy.content} isLoaded={isLoaded} />
+        </div>
+      </main>
+    );
+  }
+);
 
-MainContentArea.displayName = 'MainContentArea';
+MainContentArea.displayName = "MainContentArea";

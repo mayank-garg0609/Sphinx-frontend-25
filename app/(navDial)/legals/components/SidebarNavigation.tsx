@@ -42,6 +42,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = memo(({
                 }`}
                 aria-pressed={isActive}
                 aria-describedby={`${key}-description`}
+                aria-label={`Select ${policy.title}`} // Fixed: added accessibility label
               >
                 <div className="flex items-center space-x-4">
                   <div

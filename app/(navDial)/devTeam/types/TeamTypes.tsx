@@ -1,5 +1,4 @@
 import type { StaticImageData } from "next/image";
-import { Url } from "url";
 
 export interface TeamMember {
   id: string;

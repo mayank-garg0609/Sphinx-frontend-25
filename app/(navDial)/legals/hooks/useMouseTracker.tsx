@@ -1,12 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { MousePosition } from '../types/legal';
+import { throttle } from '../utils/performance';
 
 export const useMouseTracker = (): MousePosition => {
   const [mousePosition, setMousePosition] = useState<MousePosition>({ x: 0, y: 0 });
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    setMousePosition({ x: e.clientX, y: e.clientY });
-  }, []);
+  const handleMouseMove = useCallback(
+    throttle((e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    }, 16), 
+    []
+  );
 
   useEffect(() => {
     window.addEventListener('mousemove', handleMouseMove, { passive: true });

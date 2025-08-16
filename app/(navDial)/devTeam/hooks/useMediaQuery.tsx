@@ -6,7 +6,11 @@ export function useMediaQuery(query: string): boolean {
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    if (typeof window !== 'undefined') {
+      const mediaQuery = window.matchMedia(query);
+      setMatches(mediaQuery.matches);
+    }
+  }, [query]);
 
   useEffect(() => {
     if (!isClient) return;
@@ -18,11 +22,9 @@ export function useMediaQuery(query: string): boolean {
       setMatches(event.matches);
     };
 
-    // Modern browsers
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener('change', handleChange);
     } else {
-      // Legacy browsers
       mediaQuery.addListener(handleChange);
     }
 

@@ -32,14 +32,19 @@ export const PolicySubSection: React.FC<PolicySubSectionProps> = memo(({
   title, 
   children,
   dotColor = 'cyan'
-}) => (
-  <div className="bg-zinc-900/20 rounded-xl p-4 md:p-6 border border-zinc-800/50">
-    <h3 className="text-lg md:text-xl font-semibold text-cyan-400 mb-3 md:mb-4 flex items-center">
-      <div className={`w-2 h-2 bg-${dotColor}-400 rounded-full mr-3`} />
-      {title}
-    </h3>
-    {children}
-  </div>
-));
+}) => {
+  // Fixed: proper dynamic class handling
+  const dotColorClass = dotColor === 'cyan' ? 'bg-cyan-400' : 'bg-purple-400';
+  
+  return (
+    <div className="bg-zinc-900/20 rounded-xl p-4 md:p-6 border border-zinc-800/50">
+      <h3 className="text-lg md:text-xl font-semibold text-cyan-400 mb-3 md:mb-4 flex items-center">
+        <div className={`w-2 h-2 ${dotColorClass} rounded-full mr-3`} />
+        {title}
+      </h3>
+      {children}
+    </div>
+  );
+});
 
 PolicySubSection.displayName = 'PolicySubSection';

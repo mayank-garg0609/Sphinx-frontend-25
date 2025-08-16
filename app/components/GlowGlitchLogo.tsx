@@ -314,9 +314,9 @@ const GlowGlitchLogo: React.FC<GlowGlitchLogoProps> = ({
       </h1>
 
       {/* Time Machine Control Elements */}
-      <div className={styles.controlsLayer}>
+      {/* <div className={styles.controlsLayer}>
         {controlElements}
-      </div>
+      </div> */}
     </div>
   );
 };

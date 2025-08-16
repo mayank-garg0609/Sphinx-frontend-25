@@ -1,42 +1,73 @@
-/* styles/mobile-bg-fix.css */
+/* Enhanced mobile background fix for better browser compatibility */
 
-/* Mobile background fix for iOS Safari and other mobile browsers */
+/* Base mobile fixes for iOS Safari and other mobile browsers */
 @media screen and (max-width: 768px) {
-  .fixed-bg {
+  .fixed-bg-mobile {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100vh;
+    height: 100dvh; /* Use dynamic viewport height when available */
     background-attachment: scroll !important;
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-    -webkit-perspective: 1000;
-    perspective: 1000;
+    -webkit-perspective: 1000px;
+    perspective: 1000px;
+    will-change: transform;
+  }
+
+  /* Optimize for touch devices */
+  .team-content-mobile {
+    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
   }
 }
 
-/* Enhanced mobile support */
+/* Enhanced iOS Safari support */
 @supports (-webkit-touch-callout: none) {
-  .fixed-bg {
+  .fixed-bg-mobile {
     position: fixed;
     background-attachment: scroll !important;
     height: 100vh;
     height: -webkit-fill-available;
   }
+  
+  /* Fix viewport height issues on mobile Safari */
+  .mobile-container {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
 }
 
-/* Prevent scroll issues on mobile */
-.mobile-bg-container {
+/* Prevent horizontal scroll and layout shifts */
+.team-page-container {
   position: relative;
   min-height: 100vh;
-  min-height: -webkit-fill-available;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  width: 100%;
 }
 
+/* Performance optimizations for mobile */
 @media screen and (max-width: 768px) {
-  .mobile-bg-container {
-    overflow-x: hidden;
+  .team-navigation-mobile {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+  
+  .team-card-mobile {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .team-transition {
+    transition: none !important;
+    animation: none !important;
   }
 }

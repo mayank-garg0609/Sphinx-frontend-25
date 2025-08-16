@@ -1,8 +1,7 @@
-// Enhanced constants for optimal performance and smooth interactions
-export const SCROLL_TIMEOUT_DELAY = 100; // Reduced for more responsive feedback
-export const ACTIVE_SCROLL_TIMEOUT = 800; // Increased to match scroll animation duration
-export const OBSERVER_THRESHOLD = [0.1, 0.25, 0.5, 0.75, 0.9]; // More granular thresholds
-export const ROOT_MARGIN = "-30% 0px -30% 0px"; // Better center detection
+export const SCROLL_TIMEOUT_DELAY = 100; 
+export const ACTIVE_SCROLL_TIMEOUT = 800; 
+export const OBSERVER_THRESHOLD = [0.1, 0.25, 0.5, 0.75, 0.9]; 
+export const ROOT_MARGIN = "-30% 0px -30% 0px"; 
 
 // Animation constants
 export const ANIMATION_DURATION = {
@@ -14,9 +13,9 @@ export const ANIMATION_DURATION = {
 
 // Scroll behavior configuration
 export const SCROLL_CONFIG = {
-  behavior: "smooth" as ScrollBehavior,
-  block: "center" as ScrollLogicalPosition,
-  inline: "nearest" as ScrollLogicalPosition,
+  behavior: "smooth" as const,
+  block: "center" as const,
+  inline: "nearest" as const,
 } as const;
 
 // Performance optimization constants

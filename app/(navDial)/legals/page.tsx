@@ -11,7 +11,7 @@ import dynamic from "next/dynamic";
 import Head from "next/head";
 import { FloatingCursor } from "./components/FloatingCursor";
 import { BackgroundEffects } from "./components/BackgroundEffects";
-import { CustomStyles } from "./components/CustomStyles";
+import { CustomStyles } from "./styles/CustomStyles";
 import { useMouseTracker } from "./hooks/useMouseTracker";
 import { POLICIES } from "./utils/constants";
 import type { PolicyKey } from "./types/legal";

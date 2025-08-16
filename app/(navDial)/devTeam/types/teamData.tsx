@@ -1,10 +1,11 @@
 import { TeamMember } from "./TeamTypes";
 import ts1 from "@/public/team/IMG_5015.webp";
 import ts3 from "@/public/team/IMG_5014.webp";
+
 export const TeamData: TeamMember[] = [
   {
     id: "1",
-    name: "Аbhinav Thapliyal",
+    name: "Abhinav Thapliyal", 
     branch: "Chemical Engineering",
     imageUrl: ts1,
     age: 20,
@@ -21,7 +22,7 @@ export const TeamData: TeamMember[] = [
     branch: "Artificial Intelligence and Data Engineering",
     imageUrl: ts3,
     age: 21,
-    designation: "Technical Secretory",
+    designation: "Technical Secretary",
     description:
       "Instead of trying to produce a program to simulate the adult mind, why not rather try to produce one which simulates the child's? - Alan Turing",
     linkedIn: "http://www.linkedin.com/in/mayank-garg-500023234",
