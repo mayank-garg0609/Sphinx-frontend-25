@@ -8,13 +8,13 @@ interface FormHeaderProps {
 
 export const FormHeader = memo<FormHeaderProps>(({ logo }) => (
   <div className="flex flex-col gap-2">
-    <div className="flex items-center gap-3 justify-center">
+    <div className="flex items-center gap-1 justify-center">
       <Image
         src={logo}
         alt="Sphinx Logo"
-        width={32}
-        height={32}
-        className="animate-pulse rounded-full sm:w-7 sm:h-7 lg:w-9 lg:h-9"
+        width={48}
+        height={48}
+        className="animate-pulse rounded-full sm:w-12 sm:h-12 lg:w-16 lg:h-16"
         placeholder="blur"
         priority={true}
         quality={90}
