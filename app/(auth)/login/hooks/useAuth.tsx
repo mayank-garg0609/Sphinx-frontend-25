@@ -76,14 +76,31 @@ export function useAuth(
             // Validate response structure
             const validatedResult = LoginResponseSchema.parse(result);
             
-            // Extract token data (handle both nested and flat response formats)
-            const tokenData = validatedResult.data || validatedResult;
+            // Extract token data with proper type checking
+            let accessToken: string;
+            let refreshToken: string;
+            let expiresIn: number;
+            let user: any;
+
+            if (validatedResult.data) {
+              // Nested structure
+              accessToken = validatedResult.data.accessToken;
+              refreshToken = validatedResult.data.refreshToken;
+              expiresIn = validatedResult.data.expiresIn;
+              user = validatedResult.data.user;
+            } else {
+              // Flat structure
+              accessToken = validatedResult.accessToken!;
+              refreshToken = validatedResult.refreshToken!;
+              expiresIn = validatedResult.expiresIn!;
+              user = validatedResult.user!;
+            }
             
             await handleAuthSuccess(
-              tokenData.accessToken,
-              tokenData.refreshToken,
-              tokenData.expiresIn,
-              tokenData.user,
+              accessToken,
+              refreshToken,
+              expiresIn,
+              user,
               router
             );
             

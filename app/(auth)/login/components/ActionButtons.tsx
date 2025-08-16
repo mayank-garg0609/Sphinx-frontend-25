@@ -1,4 +1,3 @@
-// app/(auth)/login/components/ActionButtons.tsx
 'use client';
 
 import { memo, useCallback } from 'react';
@@ -11,6 +10,7 @@ interface ActionButtonsProps {
   readonly isGoogleLoading: boolean;
   readonly googlePopupClosed: boolean;
   readonly isRateLimited: boolean;
+  readonly isGoogleRateLimited: boolean;
   readonly googleError: string | null;
 }
 
@@ -20,10 +20,11 @@ export const ActionButtons = memo(function ActionButtons({
   isGoogleLoading,
   googlePopupClosed,
   isRateLimited,
+  isGoogleRateLimited,
   googleError,
 }: ActionButtonsProps) {
   const getGoogleButtonText = useCallback(() => {
-    if (isRateLimited) {
+    if (isGoogleRateLimited) {
       return 'Please wait...';
     }
     if (googlePopupClosed && !isGoogleLoading) {
@@ -33,7 +34,7 @@ export const ActionButtons = memo(function ActionButtons({
       return MESSAGES.AUTH.AUTHENTICATING;
     }
     return MESSAGES.AUTH.CONTINUE_WITH_GOOGLE;
-  }, [googlePopupClosed, isGoogleLoading, isRateLimited]);
+  }, [googlePopupClosed, isGoogleLoading, isGoogleRateLimited]);
 
   const getLoginButtonText = useCallback(() => {
     if (isRateLimited) {
@@ -46,7 +47,7 @@ export const ActionButtons = memo(function ActionButtons({
   }, [isSubmitting, isRateLimited]);
 
   const isLoginDisabled = isSubmitting || isGoogleLoading || isRateLimited;
-  const isGoogleDisabled = isGoogleLoading || isSubmitting || isRateLimited;
+  const isGoogleDisabled = isGoogleLoading || isSubmitting || isGoogleRateLimited;
 
   return (
     <div className="space-y-2 sm:space-y-2.5 md:space-y-3 lg:space-y-3 xl:space-y-4 2xl:space-y-5">
@@ -76,7 +77,7 @@ export const ActionButtons = memo(function ActionButtons({
         aria-describedby={
           googleError 
             ? 'google-error-message' 
-            : isRateLimited 
+            : isGoogleRateLimited 
               ? 'rate-limit-message' 
               : undefined
         }
@@ -102,7 +103,7 @@ export const ActionButtons = memo(function ActionButtons({
       )}
 
       {/* Rate Limit Message */}
-      {isRateLimited && (
+      {(isRateLimited || isGoogleRateLimited) && (
         <div
           id="rate-limit-message"
           className="text-yellow-400 text-xs sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg text-center"

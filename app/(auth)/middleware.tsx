@@ -1,7 +1,6 @@
 // middleware.ts (in app root)
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { cookies } from 'next/headers';
 import { jwtVerify, SignJWT } from 'jose';
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -130,7 +129,7 @@ async function handleAuthAPI(request: NextRequest, response: NextResponse) {
       });
 
       // Copy security headers
-      Object.entries(response.headers.entries()).forEach(([key, value]) => {
+      response.headers.forEach((value, key) => {
         newResponse.headers.set(key, value);
       });
 
@@ -149,4 +148,136 @@ async function handleAuthAPI(request: NextRequest, response: NextResponse) {
     
     if (!refreshToken) {
       return NextResponse.json(
-        { success: false, error: 'Refresh token not found'
+        { success: false, error: 'Refresh token not found' },
+        { status: 401 }
+      );
+    }
+
+    try {
+      // Verify the refresh token
+      const payload = await verifyAccessToken(refreshToken);
+      
+      if (!payload) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid refresh token' },
+          { status: 401 }
+        );
+      }
+
+      // Generate new tokens
+      const newAccessToken = await new SignJWT({ 
+        userId: payload.userId,
+        email: payload.email,
+        role: payload.role 
+      })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('15m') // 15 minutes for access token
+        .sign(JWT_SECRET);
+
+      const newRefreshToken = await new SignJWT({ 
+        userId: payload.userId,
+        email: payload.email,
+        role: payload.role 
+      })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('7d') // 7 days for refresh token
+        .sign(JWT_SECRET);
+
+      const newResponse = NextResponse.json({
+        success: true,
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+        expiresIn: 900, // 15 minutes
+      });
+
+      // Update refresh token cookie
+      newResponse.cookies.set('refreshToken', newRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60, // 7 days
+        path: '/',
+      });
+
+      // Copy security headers
+      response.headers.forEach((value, key) => {
+        newResponse.headers.set(key, value);
+      });
+
+      return newResponse;
+    } catch (error) {
+      return NextResponse.json(
+        { success: false, error: 'Token refresh failed' },
+        { status: 401 }
+      );
+    }
+  }
+
+  // Logout endpoint
+  if (pathname === '/api/auth/logout' && request.method === 'POST') {
+    const newResponse = NextResponse.json({ success: true });
+    
+    // Clear refresh token cookie
+    newResponse.cookies.set('refreshToken', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 0,
+      path: '/',
+    });
+
+    // Copy security headers
+    response.headers.forEach((value, key) => {
+      newResponse.headers.set(key, value);
+    });
+
+    return newResponse;
+  }
+
+  return response;
+}
+
+async function handleProtectedRoute(request: NextRequest, response: NextResponse) {
+  const accessToken = request.headers.get('authorization')?.replace('Bearer ', '');
+  
+  if (!accessToken) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  const payload = await verifyAccessToken(accessToken);
+  
+  if (!payload) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  return response;
+}
+
+async function handleAuthPages(request: NextRequest, response: NextResponse) {
+  const refreshToken = request.cookies.get('refreshToken')?.value;
+  
+  if (refreshToken) {
+    const payload = await verifyAccessToken(refreshToken);
+    
+    if (payload) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+  }
+
+  return response;
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+  ],
+};

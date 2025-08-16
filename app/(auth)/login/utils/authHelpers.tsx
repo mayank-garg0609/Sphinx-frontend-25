@@ -243,28 +243,69 @@ class CSRFManager {
 
 export const csrfManager = new CSRFManager();
 
-// Main auth success handler
-export const handleAuthSuccess = async (
+// Overloaded handleAuthSuccess function to handle both parameter patterns
+export async function handleAuthSuccess(
   accessToken: string,
   refreshToken: string,
   expiresIn: number,
   user: User,
   router: any
-): Promise<void> => {
-  try {
-    // Validate tokens
-    const tokenData = TokenResponseSchema.parse({
-      accessToken,
-      refreshToken,
-      expiresIn,
-    });
+): Promise<void>;
 
-    // Store tokens securely
-    tokenManager.setTokens(
-      tokenData.accessToken,
-      tokenData.refreshToken,
-      tokenData.expiresIn
-    );
+export async function handleAuthSuccess(
+  accessToken: string,
+  user: User,
+  router: any
+): Promise<void>;
+
+export async function handleAuthSuccess(
+  accessToken: string,
+  refreshTokenOrUser: string | User,
+  expiresInOrRouter: number | any,
+  userOrUndefined?: User,
+  routerOrUndefined?: any
+): Promise<void> {
+  try {
+    let refreshToken: string;
+    let expiresIn: number;
+    let user: User;
+    let router: any;
+
+    // Determine which overload is being used
+    if (typeof refreshTokenOrUser === 'string' && typeof expiresInOrRouter === 'number' && userOrUndefined && routerOrUndefined) {
+      // Full parameter version: (accessToken, refreshToken, expiresIn, user, router)
+      refreshToken = refreshTokenOrUser;
+      expiresIn = expiresInOrRouter;
+      user = userOrUndefined;
+      router = routerOrUndefined;
+    } else if (typeof refreshTokenOrUser === 'object' && refreshTokenOrUser !== null) {
+      // Simplified version: (accessToken, user, router) - for Google auth
+      refreshToken = ''; // Google auth might not provide refresh token
+      expiresIn = 3600; // Default 1 hour
+      user = refreshTokenOrUser;
+      router = expiresInOrRouter;
+    } else {
+      throw new Error('Invalid parameters for handleAuthSuccess');
+    }
+
+    // Validate tokens only if we have them
+    if (refreshToken) {
+      const tokenData = TokenResponseSchema.parse({
+        accessToken,
+        refreshToken,
+        expiresIn,
+      });
+
+      // Store tokens securely
+      tokenManager.setTokens(
+        tokenData.accessToken,
+        tokenData.refreshToken,
+        tokenData.expiresIn
+      );
+    } else {
+      // For Google auth without refresh token, just store access token
+      tokenManager.setTokens(accessToken, '', expiresIn);
+    }
 
     // Store user data
     userManager.setUser(user);
@@ -277,7 +318,7 @@ export const handleAuthSuccess = async (
     console.error('Auth success handling failed:', error);
     throw new Error('Login successful but setup failed. Please try again.');
   }
-};
+}
 
 // Logout handler
 export const handleLogout = async (router: any): Promise<void> => {

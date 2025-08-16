@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTransitionRouter } from 'next-view-transitions';
 import { memo, useCallback } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
 import { loginSchema, type LoginFormData } from '@/app/schemas/loginSchema';
 import { useAuth } from '../hooks/useAuth';
 import { useGoogleAuth } from '../hooks/useGoogleAuth';
@@ -13,6 +12,7 @@ import { FormField } from './FormFields';
 import { ActionButtons } from './ActionButtons';
 import { SignUpLink } from './SignUpLink';
 import { LoginHeader } from './LoginHeader';
+import { ErrorBoundary } from './ErrorBoundary';
 import { FORM_FIELDS, FORM_STYLES, ACCESSIBILITY, MESSAGES } from '../utils/constants';
 import { handleComponentError } from '../utils/errorHandlers';
 
@@ -177,7 +177,8 @@ const LoginFormInner = memo(function LoginFormInner() {
         onGoogleLogin={handleGoogleLogin}
         isGoogleLoading={isGoogleLoading}
         googlePopupClosed={googlePopupClosed}
-        isRateLimited={isAnyRateLimited}
+        isRateLimited={isRateLimited}
+        isGoogleRateLimited={isGoogleRateLimited}
         googleError={googleError}
       />
       
@@ -229,19 +230,12 @@ export const LoginForm = memo(function LoginForm() {
     handleComponentError(error, errorInfo);
   }, []);
 
-  const handleReset = useCallback(() => {
-    // Clear any cached state and reload
-    if (typeof window !== 'undefined') {
-      window.location.reload();
-    }
-  }, []);
-
   return (
     <ErrorBoundary
-      FallbackComponent={ErrorFallback}
+      fallback={ErrorFallback}
       onError={handleError}
-      onReset={handleReset}
-      resetKeys={[]} // Reset when keys change
+      resetOnPropsChange={false}
+      resetKeys={[]}
     >
       <LoginFormInner />
     </ErrorBoundary>

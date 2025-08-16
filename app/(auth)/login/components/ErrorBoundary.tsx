@@ -13,7 +13,7 @@ interface ErrorBoundaryState {
 
 interface ErrorBoundaryProps {
   children: ReactNode;
-  fallback?: ComponentType<ErrorFallbackProps>;
+  fallback?: React.ComponentType<ErrorFallbackProps>;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
   resetKeys?: Array<string | number>;
   resetOnPropsChange?: boolean;
@@ -25,13 +25,8 @@ interface ErrorFallbackProps {
   errorId: string;
 }
 
-interface ComponentType<P = {}> {
-  (props: P): ReactNode;
-  displayName?: string;
-}
-
 // Default Error Fallback Component
-const DefaultErrorFallback: ComponentType<ErrorFallbackProps> = ({
+const DefaultErrorFallback: React.ComponentType<ErrorFallbackProps> = ({
   error,
   resetErrorBoundary,
   errorId,
@@ -150,7 +145,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     // Generate unique error ID
-    const errorId = `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const errorId = `error_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     
     return {
       hasError: true,
@@ -254,7 +249,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
 // Higher-order component for easier usage
 export function withErrorBoundary<P extends object>(
-  Component: ComponentType<P>,
+  Component: React.ComponentType<P>,
   errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>
 ) {
   const WrappedComponent = (props: P) => (

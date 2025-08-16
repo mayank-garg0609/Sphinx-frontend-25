@@ -8,10 +8,17 @@ export interface ApiResponse<T = any> {
 }
 
 export interface LoginResponse extends ApiResponse {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-  user: User;
+  data?: {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+    user: User;
+  };
+  // Flat structure fallback for backward compatibility
+  accessToken?: string;
+  refreshToken?: string;
+  expiresIn?: number;
+  user?: User;
 }
 
 export interface RefreshTokenResponse extends ApiResponse {
@@ -71,18 +78,39 @@ export const UserSchema = z.object({
   _id: z.string().optional(),
 });
 
+// Updated schema to handle both nested and flat response structures
 export const LoginResponseSchema = z.object({
   success: z.boolean(),
-  accessToken: z.string().min(1),
-  refreshToken: z.string().min(1),
-  expiresIn: z.number().positive(),
-  user: UserSchema,
+  // Nested data structure (preferred)
   data: z.object({
     accessToken: z.string().min(1),
     refreshToken: z.string().min(1),
     expiresIn: z.number().positive(),
     user: UserSchema,
   }).optional(),
+  // Flat structure fallback
+  accessToken: z.string().min(1).optional(),
+  refreshToken: z.string().min(1).optional(),
+  expiresIn: z.number().positive().optional(),
+  user: UserSchema.optional(),
+  error: z.string().optional(),
+  message: z.string().optional(),
+}).refine((data) => {
+  // Ensure either nested data or flat structure is present
+  const hasNestedData = data.data && 
+    data.data.accessToken && 
+    data.data.refreshToken && 
+    data.data.expiresIn && 
+    data.data.user;
+  
+  const hasFlatData = data.accessToken && 
+    data.refreshToken && 
+    data.expiresIn && 
+    data.user;
+
+  return hasNestedData || hasFlatData;
+}, {
+  message: "Either nested data object or flat structure must be provided",
 });
 
 export const RefreshTokenResponseSchema = z.object({
