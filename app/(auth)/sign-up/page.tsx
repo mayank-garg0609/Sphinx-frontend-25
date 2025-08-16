@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useCallback, useEffect } from "react";
 import { useTransitionRouter } from "next-view-transitions";
 import { FormField } from "./components/FormFields";
 import { PasswordValidationMessage } from "./components/PasswordValidationMessage";
@@ -9,10 +9,69 @@ import { BackgroundImage } from "./components/BackgroundImage";
 import { ActionButtons } from "./components/ActionButtons";
 import { TermsCheckbox } from "./components/TermsCheckbox";
 import { LoginLink } from "./components/LoginLink";
+import { ErrorBoundary } from "../login/components/ErrorBoundary";
 import { useSignUp } from "./hooks/useSignUp";
-import { FORM_FIELDS } from "./utils/constants";
+import { FORM_FIELDS, FORM_STYLES, MOBILE_STYLES, ACCESSIBILITY, MESSAGES } from "./utils/constants";
+import { handleComponentError } from "./utils/errorHandlers";
 
-const SignUpForm = memo(function SignUpForm() {
+interface ErrorFallbackProps {
+  error: Error;
+  resetErrorBoundary: () => void;
+}
+
+const ErrorFallback = memo(function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
+  return (
+    <div 
+      className="bg-red-50 border border-red-200 rounded-lg p-4 text-center"
+      role="alert"
+      aria-live="assertive"
+    >
+      <div className="flex flex-col items-center gap-3">
+        <svg 
+          className="w-8 h-8 text-red-600" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        
+        <div>
+          <h2 className="text-lg font-semibold text-red-800 mb-1">
+            Something went wrong
+          </h2>
+          <p className="text-sm text-red-600 mb-3">
+            The sign-up form encountered an error. Please try again.
+          </p>
+          {process.env.NODE_ENV === 'development' && (
+            <details className="text-xs text-red-500 mb-3">
+              <summary className="cursor-pointer font-mono">Error details (dev only)</summary>
+              <pre className="mt-2 text-left bg-red-100 p-2 rounded overflow-auto">
+                {error.message}
+              </pre>
+            </details>
+          )}
+        </div>
+        
+        <button
+          onClick={resetErrorBoundary}
+          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+          aria-label="Try again"
+        >
+          Try Again
+        </button>
+      </div>
+    </div>
+  );
+});
+
+const SignUpFormInner = memo(function SignUpFormInner() {
   const router = useTransitionRouter();
   
   const {
@@ -25,23 +84,57 @@ const SignUpForm = memo(function SignUpForm() {
     handleGoogleSignup,
     isGoogleLoading,
     googlePopupClosed,
+    retryCount,
+    isRateLimited,
+    isGoogleRateLimited,
+    googleError,
   } = useSignUp(router);
 
   const password = watch("password");
   const isFormDisabled = isSubmitting || isGoogleLoading;
+  const isAnyRateLimited = isRateLimited || isGoogleRateLimited;
+
+  const getErrorMessages = useCallback(() => {
+    return Object.values(errors)
+      .map(error => {
+        if (typeof error === 'object' && error !== null && 'message' in error) {
+          return error.message as string;
+        }
+        return null;
+      })
+      .filter(Boolean) as string[];
+  }, [errors]);
+
+  const getFormAriaDescribedBy = useCallback(() => {
+    const describedBy = [];
+    if (Object.keys(errors).length > 0) {
+      describedBy.push('form-errors');
+    }
+    if (isAnyRateLimited) {
+      describedBy.push('rate-limit-message');
+    }
+    return describedBy.length > 0 ? describedBy.join(' ') : undefined;
+  }, [errors, isAnyRateLimited]);
 
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="bg-black/40 backdrop-blur-md text-white p-4 sm:p-5 md:p-6 lg:p-7 xl:p-8 2xl:p-9 rounded-xl sm:rounded-xl md:rounded-2xl lg:rounded-2xl xl:rounded-2xl 2xl:rounded-2xl shadow-[0_8px_32px_0_rgba(255,255,255,0.3)] w-full max-w-[280px] xs:max-w-[320px] sm:max-w-[360px] md:max-w-[400px] lg:max-w-md xl:max-w-lg 2xl:max-w-xl border border-white/30 space-y-3 sm:space-y-4 md:space-y-5 lg:space-y-6 xl:space-y-7 2xl:space-y-8 font-sans lg:mr-8 xl:mr-16 2xl:mr-24 mx-auto h-auto lg:h-auto xl:h-auto 2xl:h-auto max-h-[90vh] sm:max-h-[85vh] md:max-h-[85vh] lg:max-h-[85vh] xl:max-h-[90vh] 2xl:max-h-[90vh] overflow-y-auto"
-      style={{
-        scrollbarWidth: 'thin',
-        scrollbarColor: '#cbd5e1 #2d2d2d',
-      }}
+      className={FORM_STYLES.container}
+      style={FORM_STYLES.scrollbar}
+      noValidate 
+      role="form"
+      aria-label={ACCESSIBILITY.ARIA_LABELS.SIGNUP_FORM}
+      aria-describedby={getFormAriaDescribedBy()}
+      data-testid="signup-form"
     >
       <SignUpHeader />
       
-      <div className="space-y-3 sm:space-y-4 md:space-y-5 lg:space-y-6 xl:space-y-7 2xl:space-y-8 pt-3 sm:pt-4 md:pt-5 lg:pt-6 xl:pt-7 2xl:pt-8 pb-3 sm:pb-4 md:pb-5 lg:pb-6 xl:pb-7 2xl:pb-8">
+      <fieldset 
+        disabled={isFormDisabled}
+        className="space-y-3 sm:space-y-4 md:space-y-5 lg:space-y-6 xl:space-y-7 2xl:space-y-8 pt-3 sm:pt-4 md:pt-5 lg:pt-6 xl:pt-7 2xl:pt-8 pb-3 sm:pb-4 md:pb-5 lg:pb-6 xl:pb-7 2xl:pb-8"
+      >
+        <legend className="sr-only">Sign up credentials</legend>
+        
         <FormField
           field={FORM_FIELDS.name}
           register={register}
@@ -80,27 +173,151 @@ const SignUpForm = memo(function SignUpForm() {
           error={errors.agreed?.message?.toString()}
           disabled={isFormDisabled}
         />
-      </div>
+      </fieldset>
       
       <ActionButtons
         isSubmitting={isSubmitting}
         onGoogleSignup={handleGoogleSignup}
         isGoogleLoading={isGoogleLoading}
         googlePopupClosed={googlePopupClosed}
+        isRateLimited={isRateLimited}
+        isGoogleRateLimited={isGoogleRateLimited}
+        googleError={googleError}
       />
       
       <LoginLink />
+      
+      {retryCount > 0 && (
+        <div 
+          className="text-yellow-400 text-xs sm:text-sm text-center"
+          role="status"
+          aria-live="polite"
+        >
+          Retry attempt {retryCount}
+        </div>
+      )}
+      
+      {Object.keys(errors).length > 0 && (
+        <div 
+          id="form-errors"
+          className="sr-only"
+          role="alert"
+          aria-live="assertive"
+        >
+          Form has {Object.keys(errors).length} error{Object.keys(errors).length > 1 ? 's' : ''}: {
+            getErrorMessages().join(', ')
+          }
+        </div>
+      )}
+      
+      {(isSubmitting || isGoogleLoading) && (
+        <div 
+          className="sr-only"
+          role="status"
+          aria-live="polite"
+        >
+          {isSubmitting ? MESSAGES.LOADING.CREATING_ACCOUNT : MESSAGES.LOADING.AUTHENTICATING}
+        </div>
+      )}
     </form>
   );
 });
 
-export default function SignUpPage() {
+const SignUpForm = memo(function SignUpForm() {
+  const handleError = useCallback((error: Error, errorInfo: any) => {
+    handleComponentError(error, errorInfo);
+  }, []);
+
   return (
-    <div className="min-h-screen w-full flex bg-black bg-cover bg-center bg-no-repeat lg:px-4 px-6">
-      <BackgroundImage />
-      <div className="relative z-10 flex justify-center lg:justify-end w-full items-center min-h-screen py-8 lg:py-0">
-        <SignUpForm />
-      </div>
-    </div>
+    <ErrorBoundary
+      fallback={ErrorFallback}
+      onError={handleError}
+      resetOnPropsChange={false}
+      resetKeys={[]}
+    >
+      <SignUpFormInner />
+    </ErrorBoundary>
+  );
+});
+
+export default function SignUpPage() {
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      if (process.env.NODE_ENV === "production") {
+        e.preventDefault();
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (process.env.NODE_ENV === "production") {
+        if (
+          e.key === "F12" ||
+          (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) ||
+          (e.ctrlKey && e.key === "U")
+        ) {
+          e.preventDefault();
+        }
+      }
+    };
+
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  useEffect(() => {
+    document.title = "Sign Up - Sphinx'25";
+
+    const setMetaTag = (name: string, content: string) => {
+      let meta = document.querySelector(
+        `meta[name="${name}"]`
+      ) as HTMLMetaElement;
+      if (!meta) {
+        meta = document.createElement("meta");
+        meta.name = name;
+        document.head.appendChild(meta);
+      }
+      meta.content = content;
+    };
+
+    setMetaTag("referrer", "strict-origin-when-cross-origin");
+    setMetaTag("robots", "noindex, nofollow"); // Don't index auth pages
+
+    const setViewportMeta = () => {
+      let viewport = document.querySelector(
+        'meta[name="viewport"]'
+      ) as HTMLMetaElement;
+      if (!viewport) {
+        viewport = document.createElement("meta");
+        viewport.name = "viewport";
+        document.head.appendChild(viewport);
+      }
+      viewport.content =
+        "width=device-width, initial-scale=1.0, shrink-to-fit=no";
+    };
+
+    setViewportMeta();
+  }, []);
+
+  return (
+    <main className={MOBILE_STYLES.container} role="main">
+      <section aria-hidden="true" className="absolute inset-0">
+        <BackgroundImage />
+        <div className="absolute inset-0 bg-black/20 lg:bg-gradient-to-r lg:from-black/40 lg:via-black/20 lg:to-transparent" />
+      </section>
+
+      <section
+        className={MOBILE_STYLES.formWrapper}
+        aria-labelledby="signup-heading"
+      >
+        <div id="signup-form">
+          <SignUpForm />
+        </div>
+      </section>
+    </main>
   );
 }

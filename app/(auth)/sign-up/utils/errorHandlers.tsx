@@ -1,86 +1,309 @@
 import { toast } from "sonner";
+import {
+  AuthenticationError,
+  TokenExpiredError,
+  NetworkError,
+  ValidationError,
+  type AuthError,
+} from "../types/authTypes";
+
+const sanitizeErrorMessage = (message: string): string => {
+  const sensitivePatterns = [
+    /token/gi,
+    /jwt/gi,
+    /bearer/gi,
+    /authorization/gi,
+    /cookie/gi,
+    /session/gi,
+  ];
+
+  let sanitized = message;
+  sensitivePatterns.forEach((pattern) => {
+    sanitized = sanitized.replace(pattern, "[REDACTED]");
+  });
+
+  return sanitized;
+};
+
+export const ERROR_MESSAGES = {
+  AUTH: {
+    USER_EXISTS:
+      "An account with this email already exists. Please log in instead.",
+    INVALID_PASSWORD: "Password must be at least 8 characters long.",
+    INVALID_EMAIL: "Please enter a valid email address.",
+    WEAK_PASSWORD:
+      "Password is too weak. Please include uppercase, lowercase, numbers, and special characters.",
+    GOOGLE_SIGNUP_FAILED: "Google sign-up failed. Please try again.",
+    ACCOUNT_CREATION_FAILED: "Failed to create account. Please try again.",
+    TERMS_NOT_AGREED: "You must agree to the terms and conditions.",
+    PASSWORD_MISMATCH: "Passwords do not match.",
+  },
+  NETWORK: {
+    TIMEOUT: "Request timed out. Please check your connection and try again.",
+    OFFLINE: "You appear to be offline. Please check your connection.",
+    SERVER_ERROR: "Server error. Please try again later.",
+    RATE_LIMITED: "Too many requests. Please wait before trying again.",
+  },
+  VALIDATION: {
+    INVALID_EMAIL: "Please enter a valid email address.",
+    INVALID_PASSWORD: "Password must meet security requirements.",
+    REQUIRED_FIELD: "This field is required.",
+    NAME_TOO_SHORT: "Name must be at least 2 characters long.",
+    NAME_TOO_LONG: "Name must be no longer than 50 characters.",
+  },
+  GOOGLE: {
+    AUTH_FAILED: "Google sign-up failed. Please try again.",
+    POPUP_BLOCKED:
+      "Google sign-up popup was blocked. Please allow popups and try again.",
+    CANCELLED: "Google sign-up was cancelled.",
+    INVALID_CODE: "Invalid Google authentication. Please try again.",
+    ACCOUNT_EXISTS:
+      "An account with this Google email already exists. Please log in instead.",
+  },
+} as const;
 
 export const handleApiError = (res: Response, result: any): void => {
-  console.error("❌ Server error:", result);
+  console.error("SignUp API Error:", {
+    status: res.status,
+    statusText: res.statusText,
+    url: res.url,
+    error: sanitizeErrorMessage(result?.error || "Unknown error"),
+  });
+
+  let errorMessage: string;
 
   switch (res.status) {
-    case 409:
-      toast.error("Account already exists. Please try logging in instead.");
-      break;
     case 400:
-      if (result.error?.includes("email")) {
-        toast.error("Invalid email address. Please check and try again.");
-      } else if (result.error?.includes("password")) {
-        toast.error("Password doesn't meet requirements. Please try again.");
+      if (
+        result.error?.toLowerCase().includes("user already exists") ||
+        result.error?.toLowerCase().includes("email already")
+      ) {
+        errorMessage = ERROR_MESSAGES.AUTH.USER_EXISTS;
+      } else if (result.error?.toLowerCase().includes("google")) {
+        errorMessage = ERROR_MESSAGES.AUTH.GOOGLE_SIGNUP_FAILED;
+      } else if (result.error?.toLowerCase().includes("password")) {
+        errorMessage = ERROR_MESSAGES.AUTH.INVALID_PASSWORD;
+      } else if (result.error?.toLowerCase().includes("email")) {
+        errorMessage = ERROR_MESSAGES.VALIDATION.INVALID_EMAIL;
       } else {
-        toast.error(result.error || "Invalid input. Please check your details.");
+        errorMessage = ERROR_MESSAGES.AUTH.ACCOUNT_CREATION_FAILED;
       }
       break;
+
+    case 409:
+      errorMessage = ERROR_MESSAGES.AUTH.USER_EXISTS;
+      break;
+
     case 422:
-      toast.error("Validation failed. Please check your input and try again.");
+      errorMessage = ERROR_MESSAGES.VALIDATION.INVALID_EMAIL;
       break;
+
     case 429:
-      toast.error("Too many requests. Please wait a moment and try again.");
+      errorMessage = ERROR_MESSAGES.NETWORK.RATE_LIMITED;
       break;
+
     case 500:
-      toast.error("Server error. Please try again later.");
-      break;
+    case 502:
     case 503:
-      toast.error("Service temporarily unavailable. Please try again later.");
+    case 504:
+      errorMessage = ERROR_MESSAGES.NETWORK.SERVER_ERROR;
       break;
+
     default:
-      toast.error(result.error || "Sign up failed. Please try again.");
+      errorMessage =
+        result.error || ERROR_MESSAGES.AUTH.ACCOUNT_CREATION_FAILED;
+  }
+
+  toast.error(errorMessage);
+
+  if (res.status === 409) {
+    throw new AuthenticationError(errorMessage, res.status);
+  } else if (res.status === 422) {
+    throw new ValidationError(errorMessage);
+  } else if (res.status >= 500) {
+    throw new NetworkError(errorMessage, res.status);
   }
 };
 
 export const handleGoogleApiError = (res: Response, result: any): void => {
-  console.error("❌ Google signup failed:", result);
+  console.error("Google SignUp API Error:", {
+    status: res.status,
+    statusText: res.statusText,
+    error: sanitizeErrorMessage(result?.error || "Unknown error"),
+  });
+
+  let errorMessage: string;
 
   switch (res.status) {
     case 400:
-      toast.error("Invalid Google authentication code. Please try again.");
+      if (
+        result.error?.toLowerCase().includes("user already exists") ||
+        result.error?.toLowerCase().includes("email already")
+      ) {
+        errorMessage = ERROR_MESSAGES.GOOGLE.ACCOUNT_EXISTS;
+      } else {
+        errorMessage = ERROR_MESSAGES.GOOGLE.INVALID_CODE;
+      }
       break;
-    case 401:
-      toast.error("Google authentication expired. Please try again.");
-      break;
+
     case 409:
-      toast.error("Account already exists. Please try logging in instead.");
+      errorMessage = ERROR_MESSAGES.GOOGLE.ACCOUNT_EXISTS;
       break;
+
     case 429:
-      toast.error("Too many Google auth requests. Please wait and try again.");
+      errorMessage =
+        "Too many Google sign-up requests. Please wait and try again.";
       break;
+
     case 500:
-      toast.error("Failed to authenticate with Google. Please try again.");
+    case 502:
+    case 503:
+    case 504:
+      errorMessage =
+        "Google sign-up service unavailable. Please try again later.";
       break;
+
     default:
-      toast.error(result.error || "Google authentication failed. Please try again.");
+      errorMessage = ERROR_MESSAGES.GOOGLE.AUTH_FAILED;
   }
+
+  toast.error(errorMessage);
+  throw new AuthenticationError(errorMessage, res.status);
 };
 
 export const handleNetworkError = (
   error: unknown,
   retryCount: number,
   maxRetries: number,
-  setRetryCount: (fn: (prev: number) => number) => void,
-  isGoogleAuth: boolean = false
+  context = "signup"
 ): void => {
-  console.error("🚨 Network error:", error);
-  
-  if (error instanceof SyntaxError && error.message.includes("Unexpected token")) {
-    const message = isGoogleAuth 
-      ? "Server returned invalid response. Please check if the Google auth endpoint exists."
-      : "Server returned invalid response. Please check if the API endpoint exists.";
-    toast.error(message);
+  console.error("SignUp Network Error:", {
+    error: sanitizeErrorMessage(
+      error instanceof Error ? error.message : "Unknown error"
+    ),
+    retryCount,
+    maxRetries,
+    context,
+  });
+
+  let errorMessage: string;
+  let shouldRetry = false;
+
+  if (error instanceof Error) {
+    if (error.name === "AbortError") {
+      errorMessage = ERROR_MESSAGES.NETWORK.TIMEOUT;
+      shouldRetry = retryCount < maxRetries;
+    } else if (
+      error.message.includes("Failed to fetch") ||
+      error.message.includes("NetworkError")
+    ) {
+      errorMessage = navigator.onLine
+        ? ERROR_MESSAGES.NETWORK.SERVER_ERROR
+        : ERROR_MESSAGES.NETWORK.OFFLINE;
+      shouldRetry = retryCount < maxRetries && navigator.onLine;
+    } else if (
+      error instanceof SyntaxError &&
+      error.message.includes("Unexpected token")
+    ) {
+      errorMessage = "Server returned invalid response. Please try again.";
+      shouldRetry = false; // Don't retry parsing errors
+    } else {
+      errorMessage = ERROR_MESSAGES.NETWORK.SERVER_ERROR;
+      shouldRetry = retryCount < maxRetries;
+    }
   } else {
-    const message = isGoogleAuth 
-      ? "Google authentication failed. Please try again."
-      : "Network error. Please check your connection and try again.";
-    toast.error(message);
+    errorMessage = ERROR_MESSAGES.NETWORK.SERVER_ERROR;
+    shouldRetry = retryCount < maxRetries;
   }
 
-  if (retryCount < maxRetries) {
-    setRetryCount((prev) => prev + 1);
-    const authType = isGoogleAuth ? "Google auth" : "";
-    toast.info(`Retrying ${authType}... (${retryCount + 1}/${maxRetries})`);
+  toast.error(errorMessage);
+
+  if (shouldRetry) {
+    const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 10000); // Exponential backoff, max 10s
+    toast.info(
+      `Retrying in ${retryDelay / 1000}s... (${retryCount + 1}/${maxRetries})`
+    );
   }
+
+  throw new NetworkError(errorMessage);
+};
+
+export const handleGoogleNetworkError = (
+  error: unknown,
+  retryCount: number,
+  maxRetries: number
+): void => {
+  console.error("Google SignUp Network Error:", {
+    error: sanitizeErrorMessage(
+      error instanceof Error ? error.message : "Unknown error"
+    ),
+    retryCount,
+    maxRetries,
+  });
+
+  let errorMessage: string;
+
+  if (error instanceof Error) {
+    if (error.name === "AbortError") {
+      errorMessage = "Google sign-up timed out. Please try again.";
+    } else if (
+      error.message.includes("Failed to fetch") ||
+      error.message.includes("NetworkError")
+    ) {
+      errorMessage = navigator.onLine
+        ? "Google sign-up service unavailable. Please try again."
+        : ERROR_MESSAGES.NETWORK.OFFLINE;
+    } else if (
+      error instanceof SyntaxError &&
+      error.message.includes("Unexpected token")
+    ) {
+      errorMessage = "Google sign-up response was invalid. Please try again.";
+    } else {
+      errorMessage = ERROR_MESSAGES.GOOGLE.AUTH_FAILED;
+    }
+  } else {
+    errorMessage = ERROR_MESSAGES.GOOGLE.AUTH_FAILED;
+  }
+
+  toast.error(errorMessage);
+
+  if (retryCount < maxRetries) {
+    const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+    toast.info(
+      `Retrying Google sign-up in ${retryDelay / 1000}s... (${
+        retryCount + 1
+      }/${maxRetries})`
+    );
+  }
+
+  throw new NetworkError(errorMessage);
+};
+
+export const handleComponentError = (error: Error, errorInfo: any): void => {
+  console.error("SignUp Component Error:", {
+    error: sanitizeErrorMessage(error.message),
+    componentStack: errorInfo.componentStack,
+    stack: error.stack,
+  });
+
+  toast.error("Something went wrong. Please refresh the page and try again.");
+};
+
+export const handleCSRFError = (): void => {
+  console.error("CSRF validation failed");
+  toast.error(
+    "Security validation failed. Please refresh the page and try again."
+  );
+  if (typeof window !== "undefined") {
+    window.location.reload();
+  }
+};
+
+export const handleRateLimitError = (timeUntilReset: number): void => {
+  const minutes = Math.ceil(timeUntilReset / 60000);
+  toast.error(
+    `Too many requests. Please wait ${minutes} minute${
+      minutes > 1 ? "s" : ""
+    } before trying again.`
+  );
 };

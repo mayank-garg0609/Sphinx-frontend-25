@@ -54,7 +54,6 @@ export default function HomePage() {
       const newTimeLeft = calculateTimeLeft();
       setTimeLeft(newTimeLeft);
 
-      // Check if countdown is finished
       if (
         newTimeLeft.days === 0 &&
         newTimeLeft.hours === 0 &&
@@ -83,7 +82,6 @@ export default function HomePage() {
     timeLeft.minutes === 0 &&
     timeLeft.seconds === 0;
 
-  // Calculate progress for circular progress bars
   const getProgress = (value: number, max: number) => {
     return (value / max) * 100;
   };
@@ -104,7 +102,6 @@ export default function HomePage() {
     return (
       <div className="relative flex flex-col items-center">
         <div className="relative w-24 h-24 md:w-32 md:h-32">
-          {/* Background circle */}
           <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
             <circle
               cx="50"
@@ -115,7 +112,6 @@ export default function HomePage() {
               fill="transparent"
               className="drop-shadow-sm"
             />
-            {/* Progress circle */}
             <circle
               cx="50"
               cy="50"
@@ -137,7 +133,6 @@ export default function HomePage() {
             </defs>
           </svg>
 
-          {/* Center value */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
               <div className="text-2xl md:text-3xl font-mono font-bold text-transparent bg-clip-text bg-gradient-to-b from-cyan-300 to-cyan-600 filter drop-shadow-lg">
@@ -146,11 +141,9 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Glowing effect */}
           <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400/10 to-purple-500/10 animate-pulse"></div>
         </div>
 
-        {/* Label */}
         <div className="text-xs md:text-sm text-cyan-400/80 font-mono tracking-wider mt-3 text-center">
           {label}
         </div>
@@ -160,9 +153,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-black relative overflow-hidden">
-      {/* Optimized Image Background with Animated Effects */}
       <div className="fixed inset-0 z-0">
-        {/* Main background image */}
         <Image
           src="/image/BG.png"
           alt="Futuristic Background"
@@ -176,30 +167,25 @@ export default function HomePage() {
         />
       </div>
 
-      {/* Animated gradient overlays */}
       <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-black/80"></div>
 
-      {/* Cinematic vignette effect */}
       <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-black/50"></div>
 
-      {/* Animated color overlay for depth */}
       <div className="absolute inset-0 bg-gradient-to-tr from-cyan-900/10 via-transparent to-purple-900/10 animate-pulse"></div>
 
-      {/* Moving light effects */}
       <div className="absolute inset-0 opacity-30">
-        {/* Horizontal light sweep */}
         <div className="absolute top-1/3 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent animate-light-sweep"></div>
 
-        {/* Vertical light sweep */}
         <div className="absolute top-0 left-1/3 w-1 h-full bg-gradient-to-b from-transparent via-purple-400/30 to-transparent animate-light-sweep-vertical"></div>
 
-        {/* Diagonal light beams */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
           <div className="absolute -top-1/2 -left-1/2 w-full h-2 bg-gradient-to-r from-transparent via-pink-400/20 to-transparent rotate-45 animate-diagonal-sweep"></div>
         </div>
       </div>
 
-      <ParticleEffect />
+      <div className="hidden md:block">
+        <ParticleEffect />
+      </div>
 
       <section className="relative h-screen flex items-center justify-center overflow-hidden z-10">
         <GlowGlitchLogo
@@ -210,7 +196,6 @@ export default function HomePage() {
           className="absolute inset-0"
         />
 
-        {/* Enhanced animated border effects */}
         <div className="absolute inset-0 opacity-25">
           <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-border-glow"></div>
           <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent animate-border-glow"></div>
@@ -226,7 +211,6 @@ export default function HomePage() {
           <div className="text-center text-white z-20 relative">
             {countdownActive && (
               <div className="relative">
-                {/* Enhanced sci-fi grid background effect */}
                 <div className="absolute inset-0 opacity-10">
                   <div className="grid grid-cols-16 grid-rows-16 w-full h-full animate-grid-pulse">
                     {Array.from({ length: 256 }).map((_, i) => (
@@ -241,20 +225,15 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Main countdown container with enhanced circular design */}
                 <div className="relative">
-                  {/* Multiple outer glow rings for depth */}
                   <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400/30 via-purple-500/30 to-pink-500/30 blur-2xl animate-glow-pulse"></div>
                   <div className="absolute inset-2 rounded-full bg-gradient-to-r from-purple-400/20 via-cyan-400/20 to-pink-400/20 blur-xl animate-glow-pulse-reverse"></div>
 
-                  {/* Main circular container with glassmorphism */}
                   <div className="relative bg-black/90 backdrop-blur-xl rounded-full p-8 md:p-12 border border-cyan-400/40 shadow-2xl shadow-cyan-400/20">
-                    {/* Multiple inner decorative rings */}
                     <div className="absolute inset-3 rounded-full border-2 border-dashed border-cyan-400/30 animate-spin-slow"></div>
                     <div className="absolute inset-6 rounded-full border border-dotted border-purple-400/25 animate-reverse-spin"></div>
                     <div className="absolute inset-9 rounded-full border border-solid border-pink-400/15 animate-spin-slower"></div>
 
-                    {/* Enhanced status indicator */}
                     <div className="text-cyan-400 text-xs md:text-sm font-mono mb-6 flex items-center justify-center gap-3">
                       <div className="flex gap-1">
                         <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
@@ -270,7 +249,6 @@ export default function HomePage() {
                       SYSTEM ONLINE - COUNTDOWN ACTIVE
                     </div>
 
-                    {/* Circular timer grid */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mb-8">
                       <CircularTimer
                         value={timeLeft.days}
@@ -294,7 +272,6 @@ export default function HomePage() {
                       />
                     </div>
 
-                    {/* Enhanced mission info */}
                     <div className="text-center">
                       <div className="text-base md:text-lg text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-cyan-400 to-pink-400 font-mono tracking-wider mb-2 animate-text-glow">
                         [ MISSION LAUNCH SEQUENCE INITIATED ]
@@ -305,12 +282,10 @@ export default function HomePage() {
                       </div>
                     </div>
 
-                    {/* Multiple animated scan lines */}
                     <div className="absolute inset-x-0 top-1/3 h-px bg-gradient-to-r from-transparent via-cyan-400/80 to-transparent animate-scan-line"></div>
                     <div className="absolute inset-x-0 bottom-1/3 h-px bg-gradient-to-r from-transparent via-purple-400/60 to-transparent animate-scan-line-reverse"></div>
                   </div>
 
-                  {/* Enhanced corner decorations */}
                   <div className="absolute -top-3 -left-3 w-8 h-8 border-t-2 border-l-2 border-cyan-400 animate-corner-glow"></div>
                   <div
                     className="absolute -top-3 -right-3 w-8 h-8 border-t-2 border-r-2 border-cyan-400 animate-corner-glow"

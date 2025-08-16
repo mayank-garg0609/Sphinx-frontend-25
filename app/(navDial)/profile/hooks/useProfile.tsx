@@ -7,9 +7,9 @@ import {
 } from "@/app/schemas/profileSchema";
 import { useUser } from "@/app/hooks/useUser/useUser";
 import { fetchProfileData } from "../utils/api";
-import { getAuthToken, clearAuthData } from "../utils/auth";
 import { canMakeRequest } from "../utils/requestTracker";
 import { handleApiError } from "../utils/api";
+
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 2000;
 
@@ -27,7 +27,7 @@ interface UseProfileReturn {
 
 export const useProfile = (): UseProfileReturn => {
   const router = useTransitionRouter();
-  const { user, isLoggedIn, isLoading, refreshUserData } = useUser();
+  const { user, isLoggedIn, isLoading, logoutUser, refreshSession } = useUser();
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -38,31 +38,38 @@ export const useProfile = (): UseProfileReturn => {
 
   const loadProfile = useCallback(
     async (showRefreshing: boolean = false): Promise<void> => {
-      const token = getAuthToken();
-
-      if (!token || !user) {
-        console.log("🚨 No auth token or user data found");
+      if (!isLoggedIn || !user) {
+        console.log("🚨 User not authenticated or user data not available");
         setError("Please log in to view your profile.");
         setLoading(false);
         setCanRetry(false);
         return;
       }
 
-
       try {
         if (showRefreshing) {
           setIsRefreshing(true);
+          console.log("🔄 Refreshing profile with enhanced auth...");
         } else {
           setLoading(true);
+          console.log("📦 Loading profile with enhanced auth...");
         }
 
         setError(null);
         setCanRetry(true);
 
-        const data = await fetchProfileData(token);
+        if (showRefreshing) {
+          console.log("🔄 Attempting to refresh session before profile fetch...");
+          const sessionValid = await refreshSession();
+          if (!sessionValid) {
+            throw new Error("Session refresh failed. Please log in again.");
+          }
+        }
+
+        const data = await fetchProfileData();
 
         const parsed = ProfileSchema.safeParse(data);
-        console.log(parsed);
+        console.log("🔍 Profile validation result:", parsed.success ? "✅ Valid" : "❌ Invalid");
 
         if (!parsed.success) {
           console.error("❌ Profile validation error:", parsed.error.format());
@@ -76,7 +83,7 @@ export const useProfile = (): UseProfileReturn => {
             setCanRetry(false);
           }
         } else {
-          console.log("✅ Profile loaded and validated successfully");
+          console.log("✅ Profile loaded and validated successfully with enhanced auth");
           setProfile(parsed.data);
           setRetryCount(0);
           if (showRefreshing) {
@@ -91,7 +98,7 @@ export const useProfile = (): UseProfileReturn => {
         const shouldStopRetrying = handleApiError(
           error,
           router,
-          refreshUserData,
+          logoutUser,
           showRefreshing
         );
         setError(error.message || "Failed to load profile.");
@@ -110,12 +117,12 @@ export const useProfile = (): UseProfileReturn => {
         setIsRefreshing(false);
       }
     },
-    [router, retryCount, user, refreshUserData]
+    [router, retryCount, user, isLoggedIn, logoutUser, refreshSession]
   );
 
   const handleRefresh = useCallback((): void => {
     if (!isRefreshing && canMakeRequest()) {
-      console.log("🔄 Manual refresh triggered");
+      console.log("🔄 Manual refresh triggered with enhanced auth");
       setRetryCount(0);
       setCanRetry(true);
       loadProfile(true);
@@ -124,7 +131,7 @@ export const useProfile = (): UseProfileReturn => {
 
   const handleRetry = useCallback((): void => {
     if (canMakeRequest()) {
-      console.log("🔄 Manual retry triggered");
+      console.log("🔄 Manual retry triggered with enhanced auth");
       setRetryCount(0);
       setCanRetry(true);
       loadProfile(false);
@@ -135,10 +142,34 @@ export const useProfile = (): UseProfileReturn => {
 
   useEffect(() => {
     if (isLoggedIn && user && !isLoading && !hasLoadedOnce) {
+      console.log("🚀 Initial profile load triggered - User authenticated:", {
+        userId: user.sphinx_id,
+        userName: user.name,
+        isLoggedIn,
+        hasLoadedOnce
+      });
       loadProfile();
       setHasLoadedOnce(true);
+    } else if (!isLoggedIn && hasLoadedOnce) {
+      // Reset state when user logs out
+      console.log("🔄 User logged out, resetting profile state");
+      setProfile(null);
+      setError(null);
+      setLoading(false);
+      setIsRefreshing(false);
+      setCanRetry(true);
+      setRetryCount(0);
+      setHasLoadedOnce(false);
     }
   }, [isLoggedIn, user, isLoading, loadProfile, hasLoadedOnce]);
+
+  useEffect(() => {
+    if (!isLoggedIn && profile) {
+      console.log("🔄 Authentication lost, clearing profile data");
+      setProfile(null);
+      setError("Authentication required");
+    }
+  }, [isLoggedIn, profile]);
 
   return {
     profile,

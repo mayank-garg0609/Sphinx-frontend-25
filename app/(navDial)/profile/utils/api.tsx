@@ -3,15 +3,13 @@ import { useTransitionRouter } from "next-view-transitions";
 import { slideInOut } from "@/app/animations/pageTrans";
 import { ProfileResponse } from "../types/profileTypes";
 import { canMakeRequest, incrementRequestCount } from "./requestTracker";
-import { clearAuthData } from "./auth";
 import { ProfileData } from "@/app/schemas/profileSchema";
+import { getAuthHeaders } from "@/app/hooks/useUser/utils/helperFunctions";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-export const fetchProfileData = async (
-  token: string
-): Promise<ProfileData> => {
-  console.log("📦 Fetching profile data...");
+export const fetchProfileData = async (): Promise<ProfileData> => {
+  console.log("📦 Fetching profile data with enhanced auth...");
 
   if (!canMakeRequest()) {
     throw new Error("Request limit exceeded. Please wait before trying again.");
@@ -20,12 +18,13 @@ export const fetchProfileData = async (
   incrementRequestCount();
 
   try {
+    const headers = await getAuthHeaders();
+    
+    console.log("🔐 Using enhanced auth headers");
+
     const response = await fetch(`${API_BASE_URL}/user/info`, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
+      headers,
     });
 
     const contentType = response.headers.get("content-type");
@@ -39,6 +38,19 @@ export const fetchProfileData = async (
 
     if (!response.ok) {
       console.error("❌ Profile fetch failed:", result);
+      
+      if (response.status === 401) {
+        throw new Error("Authentication failed. Please log in again.");
+      } else if (response.status === 403) {
+        throw new Error("Access denied. Insufficient permissions.");
+      } else if (response.status === 404) {
+        throw new Error("Profile not found. Please contact support.");
+      } else if (response.status === 429) {
+        throw new Error("Too many requests. Please wait before trying again.");
+      } else if (response.status >= 500) {
+        throw new Error("Server error. Please try again later.");
+      }
+      
       throw new Error(
         result.error ||
           result.message ||
@@ -46,8 +58,7 @@ export const fetchProfileData = async (
       );
     }
 
-    console.log("✅ Profile data fetched successfully");
-    console.log(result.user);
+    console.log("✅ Profile data fetched successfully with enhanced auth");
     return result.user;
   } catch (error) {
     console.error("🚨 Profile fetch error:", error);
@@ -74,27 +85,27 @@ export const fetchProfileData = async (
 export const handleApiError = (
   error: Error,
   router: ReturnType<typeof useTransitionRouter>,
-  refreshUserData: () => void,
+  logoutUser: () => Promise<void>,
   isRefresh: boolean = false
 ): boolean => {
   const message = error.message;
   console.error("🚨 API Error:", message);
 
-  if (message.includes("401") || message.includes("Unauthorized")) {
+  if (message.includes("401") || message.includes("Authentication failed")) {
     toast.error("Session expired. Please log in again.");
-    clearAuthData();
-    refreshUserData();
-    setTimeout(() => {
-      router.push("/login", { onTransitionReady: slideInOut });
-    }, 1000);
+    logoutUser().then(() => {
+      setTimeout(() => {
+        router.push("/login", { onTransitionReady: slideInOut });
+      }, 1000);
+    }).catch(console.error);
     return true;
-  } else if (message.includes("403") || message.includes("Forbidden")) {
+  } else if (message.includes("403") || message.includes("Access denied")) {
     toast.error("Access denied. Please check your permissions.");
     return true;
   } else if (message.includes("Request limit exceeded")) {
     toast.error("Too many requests. Please wait before trying again.");
     return true;
-  } else if (message.includes("404") || message.includes("Not Found")) {
+  } else if (message.includes("404") || message.includes("Profile not found")) {
     toast.error("Profile not found. Please contact support.");
     return true;
   } else if (message.includes("429") || message.includes("Too Many Requests")) {
@@ -102,7 +113,7 @@ export const handleApiError = (
     return true;
   } else if (
     message.includes("500") ||
-    message.includes("Internal Server Error")
+    message.includes("Server error")
   ) {
     toast.error("Server error. Please try again later.");
   } else if (

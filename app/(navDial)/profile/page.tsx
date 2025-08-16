@@ -8,13 +8,18 @@ import { slideInOut } from "@/app/animations/pageTrans";
 import profileBG from "@/public/image/profileBG.webp";
 import { useProfile } from "./hooks/useProfile";
 import ProfileContent from "./components/ProfileContent";
-import {LoginPrompt} from "./components/LoginPrompt";
-import {LoadingSpinner} from "./components/LoadingSpinner";
+import { LoginPrompt } from "./components/LoginPrompt";
+import { LoadingSpinner } from "./components/LoadingSpinner";
 import { PROFILE_STYLES } from "./utils/constants";
 
 const ProfilePage: React.FC = () => {
   const router = useTransitionRouter();
-  const { isLoggedIn, isLoading: userLoading } = useUser();
+  const { 
+    user, 
+    isLoggedIn, 
+    isLoading: userLoading, 
+    authStatus 
+  } = useUser();
   
   const {
     profile,
@@ -22,6 +27,7 @@ const ProfilePage: React.FC = () => {
     error,
     canRetry,
     handleRetry,
+    isRefreshing
   } = useProfile();
 
   const handleLogin = useCallback((): void => {
@@ -29,6 +35,13 @@ const ProfilePage: React.FC = () => {
   }, [router]);
 
   if (userLoading) {
+    console.log("🔄 User authentication loading...", {
+      userLoading,
+      isLoggedIn,
+      hasUser: !!user,
+      authStatus: authStatus.isAuthenticated
+    });
+
     return (
       <div className={PROFILE_STYLES.container}>
         <div className="absolute inset-0 z-0">
@@ -47,6 +60,7 @@ const ProfilePage: React.FC = () => {
           <div className={PROFILE_STYLES.mobileCard}>
             <div className="text-center text-white">
               <LoadingSpinner />
+              <p className="text-sm text-gray-400 mt-2">Authenticating...</p>
             </div>
           </div>
         </div>
@@ -55,6 +69,7 @@ const ProfilePage: React.FC = () => {
           <div className={PROFILE_STYLES.desktopCard}>
             <div className="text-center text-white">
               <LoadingSpinner />
+              <p className="text-sm text-gray-400 mt-2">Authenticating...</p>
             </div>
           </div>
         </div>
@@ -64,8 +79,22 @@ const ProfilePage: React.FC = () => {
 
   const renderContent = () => {
     if (!isLoggedIn) {
+      console.log("🚫 User not logged in, showing login prompt", {
+        isLoggedIn,
+        hasUser: !!user,
+        authStatus: authStatus.isAuthenticated
+      });
       return <LoginPrompt onLogin={handleLogin} />;
     }
+
+    console.log("✅ User authenticated, rendering profile content", {
+      userId: user?.sphinx_id,
+      userName: user?.name,
+      profileLoaded: !!profile,
+      isLoading: loading,
+      isRefreshing,
+      hasError: !!error
+    });
 
     return (
       <ProfileContent
@@ -91,14 +120,12 @@ const ProfilePage: React.FC = () => {
       </div>
       
       <div className={PROFILE_STYLES.backgroundOverlay} />
-      
 
       <div className={PROFILE_STYLES.mobileWrapper}>
         <div className={PROFILE_STYLES.mobileCard}>
           {renderContent()}
         </div>
       </div>
-
 
       <div className={PROFILE_STYLES.desktopWrapper}>
         <div className={PROFILE_STYLES.desktopCard}>

@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
@@ -5,24 +7,30 @@ export interface ApiResponse<T = any> {
   message?: string;
 }
 
-export interface User {
-  sphinx_id: string;
-  name: string;
-  email: string;
-  role: string;
-  is_verified: boolean;
-  applied_ca: boolean;
-  password?: string;
-  created_at?: string;
-  _id?: string;
-}
-
 export interface SignUpResponse extends ApiResponse {
-  token: string;
-  user: User;
+  data?: {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+    user: User;
+  };
+  accessToken?: string;
+  refreshToken?: string;
+  expiresIn?: number;
+  user?: User;
 }
 
-export interface UserCache {
+export interface RefreshTokenResponse extends ApiResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+export interface CSRFResponse extends ApiResponse {
+  csrfToken: string;
+}
+
+export interface UserData {
   sphinx_id: string;
   name: string;
   email: string;
@@ -30,13 +38,132 @@ export interface UserCache {
   is_verified: boolean;
   applied_ca: boolean;
   created_at?: string;
-  last_login: string;
+  last_login?: string;
 }
 
 export interface UserPreferences {
   theme: string;
   notifications: boolean;
   language: string;
+}
+
+export interface User {
+  readonly sphinx_id: string;
+  readonly name: string;
+  readonly email: string;
+  readonly role: string;
+  readonly is_verified: boolean;
+  readonly applied_ca: boolean;
+  readonly created_at?: string;
+  readonly _id?: string;
+}
+
+export const ApiResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.any().optional(),
+  error: z.string().optional(),
+  message: z.string().optional(),
+});
+
+export const UserSchema = z.object({
+  sphinx_id: z.string(),
+  name: z.string().min(1),
+  email: z.string().email(),
+  role: z.string(),
+  is_verified: z.boolean(),
+  applied_ca: z.boolean(),
+  created_at: z.string().optional(),
+  _id: z.string().optional(),
+});
+
+export const SignUpResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.object({
+    accessToken: z.string().min(1),
+    refreshToken: z.string().min(1),
+    expiresIn: z.number().positive(),
+    user: UserSchema,
+  }).optional(),
+  accessToken: z.string().min(1).optional(),
+  refreshToken: z.string().min(1).optional(),
+  expiresIn: z.number().positive().optional(),
+  user: UserSchema.optional(),
+  error: z.string().optional(),
+  message: z.string().optional(),
+}).refine((data) => {
+  const hasNestedData = data.data && 
+    data.data.accessToken && 
+    data.data.refreshToken && 
+    data.data.expiresIn && 
+    data.data.user;
+  
+  const hasFlatData = data.accessToken && 
+    data.refreshToken && 
+    data.expiresIn && 
+    data.user;
+
+  return hasNestedData || hasFlatData;
+}, {
+  message: "Either nested data object or flat structure must be provided",
+});
+
+export const RefreshTokenResponseSchema = z.object({
+  success: z.boolean(),
+  accessToken: z.string().min(1),
+  refreshToken: z.string().min(1),
+  expiresIn: z.number().positive(),
+});
+
+export const CSRFResponseSchema = z.object({
+  success: z.boolean(),
+  csrfToken: z.string().min(1),
+});
+
+export interface AuthError extends Error {
+  code: string;
+  status?: number;
+}
+
+export class AuthenticationError extends Error implements AuthError {
+  code = 'AUTHENTICATION_ERROR';
+  status?: number;
+
+  constructor(message: string, status?: number) {
+    super(message);
+    this.name = 'AuthenticationError';
+    this.status = status;
+  }
+}
+
+export class TokenExpiredError extends Error implements AuthError {
+  code = 'TOKEN_EXPIRED';
+  status = 401;
+
+  constructor(message = 'Token has expired') {
+    super(message);
+    this.name = 'TokenExpiredError';
+  }
+}
+
+export class NetworkError extends Error implements AuthError {
+  code = 'NETWORK_ERROR';
+  status?: number;
+
+  constructor(message: string, status?: number) {
+    super(message);
+    this.name = 'NetworkError';
+    this.status = status;
+  }
+}
+
+export class ValidationError extends Error implements AuthError {
+  code = 'VALIDATION_ERROR';
+  status = 422;
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'ValidationError';
+  }
 }
 
 export type PasswordStrength = "Weak" | "Medium" | "Strong" | "";
