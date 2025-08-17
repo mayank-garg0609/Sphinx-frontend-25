@@ -51,3 +51,10 @@ export interface ResponsibilityItem {
   readonly id: string
   readonly description: string
 }
+
+export interface ContactPerson {
+  readonly id: string
+  readonly name: string
+  readonly designation: string
+  readonly phone: string
+}

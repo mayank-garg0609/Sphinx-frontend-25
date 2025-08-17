@@ -1,20 +1,29 @@
-import type { ResponsibilityItem } from '../types/caProgram'
+import type { ResponsibilityItem } from "../types/caProgram";
 
 export const responsibilities: readonly ResponsibilityItem[] = [
   {
-    id: 'promote-events',
-    description: 'Promote Sphinx events and workshops across your campus'
+    id: "promote-events",
+    description: "Promote Sphinx events on campus and social media.",
   },
   {
-    id: 'official-representative',
-    description: 'Serve as the official Sphinx representative at your institution'
+    id: "drive",
+    description: "Drive registrations and participation from your college.",
   },
   {
-    id: 'coordinate-administration',
-    description: 'Coordinate with college administration and student clubs'
+    id: "representation",
+    description:
+      "Act as the official representative of Team Sphinx.",
   },
   {
-    id: 'build-networks',
-    description: 'Build and share relevant student networks for maximum reach'
+    id:'Coordinate',
+    description:"Coordinate offline publicity like posters and announcements.",
   },
-] as const
+  {
+    id: "build-networks",
+    description: "Assist in building connections with sponsors or partners.",
+  },
+  {
+    id: "create-hype",
+    description: "Create buzz and hype for flagship events and pronites.",
+  },
+] as const;

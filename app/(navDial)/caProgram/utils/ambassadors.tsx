@@ -2,18 +2,18 @@ import type { Applicant } from '../types/caProgram'
 
 export const ambassadors: readonly Applicant[] = [
   {
-    id: 'anurag-sharma',
-    name: "Anurag Sharma",
-    college: "IIT Delhi",
-    experience: "Promoted 50+ events across campus, managed social media campaigns, and successfully coordinated with college administration for fest participation.",
-    image: "/image/human.webp",
+    id: 'Himanshu-Sahu',
+    name: "Himanshu Sahu",
+    college: "JECRC Foundation",
+    experience: "My journey as a Campus Ambassador for MNIT Sphinx 2024 was truly rewarding. It enhanced my communication, leadership, and networking skills while giving me the chance to represent my institute on a larger platform.",
+    image: "/CA/CA1.jpeg",
   },
   {
-    id: 'aditya-jain',
-    name: "Aditya Jain", 
-    college: "Graphic Era University",
-    experience: "Led promotional activities for technical events, built strong network with student clubs, and achieved 200+ registrations from campus.",
-    image: "/image/human.webp",
+    id: 'Yash-Chavan',
+    name: "Yash Chavan", 
+    college: "BITS Pilani",
+    experience: "Led impactful promotional activities for Sphinx’24, built strong connections with student communities, and collaborated with campus clubs to maximize fest visibility and participation.",
+    image: "/CA/CA2.jpeg",
   },
   {
     id: 'neha',

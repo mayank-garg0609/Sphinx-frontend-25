@@ -8,6 +8,7 @@ import PerksSection from "./components/PerksSection";
 import ResponsibilitiesSection from "./components/ResponsibilitiesSection";
 import AmbassadorsSection from "./components/AmbassadorsSection";
 import FAQSection from "./components/FAQSection";
+import ContactSection from "./components/ContactSection";
 import { InteractiveBackground } from "./components/InteractiveBackground";
 import { ReactLenis } from "@studio-freight/react-lenis";
 import bgOverlay from "@/public/image/logo.png";
@@ -115,21 +116,21 @@ export default function CAProgramPage() {
                   </h2>
                   <div className="space-y-3 sm:space-y-4 text-sm sm:text-base lg:text-lg leading-relaxed text-gray-100">
                     <p>
-                      <span className="text-yellow-300 font-semibold">
-                        Sphinx
-                      </span>
-                      , MNIT Jaipur's flagship technical festival, brings
-                      together thousands of students from across India. Our
-                      Campus Ambassador Program (CAP) is the backbone of this
-                      nationwide reach, connecting passionate students who help
-                      promote and coordinate fest activities at their respective
-                      institutions.
+                      Sphinx, Rajasthan’s largest techno-management fest and
+                      MNIT Jaipur’s flagship event, brings together thousands of
+                      students from across India. Our Campus Ambassador Program
+                      (CAP) is the backbone of this nationwide reach, connecting
+                      passionate students who help promote and coordinate fest
+                      activities at their respective institutions.
                     </p>
                     <p>
-                      As a Campus Ambassador, you'll work directly with Team
-                      Sphinx, gaining invaluable experience in event management,
-                      marketing, and leadership while building connections that
-                      last beyond college.
+                      As a Campus Ambassador, you’ll work directly with Team
+                      Sphinx, becoming the official representative in your
+                      college—creating buzz, driving participation, and
+                      showcasing your leadership. Along the way, you’ll gain
+                      recognition, exclusive perks, and the opportunity to
+                      sharpen your marketing and networking skills on a national
+                      stage.
                     </p>
                   </div>
                 </section>
@@ -174,6 +175,9 @@ export default function CAProgramPage() {
                     </button>
                   </Link>
                 </section>
+                <Suspense fallback={<SectionSkeleton />}>
+                  <ContactSection />
+                </Suspense>
               </div>
             </div>
           </div>
