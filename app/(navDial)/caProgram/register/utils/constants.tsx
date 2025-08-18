@@ -3,26 +3,26 @@ import { FormField } from "../types/CARegistrations";
 export const FORM_FIELDS: FormField[] = [
   {
     key: "how_did_you_find_us",
-    label: "How did you find out about us?",
-    placeholder: "e.g., Social media, friend, campus event...",
+    label: "Why do you want to be Campus Ambassador?",
+    placeholder: "...",
     type: "text",
   },
   {
     key: "why_should_we_choose_you",
-    label: "Why should we choose you?",
-    placeholder: "Describe why you are a good fit for the CA program...",
+    label: "Are you willing to promote our fest at your campus?",
+    placeholder: "Yes/No",
     type: "text",
   },
   {
     key: "past_experience",
-    label: "Any past experience?",
-    placeholder: "Share any past campus ambassador or leadership roles...",
+    label: "How many Instagram followers do you have?",
+    placeholder: "Yes/No",
     type: "text",
   },
   {
     key: "your_strengths",
-    label: "What are your strengths?",
-    placeholder: "Mention key skills or qualities that set you apart...",
+    label: "Are you willing to escort our publicity team at your campus for offline publicity?",
+    placeholder: "Yes/No",
     type: "text",
   },
   {
