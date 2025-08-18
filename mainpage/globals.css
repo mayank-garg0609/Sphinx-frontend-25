@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+
+/* 👇 Register custom font */
+@font-face {
+  font-family: 'SpaceArmor';
+  src: url('/fonts/Space-Armor.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 👇 Light mode colors */
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+.font-space {
+  font-family: 'SpaceArmor', sans-serif !important;
+}
+
+
+/* 👇 Dark mode colors */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+/* 👇 Apply global styles */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: sans-serif; /* default fallback */
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+.animate-twinkle {
+  animation: twinkle 3s infinite;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+.animate-pulse-slow {
+  animation: pulse-slow 6s infinite;
+}
