@@ -185,3 +185,314 @@ video {
   z-index: 1;
   animation: none !important;
 }
+@import "tailwindcss";
+
+/* Custom Font */
+@font-face {
+  font-family: 'SpaceArmor';
+  src: url('/fonts/Space-Armor.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Color Variables */
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+/* Base Styles */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: sans-serif;
+}
+
+.font-space {
+  font-family: 'SpaceArmor', sans-serif !important;
+}
+
+/* Enhanced Animations */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes light-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100vw); }
+}
+
+@keyframes light-sweep-vertical {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes diagonal-sweep {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(200vw) translateY(200vh) rotate(45deg); }
+}
+
+@keyframes border-glow {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+@keyframes border-glow-vertical {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+@keyframes grid-pulse {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes glow-pulse-reverse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes reverse-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes spin-slower {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes text-glow {
+  0%, 100% { text-shadow: 0 0 10px currentColor; }
+  50% { text-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
+}
+
+@keyframes scan-line {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes scan-line-reverse {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes corner-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes rotate-hue {
+  from { filter: hue-rotate(0deg); }
+  to { filter: hue-rotate(360deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 5px currentColor,
+                0 0 10px currentColor,
+                0 0 15px currentColor;
+  }
+  50% { 
+    box-shadow: 0 0 10px currentColor,
+                0 0 20px currentColor,
+                0 0 30px currentColor,
+                0 0 40px currentColor;
+  }
+}
+
+/* Animation Classes */
+.animate-twinkle {
+  animation: twinkle 3s infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 6s infinite;
+}
+
+.animate-light-sweep {
+  animation: light-sweep 3s linear infinite;
+}
+
+.animate-light-sweep-vertical {
+  animation: light-sweep-vertical 4s linear infinite;
+}
+
+.animate-diagonal-sweep {
+  animation: diagonal-sweep 5s linear infinite;
+}
+
+.animate-border-glow {
+  animation: border-glow 2s ease-in-out infinite;
+}
+
+.animate-border-glow-vertical {
+  animation: border-glow-vertical 2.5s ease-in-out infinite;
+}
+
+.animate-grid-pulse {
+  animation: grid-pulse 3s ease-in-out infinite;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.animate-glow-pulse-reverse {
+  animation: glow-pulse-reverse 2s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+.animate-reverse-spin {
+  animation: reverse-spin 12s linear infinite;
+}
+
+.animate-spin-slower {
+  animation: spin-slower 15s linear infinite;
+}
+
+.animate-text-glow {
+  animation: text-glow 2s ease-in-out infinite;
+}
+
+.animate-scan-line {
+  animation: scan-line 2s ease-in-out infinite;
+}
+
+.animate-scan-line-reverse {
+  animation: scan-line-reverse 2s ease-in-out infinite;
+}
+
+.animate-corner-glow {
+  animation: corner-glow 1.5s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 1s ease-out;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-rotate-hue {
+  animation: rotate-hue 10s linear infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Utility Classes */
+.bg-radial-gradient {
+  background: radial-gradient(circle, transparent 0%, rgba(0,0,0,0.5) 100%);
+}
+
+.text-shadow-blue {
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.7);
+}
+
+.text-shadow-cyan {
+  text-shadow: 0 0 10px rgba(6, 182, 212, 0.7);
+}
+
+.text-shadow-purple {
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.7);
+}
+
+.backdrop-blur-strong {
+  backdrop-filter: blur(20px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .animate-light-sweep,
+  .animate-light-sweep-vertical,
+  .animate-diagonal-sweep {
+    animation-duration: 2s;
+  }
+  
+  .animate-grid-pulse {
+    display: none;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-twinkle,
+  .animate-pulse-slow,
+  .animate-light-sweep,
+  .animate-light-sweep-vertical,
+  .animate-diagonal-sweep,
+  .animate-border-glow,
+  .animate-border-glow-vertical,
+  .animate-grid-pulse,
+  .animate-glow-pulse,
+  .animate-glow-pulse-reverse,
+  .animate-spin-slow,
+  .animate-reverse-spin,
+  .animate-spin-slower,
+  .animate-text-glow,
+  .animate-scan-line,
+  .animate-scan-line-reverse,
+  .animate-corner-glow,
+  .animate-float,
+  .animate-rotate-hue,
+  .animate-pulse-glow {
+    animation: none;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .text-cyan-400 {
+    color: #00ffff;
+  }
+  
+  .text-purple-400 {
+    color: #ff00ff;
+  }
+  
+  .border-cyan-400 {
+    border-color: #00ffff;
+  }
+}

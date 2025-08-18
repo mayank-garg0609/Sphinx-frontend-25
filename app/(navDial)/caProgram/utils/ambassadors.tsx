@@ -16,11 +16,11 @@ export const ambassadors: readonly Applicant[] = [
     image: "/CA/CA2.jpeg",
   },
   {
-    id: 'neha',
-    name: "Neha",
+    id: 'Shubham-Ranjan',
+    name: "Shubham Ranjan",
     college: "BITS Pilani", 
-    experience: "Organized workshops and seminars, coordinated with multiple departments, and created engaging content for fest promotion.",
-    image: "/image/human.webp",
+    experience: "Being a Campus Ambassador for Sphinx’24 was a great experience that helped me enhance my communication, networking, and leadership skills while contributing to the success of the fest",
+    image: "/CA/CA3",
   },
   {
     id: 'kartik-garg',

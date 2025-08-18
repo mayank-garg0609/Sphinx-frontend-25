@@ -1,29 +1,46 @@
-import type { FAQ } from '../types/caProgram'
+import type { FAQ } from "../types/caProgram";
 
 export const faqs: readonly FAQ[] = [
   {
-    id: 'who-can-apply',
+    id: "who-can-apply",
     question: "Who can apply for the Campus Ambassador program?",
-    answer: "Any undergraduate or postgraduate student currently enrolled in a recognized college or university in India can apply. We welcome students from all branches and years of study.",
+    answer:
+      "Any undergraduate or postgraduate student currently enrolled in a recognized college or university in India can apply. We welcome students from all branches and years of study.",
   },
   {
-    id: 'program-duration',
-    question: "What is the duration of the program?", 
-    answer: "The program runs for approximately 2-3 months, starting from the application period and continuing through the fest. Active promotion typically intensifies in the final month before Sphinx.",
+    id: "program-duration",
+    question: "What is the duration of the program?",
+    answer:
+      "The program runs for approximately 2-3 months, starting from the application period and continuing through the fest. Active promotion typically intensifies in the final month before Sphinx.",
   },
   {
-    id: 'paid-opportunity',
+    id: "paid-opportunity",
     question: "Is this a paid opportunity?",
-    answer: "While this is an unpaid volunteer role, it offers valuable incentives including certificates, exclusive merchandise, internship opportunities with our sponsors, and networking benefits that can enhance your career prospects.",
+    answer:
+      "While this is an unpaid volunteer role, it offers valuable incentives including certificates, exclusive merchandise, internship opportunities with our sponsors, and networking benefits that can enhance your career prospects.",
   },
   {
-    id: 'selection-process',
+    id: "selection-process",
     question: "How will I be selected as a Campus Ambassador?",
-    answer: "Selection is based on your application form, your enthusiasm for event promotion, communication skills, and your ability to engage with your college community. We also consider your past experience in organizing or promoting events.",
+    answer:
+      "Selection is based on your application form, your enthusiasm for event promotion, communication skills, and your ability to engage with your college community. We also consider your past experience in organizing or promoting events.",
   },
   {
-    id: 'team-support',
+    id: "team-support",
     question: "What kind of support will I receive from Team Sphinx?",
-    answer: "You'll receive comprehensive promotional materials, regular guidance from our team, access to exclusive webinars, and direct communication channels with the organizing committee for any assistance you need.",
+    answer:
+      "You'll receive comprehensive promotional materials, regular guidance from our team, access to exclusive webinars, and direct communication channels with the organizing committee for any assistance you need.",
   },
-] as const
+  {
+    id: "progress-check",
+    question: "How can I check my progress?",
+    answer:
+      "After being selected as a Campus Ambassador, you will have access to a dedicated dashboard on the official website. This dashboard will display your tasks, points, achievements, and overall progress in real time.",
+  },
+  {
+    id: "multiple-ca",
+    question: "Can there be multiple CAs from a single college?",
+    answer:
+      "Yes, there can be multiple Campus Ambassadors from the same college. This helps in better outreach, teamwork, and ensuring wider participation across the campus.",
+  },
+] as const;
