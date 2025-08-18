@@ -5,9 +5,11 @@ import vp2 from "@/public/team/IMG_5016.webp";
 import gs1 from "@/public/team/IMG_5069.webp";
 import gs2 from "@/public/image/human.webp"; 
 import gs3 from "@/public/team/IMG_5044.webp";
+import gs4 from "@/public/image/human.webp"
 import ts1 from "@/public/team/IMG_5015.webp";
 import ts2 from "@/public/team/IMG_5075.webp";
 import ts3 from "@/public/team/IMG_5014.webp";
+import ts4 from "@/public/image/human.webp"
 import cs1 from "@/public/team/IMG_5052.webp";
 import cs2 from "@/public/team/IMG_5023.webp";
 import cs3 from "@/public/team/IMG_5039.webp";
@@ -19,8 +21,10 @@ import ls2 from "@/public/team/IMG_5086.webp";
 import ls3 from "@/public/team/IMG_5017.webp";
 import ms1 from "@/public/team/IMG_5071.webp";
 import ms2 from "@/public/team/IMG_50822.webp";
-import ms3 from "@/public/image/human.webp"; 
-import ds1 from "@/public/image/human.webp"; 
+// import ms3 from "@/public/team/IMG_50.webp";
+import ms3 from "@/public/image/human.webp";
+import ds1 from "@/public/image/human.webp";
+// import ds1 from "@/public/team/IMG_5060.webp";
 import ds2 from "@/public/team/IMG_5020.webp";
 import ds3 from "@/public/team/IMG_5057.webp";
 import ps1 from "@/public/team/IMG_5067.webp";
@@ -32,6 +36,15 @@ import mms3 from "@/public/team/IMG_5066.webp";
 import d1 from "@/public/team/IMG_5047.webp";
 import d2 from "@/public/team/IMG_5030.webp";
 import d3 from "@/public/team/IMG_5028.webp";
+import ap from "@/public/image/human.webp";
+import ags from "@/public/image/human.webp";
+import aps from "@/public/image/human.webp";
+import ams from "@/public/image/human.webp";
+import acs from "@/public/image/human.webp";
+import ads from "@/public/image/human.webp";
+import ads2 from "@/public/image/human.webp";
+
+
 import { TeamMember } from "../types/teamTypes";
 
 const createTeamMember = (
@@ -59,12 +72,14 @@ export const GenSec: readonly TeamMember[] = [
   createTeamMember(1, "MUDITA VYAS", "General Secretary", gs1),
   createTeamMember(2, "VANSH KHATRI", "General Secretary", gs2),
   createTeamMember(3, "SHIVANG", "General Secretary", gs3),
+  createTeamMember(4, "SIDDHARTH", "General Secretary", gs4),
 ] as const;
 
 export const TechSec: readonly TeamMember[] = [
   createTeamMember(1, "MAHESH SHARMA", "Technical Secretary", ts2),
   createTeamMember(2, "ABHINAV THAPLIYAL", "Technical Secretary", ts1),
   createTeamMember(3, "MAYANK GARG", "Technical Secretary", ts3),
+  createTeamMember(4, "ARYAN", "Technical Secretary", ts4),
 ] as const;
 
 export const CulSec: readonly TeamMember[] = [
@@ -116,42 +131,11 @@ export const DesSec: readonly TeamMember[] = [
 ] as const;
 
 export const Advisors: readonly TeamMember[] = [
-  createTeamMember(1, "Krishnav Maheshwari", "Advisor to President", humanImg),
-  createTeamMember(2, "Bhavdeep", "Advisor to Vice President", humanImg),
-  createTeamMember(3, "Aditya Jangid", "Advisor to General Secretary", humanImg), 
-  createTeamMember(4, "Kunal Agarwal", "Advisor to Publicity Secretary", humanImg),
-  createTeamMember(5, "Saransh", "Advisor to Marketing Secretary", humanImg),
+  createTeamMember(1, "Krishnav Maheshwari", "Advisor to President", ap),
+  createTeamMember(2, "Adtiya Jangid", "Advisor to  General Secretary", ags),
+  createTeamMember(3, "Kunal Agarwal", "Advisor to  Publicity Secretary", aps),
+  createTeamMember(4, "Bhavdiyadra Diya Deepakbhai", "Advisor to  Cultural Secretary", acs),
+  createTeamMember(5, "Saransh", "Advisor to  Marketing Secretary", ams),
+  createTeamMember(6, "Bhoomi Singh Gehlot", "Advisor to  Decor Secretary", ads),
+  createTeamMember(7, "Vanshita Dave", "Advisor to  Design Secretary", ads2),
 ] as const;
-
-export const ALL_TEAM_SECTIONS = {
-  President,
-  VicePresident,
-  GenSec,
-  TechSec,
-  CulSec,
-  FinSec,
-  LogSec,
-  MarSec,
-  DecSec,
-  PubSec,
-  MasSec,
-  DesSec,
-  Advisors,
-} as const;
-
-export const getCoreTeamMembers = (): readonly TeamMember[] => {
-  return [
-    ...President,
-    ...VicePresident,
-    ...GenSec,
-    ...TechSec,
-    ...CulSec,
-    ...FinSec,
-    ...LogSec,
-    ...MarSec,
-    ...DecSec,
-    ...PubSec,
-    ...MasSec,
-    ...DesSec,
-  ] as const;
-};

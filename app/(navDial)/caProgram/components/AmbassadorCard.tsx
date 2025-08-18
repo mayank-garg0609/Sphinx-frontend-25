@@ -37,7 +37,7 @@ const AmbassadorCard = memo<AmbassadorCardProps>(function AmbassadorCard({
           {applicant.college}
         </div>
         
-        <p className="text-xs sm:text-sm text-center text-gray-200 leading-relaxed line-clamp-4">
+        <p className="text-xs sm:text-sm text-center text-gray-200 leading-relaxed">
           {applicant.experience}
         </p>
       </div>

@@ -51,7 +51,7 @@ export const navItems: readonly NavItem[] = Object.freeze([
     icon: FaChalkboardTeacher,
   },
   { id: "sponsors", label: "Sponsors", link: "/sponsors", icon: FaHandshake },
-  { id: "team", label: "Team", link: "/team", icon: FaUserFriends },
+  { id: "team", label: "Core Team", link: "/team", icon: FaUserFriends },
   { id: "devteam", label: "Dev Team", link: "/devTeam", icon: FaCode },
   { id: "about", label: "About Us", link: "/about-us", icon: FaInfoCircle },
   { id: "legals", label: "Legals", link: "/legals", icon: FaBalanceScale },

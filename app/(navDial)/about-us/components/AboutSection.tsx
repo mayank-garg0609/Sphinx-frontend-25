@@ -23,22 +23,28 @@ const AboutSection: React.FC<AboutSectionProps> = React.memo(({ isLoaded }) => {
     <section className="px-6 py-24">
       <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
         <div className={leftColumnClasses}>
-          <div className="relative group">
-            <div className="aspect-[4/3] bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-3xl overflow-hidden shadow-2xl transform transition-all duration-700 group-hover:scale-105 group-hover:shadow-yellow-500/10">
-              <div className="w-full h-full bg-gradient-to-br from-yellow-900/10 to-transparent flex items-center justify-center relative">
-                <div className="text-center p-8 transform transition-all duration-500 group-hover:scale-110">
-                  <Camera className="w-20 h-20 text-yellow-400 mx-auto mb-6 transform transition-all duration-500 group-hover:rotate-12" />
-                  <p className="text-zinc-300 text-lg font-medium">
-                    Technical Festival
-                  </p>
+            <div className="relative group">
+              <div className="aspect-[4/3] bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-3xl overflow-hidden shadow-2xl flex items-center justify-center">
+                <iframe
+                  width="100%"
+                  height="100%"
+                  src="https://www.youtube.com/embed/xd50KJh1AIo?si=1mf76_MKyRf9toU6&start=68"
+                  title="YouTube video player"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                  className="rounded-2xl"
+                  style={{ minHeight: "315px", minWidth: "420px", background: "#000" }}
+                />
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center p-2 bg-black/60 rounded-xl">
+                  <p className="text-zinc-300 text-lg font-medium">Technical Festival</p>
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              </div>
+              <div className="absolute -bottom-8 -right-8 w-28 h-28 bg-gradient-to-r from-yellow-500 to-yellow-400 rounded-full flex items-center justify-center shadow-xl transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-12">
+                <Play className="w-10 h-10 text-black ml-1 font-bold" />
               </div>
             </div>
-            <div className="absolute -bottom-8 -right-8 w-28 h-28 bg-gradient-to-r from-yellow-500 to-yellow-400 rounded-full flex items-center justify-center shadow-xl transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-12">
-              <Play className="w-10 h-10 text-black ml-1 font-bold" />
-            </div>
-          </div>
         </div>
 
         <div className={rightColumnClasses}>

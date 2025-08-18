@@ -9,7 +9,7 @@ const CTASection: React.FC = React.memo(() => {
   const router = useTransitionRouter();
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    router.push("/", { onTransitionReady: slideInOut });
+    router.push("/caProgram", { onTransitionReady: slideInOut });
   };
 
   return (
@@ -21,7 +21,7 @@ const CTASection: React.FC = React.memo(() => {
             alt="CTA Background"
             layout="fill"
             objectFit="cover"
-            className="rounded-3xl"
+            className="rounded-3xl opacity-75"
             priority
           ></Image>
           <div className="absolute inset-0 bg-gradient-to-r from-yellow-900/10 to-transparent"></div>

@@ -53,8 +53,9 @@ export const SKILLS_DATA: SkillData[] = [
 ];
 
 export const STATS_DATA: StatData[] = [
-  { value: "20+", label: "Years" },
-  { value: "1,000+", label: " Attendees" },
-  { value: "A+", label: "Speakers" },
-  { value: "01", label: "In the Nation" },
+  { value: "20k+", label: "Foot Fall" },
+  { value: "10L+", label: "Prize Pool" },
+  { value: "6+", label: "Flagship Event" },
+  { value: "50+", label: "Events" },
+  
 ];

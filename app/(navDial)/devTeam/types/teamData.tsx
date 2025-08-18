@@ -27,6 +27,6 @@ export const TeamData: TeamMember[] = [
       "Instead of trying to produce a program to simulate the adult mind, why not rather try to produce one which simulates the child's? - Alan Turing",
     linkedIn: "http://www.linkedin.com/in/mayank-garg-500023234",
     Instagram: "https://www.instagram.com/mayankgarg0609",
-    Github: "https://github.com/1219Arvi",
+    Github: "https://github.com/mayank-garg0609",
   },
 ];

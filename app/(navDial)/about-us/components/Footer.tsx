@@ -9,16 +9,29 @@ const Footer: React.FC = React.memo(() => {
           <h4 className="text-xl font-semibold mb-6 text-white">Quick Links</h4>
           <ul className="space-y-3 text-zinc-400">
             <li className="hover:text-white transition-colors duration-300">
-              About Us
+              <a href="https://www.mnit.ac.in/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors duration-300">
+                MNIT Jaipur
+              </a>
             </li>
             <li className="hover:text-white transition-colors duration-300">
-              Events
+              <a
+                href="https://mail.google.com/mail/?view=cm&fs=1&to=sphinx@mnit.ac.in"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors duration-300"
+              >
+                Email
+              </a>
             </li>
             <li className="hover:text-white transition-colors duration-300">
-              Gallery
+             <a href="https://www.instagram.com/sphinx_mnit/?hl=en" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors duration-300">
+                Instagram
+              </a>
             </li>
             <li className="hover:text-white transition-colors duration-300">
-              Contact
+             <a href="https://www.linkedin.com/company/sphinx-mnit-jaipur/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors duration-300">
+                LinkedIn
+              </a>
             </li>
           </ul>
         </div>
@@ -30,10 +43,13 @@ const Footer: React.FC = React.memo(() => {
           </h4>
           <div className="space-y-3 text-zinc-400">
             <p className="hover:text-white transition-colors duration-300">
-              Lorem Ipsum — +91 98765 43210
+              Naman Kaur — +91 98155 57836
             </p>
             <p className="hover:text-white transition-colors duration-300">
-              Lorem Ipsum — +91 91234 56789
+              Amit Parmar — +91 86190 60757
+            </p>
+            <p className="hover:text-white transition-colors duration-300">
+              Shivam Mittal — +91 90313 76804
             </p>
           </div>
         </div>
@@ -45,10 +61,10 @@ const Footer: React.FC = React.memo(() => {
           </h4>
           <div className="space-y-3 text-zinc-400">
             <p className="hover:text-white transition-colors duration-300">
-              Lorem Ipsum — +91 99887 66554
+              Abhinav Thapliyal — +91 99887 66554
             </p>
             <p className="hover:text-white transition-colors duration-300">
-              Lorem Ipsum — +91 99123 45678
+              Mayank Garg — +91 99123 45678
             </p>
           </div>
         </div>
