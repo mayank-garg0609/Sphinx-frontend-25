@@ -76,7 +76,7 @@ export function useGoogleAuth(
             },
             body: JSON.stringify({ code }),
             signal: controller.signal,
-            credentials: "include",
+            // credentials: "include",
           });
 
           clearTimeout(timeoutId);

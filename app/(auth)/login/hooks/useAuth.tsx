@@ -54,29 +54,54 @@ export function useAuth(
             API_CONFIG.timeout
           );
 
-          const headers = await getAuthHeaders();
+          const headers = await getAuthHeaders(true);
+          console.log(
+            "📡 Making login request to:",
+            getApiUrl(API_ENDPOINTS.LOGIN)
+          );
+          console.log("📡 Request headers:", headers);
 
           const response = await fetch(getApiUrl(API_ENDPOINTS.LOGIN), {
             method: "POST",
             headers,
             body: JSON.stringify(data),
             signal: controller.signal,
-            credentials: "include",
+            // credentials: "include",
           });
 
           clearTimeout(timeoutId);
 
+          console.log("📥 Response received:", {
+            status: response.status,
+            statusText: response.statusText,
+            ok: response.ok,
+          });
+
           const contentType = response.headers.get("content-type");
           if (!contentType?.includes("application/json")) {
-            console.error(
-              "❌ Server returned non-JSON response:",
-              response.status
-            );
+            console.error("❌ Server returned non-JSON response:", {
+              status: response.status,
+              contentType,
+              headers: Object.fromEntries(response.headers.entries()),
+            });
+
+            // Try to get response text for debugging
+            try {
+              const responseText = await response.text();
+              console.error(
+                "📄 Response body:",
+                responseText.substring(0, 1000)
+              );
+            } catch (e) {
+              console.error("Could not read response body");
+            }
+
             toast.error("Server configuration error. Please contact support.");
             return;
           }
 
           const result = await response.json();
+          console.log("📊 Parsed response:", result);
 
           if (response.ok) {
             console.log("✅ Login successful");
@@ -112,22 +137,29 @@ export function useAuth(
             reset();
             setRetryCount(0);
           } else {
+            console.error("❌ Login failed - API returned error:", result);
             handleApiError(response, result);
             if (retryCount < API_CONFIG.maxRetries) {
               setRetryCount((prev) => prev + 1);
             }
           }
         } catch (error) {
-          console.error("🚨 Login error:", error);
+          console.error("🚨 Login error - Enhanced debugging:", {
+            errorType:
+              error instanceof Error ? error.constructor.name : typeof error,
+            errorMessage:
+              error instanceof Error ? error.message : String(error),
+            errorStack: error instanceof Error ? error.stack : undefined,
+            isAbortError: error instanceof Error && error.name === "AbortError",
+            isNetworkError:
+              error instanceof Error && error.message.includes("fetch"),
+            apiUrl: getApiUrl(API_ENDPOINTS.LOGIN),
+            retryCount,
+          });
 
           handleNetworkError(error, retryCount, API_CONFIG.maxRetries, "login");
           if (retryCount < API_CONFIG.maxRetries) {
             setRetryCount((prev) => prev + 1);
-
-            const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 10000);
-            setTimeout(() => {
-              console.log(`🔄 Retrying login (attempt ${retryCount + 1})`);
-            }, retryDelay);
           }
         }
       });

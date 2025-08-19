@@ -55,7 +55,7 @@ class AuthManagerSingleton {
     try {
       const response = await fetch("/api/auth/refresh", {
         method: "POST",
-        credentials: "include",
+        // credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -87,7 +87,7 @@ class AuthManagerSingleton {
 
     fetch("/api/auth/logout", {
       method: "POST",
-      credentials: "include",
+      // credentials: "include",
     }).catch((error) => {
       console.error("Failed to clear refresh token:", error);
     });

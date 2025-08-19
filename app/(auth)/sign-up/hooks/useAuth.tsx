@@ -61,7 +61,7 @@ export function useAuth(
             headers,
             body: JSON.stringify(data),
             signal: controller.signal,
-            credentials: "include",
+            // credentials: "include",
           });
 
           clearTimeout(timeoutId);

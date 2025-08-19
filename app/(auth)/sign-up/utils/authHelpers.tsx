@@ -18,7 +18,6 @@ const UserSchema = z.object({
   _id: z.string().optional(),
 });
 
-// Password strength calculation
 export const calculatePasswordStrength = (password: string): PasswordStrength => {
   if (!password) return "";
   
@@ -144,21 +143,32 @@ export const checkAuthStatus = (): boolean => {
   return tokenManager.isAuthenticated();
 };
 
-export const getAuthHeaders = async (): Promise<Record<string, string>> => {
+export const getAuthHeaders = async (skipTokenValidation = false): Promise<Record<string, string>> => {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
 
   try {
-    const accessToken = await tokenManager.getValidAccessToken();
-    if (accessToken) {
-      headers["Authorization"] = `Bearer ${accessToken}`;
+    if (!skipTokenValidation) {
+      const accessToken = await tokenManager.getValidAccessToken();
+      if (accessToken) {
+        headers["Authorization"] = `Bearer ${accessToken}`;
+      }
     }
 
-    const csrfToken = await csrfManager.getCSRFToken();
-    headers["X-CSRF-Token"] = csrfToken;
+    try {
+      const csrfToken = await csrfManager.getCSRFToken();
+      headers["X-CSRF-Token"] = csrfToken;
+    } catch (csrfError) {
+      console.warn("CSRF token not available, proceeding without it:", csrfError);
+    }
   } catch (error) {
     console.error("Failed to get auth headers:", error);
+    
+    if (skipTokenValidation) {
+      return headers;
+    }
+    
     throw error;
   }
 
