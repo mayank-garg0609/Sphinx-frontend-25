@@ -59,7 +59,7 @@ export interface User {
 }
 
 export const ApiResponseSchema = z.object({
-  success: z.boolean(),
+  success: z.boolean().optional(), 
   data: z.any().optional(),
   error: z.string().optional(),
   message: z.string().optional(),
@@ -77,19 +77,31 @@ export const UserSchema = z.object({
 });
 
 export const SignUpResponseSchema = z.object({
-  success: z.boolean(),
+  success: z.boolean().optional(), 
   data: z.object({
     accessToken: z.string().min(1),
     refreshToken: z.string().min(1),
-    expiresIn: z.number().positive(),
+    expiresIn: z.union([z.number().positive(), z.string()]).transform(val => 
+      typeof val === 'string' ? parseInt(val, 10) : val
+    ), // Handle both string and number
     user: UserSchema,
   }).optional(),
   accessToken: z.string().min(1).optional(),
   refreshToken: z.string().min(1).optional(),
-  expiresIn: z.number().positive().optional(),
+  expiresIn: z.union([z.number().positive(), z.string()]).transform(val => 
+    typeof val === 'string' ? parseInt(val, 10) : val
+  ).optional(), 
   user: UserSchema.optional(),
   error: z.string().optional(),
   message: z.string().optional(),
+}).transform((data) => {
+  if (data.data && typeof data.data.expiresIn === 'string') {
+    data.data.expiresIn = parseInt(data.data.expiresIn, 10);
+  }
+  if (data.expiresIn && typeof data.expiresIn === 'string') {
+    data.expiresIn = parseInt(data.expiresIn, 10);
+  }
+  return data;
 }).refine((data) => {
   const hasNestedData = data.data && 
     data.data.accessToken && 
@@ -107,15 +119,55 @@ export const SignUpResponseSchema = z.object({
   message: "Either nested data object or flat structure must be provided",
 });
 
+export const LenientSignUpResponseSchema = z.object({
+  success: z.boolean().optional().default(true),
+  data: z.object({
+    accessToken: z.string().min(1),
+    refreshToken: z.string().min(1),
+    expiresIn: z.union([z.number(), z.string()]).transform(val => 
+      typeof val === 'string' ? parseInt(val, 10) || 3600 : val
+    ),
+    user: z.object({
+      sphinx_id: z.string(),
+      name: z.string(),
+      email: z.string().email(),
+      role: z.string(),
+      is_verified: z.boolean(),
+      applied_ca: z.boolean(),
+      created_at: z.string().optional(),
+      _id: z.string().optional(),
+    }),
+  }).optional(),
+  accessToken: z.string().optional(),
+  refreshToken: z.string().optional(),
+  expiresIn: z.union([z.number(), z.string()]).transform(val => 
+    typeof val === 'string' ? parseInt(val, 10) || 3600 : val
+  ).optional(),
+  user: z.object({
+    sphinx_id: z.string(),
+    name: z.string(),
+    email: z.string().email(),
+    role: z.string(),
+    is_verified: z.boolean(),
+    applied_ca: z.boolean(),
+    created_at: z.string().optional(),
+    _id: z.string().optional(),
+  }).optional(),
+  error: z.string().optional(),
+  message: z.string().optional(),
+}).passthrough();
+
 export const RefreshTokenResponseSchema = z.object({
-  success: z.boolean(),
+  success: z.boolean().optional().default(true),
   accessToken: z.string().min(1),
   refreshToken: z.string().min(1),
-  expiresIn: z.number().positive(),
+  expiresIn: z.union([z.number().positive(), z.string()]).transform(val => 
+    typeof val === 'string' ? parseInt(val, 10) : val
+  ),
 });
 
 export const CSRFResponseSchema = z.object({
-  success: z.boolean(),
+  success: z.boolean().optional().default(true),
   csrfToken: z.string().min(1),
 });
 

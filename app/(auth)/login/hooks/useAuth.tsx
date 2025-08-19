@@ -54,7 +54,12 @@ export function useAuth(
             API_CONFIG.timeout
           );
 
-          const headers = await getAuthHeaders(true);
+          // Use minimal headers for login request
+          const headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          };
+
           console.log(
             "📡 Making login request to:",
             getApiUrl(API_ENDPOINTS.LOGIN)
@@ -66,7 +71,6 @@ export function useAuth(
             headers,
             body: JSON.stringify(data),
             signal: controller.signal,
-            // credentials: "include",
           });
 
           clearTimeout(timeoutId);
@@ -85,7 +89,6 @@ export function useAuth(
               headers: Object.fromEntries(response.headers.entries()),
             });
 
-            // Try to get response text for debugging
             try {
               const responseText = await response.text();
               console.error(
@@ -106,36 +109,86 @@ export function useAuth(
           if (response.ok) {
             console.log("✅ Login successful");
 
-            const validatedResult = LoginResponseSchema.parse(result);
+            try {
+              console.log("🔍 Raw response data:", result);
+              
+              const validatedResult = LoginResponseSchema.parse(result);
+              console.log("🔍 Validated result:", validatedResult);
 
-            let accessToken: string;
-            let refreshToken: string;
-            let expiresIn: number;
-            let user: any;
+              const accessToken = validatedResult.accessToken!;
+              const refreshToken = validatedResult.refreshToken!;
+              const expiresIn = validatedResult.expiresIn!;
+              const user = validatedResult.user!;
 
-            if (validatedResult.data) {
-              accessToken = validatedResult.data.accessToken;
-              refreshToken = validatedResult.data.refreshToken;
-              expiresIn = validatedResult.data.expiresIn;
-              user = validatedResult.data.user;
-            } else {
-              accessToken = validatedResult.accessToken!;
-              refreshToken = validatedResult.refreshToken!;
-              expiresIn = validatedResult.expiresIn!;
-              user = validatedResult.user!;
+              console.log("🔑 Token data received:", {
+                hasAccessToken: !!accessToken,
+                hasRefreshToken: !!refreshToken,
+                expiresIn: expiresIn,
+                expiresInType: typeof expiresIn,
+                userEmail: user?.email,
+              });
+
+              // Handle auth success with better error handling
+              await handleAuthSuccess(
+                accessToken,
+                refreshToken,
+                expiresIn,
+                user,
+                router
+              );
+
+              toast.success("✅ Logged in successfully!");
+              reset();
+              setRetryCount(0);
+              
+            } catch (authError) {
+              console.error("❌ Auth success handling failed:", authError);
+              console.error("❌ Raw response that failed parsing:", result);
+              
+              try {
+                let accessToken, refreshToken, expiresIn, user;
+                
+                if (result.data) {
+                  accessToken = result.data.accessToken;
+                  refreshToken = result.data.refreshToken;
+                  expiresIn = typeof result.data.expiresIn === 'string' ? 
+                    parseInt(result.data.expiresIn, 10) : result.data.expiresIn;
+                  user = result.data.user;
+                } else {
+                  accessToken = result.accessToken;
+                  refreshToken = result.refreshToken;
+                  expiresIn = typeof result.expiresIn === 'string' ? 
+                    parseInt(result.expiresIn, 10) : result.expiresIn;
+                  user = result.user;
+                }
+                
+                console.log("🔧 Manual extraction:", {
+                  hasAccessToken: !!accessToken,
+                  hasRefreshToken: !!refreshToken,
+                  expiresIn,
+                  hasUser: !!user,
+                });
+                
+                if (accessToken && refreshToken && user) {
+                  await handleAuthSuccess(
+                    accessToken,
+                    refreshToken,
+                    expiresIn || 3600, // default to 1 hour
+                    user,
+                    router
+                  );
+                  
+                  toast.success("✅ Logged in successfully!");
+                  reset();
+                  setRetryCount(0);
+                } else {
+                  throw new Error("Missing required auth data");
+                }
+              } catch (manualError) {
+                console.error("❌ Manual extraction also failed:", manualError);
+                toast.error("Login successful but setup failed. Please refresh and try again.");
+              }
             }
-
-            await handleAuthSuccess(
-              accessToken,
-              refreshToken,
-              expiresIn,
-              user,
-              router
-            );
-
-            toast.success("✅ Logged in successfully!");
-            reset();
-            setRetryCount(0);
           } else {
             console.error("❌ Login failed - API returned error:", result);
             handleApiError(response, result);
@@ -156,6 +209,13 @@ export function useAuth(
             apiUrl: getApiUrl(API_ENDPOINTS.LOGIN),
             retryCount,
           });
+
+          if (error instanceof Error && 
+              (error.message.includes("Login successful but setup failed") ||
+               error.message.includes("Auth success handling failed"))) {
+            console.log("🟡 Login succeeded but post-processing failed - user should still be logged in");
+            return; // Don't show network error toast
+          }
 
           handleNetworkError(error, retryCount, API_CONFIG.maxRetries, "login");
           if (retryCount < API_CONFIG.maxRetries) {

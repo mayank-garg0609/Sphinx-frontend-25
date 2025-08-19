@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export interface ApiResponse<T = any> {
-  success: boolean;
+  success?: boolean;
   data?: T;
   error?: string;
   message?: string;
@@ -11,19 +11,19 @@ export interface LoginResponse extends ApiResponse {
   data?: {
     accessToken: string;
     refreshToken: string;
-    expiresIn: number;
+    expiresIn: number | string;
     user: User;
   };
   accessToken?: string;
   refreshToken?: string;
-  expiresIn?: number;
+  expiresIn?: number | string;
   user?: User;
 }
 
 export interface RefreshTokenResponse extends ApiResponse {
   accessToken: string;
   refreshToken: string;
-  expiresIn: number;
+  expiresIn: number | string;
 }
 
 export interface CSRFResponse extends ApiResponse {
@@ -58,9 +58,9 @@ export interface User {
   readonly _id?: string;
 }
 
-// Zod schemas for runtime validation
+// Zod schemas for runtime validation - made more flexible
 export const ApiResponseSchema = z.object({
-  success: z.boolean(),
+  success: z.boolean().optional(),
   data: z.any().optional(),
   error: z.string().optional(),
   message: z.string().optional(),
@@ -78,45 +78,52 @@ export const UserSchema = z.object({
 });
 
 export const LoginResponseSchema = z.object({
-  success: z.boolean(),
+  success: z.boolean().optional(),
   data: z.object({
     accessToken: z.string().min(1),
     refreshToken: z.string().min(1),
-    expiresIn: z.number().positive(),
+    expiresIn: z.union([z.number().positive(), z.string()]).transform(val => 
+      typeof val === 'string' ? parseInt(val, 10) : val
+    ),
     user: UserSchema,
   }).optional(),
   accessToken: z.string().min(1).optional(),
   refreshToken: z.string().min(1).optional(),
-  expiresIn: z.number().positive().optional(),
+  expiresIn: z.union([z.number().positive(), z.string()]).transform(val => 
+    typeof val === 'string' ? parseInt(val, 10) : val
+  ).optional(),
   user: UserSchema.optional(),
   error: z.string().optional(),
   message: z.string().optional(),
+}).transform(data => {
+  // Normalize the response format
+  if (data.data) {
+    return {
+      ...data,
+      accessToken: data.data.accessToken,
+      refreshToken: data.data.refreshToken,
+      expiresIn: data.data.expiresIn,
+      user: data.data.user,
+    };
+  }
+  return data;
 }).refine((data) => {
-  const hasNestedData = data.data && 
-    data.data.accessToken && 
-    data.data.refreshToken && 
-    data.data.expiresIn && 
-    data.data.user;
-  
-  const hasFlatData = data.accessToken && 
-    data.refreshToken && 
-    data.expiresIn && 
-    data.user;
-
-  return hasNestedData || hasFlatData;
+  return data.accessToken && data.refreshToken && data.expiresIn && data.user;
 }, {
-  message: "Either nested data object or flat structure must be provided",
+  message: "Required authentication data is missing",
 });
 
 export const RefreshTokenResponseSchema = z.object({
-  success: z.boolean(),
+  success: z.boolean().optional(),
   accessToken: z.string().min(1),
   refreshToken: z.string().min(1),
-  expiresIn: z.number().positive(),
+  expiresIn: z.union([z.number().positive(), z.string()]).transform(val => 
+    typeof val === 'string' ? parseInt(val, 10) : val
+  ),
 });
 
 export const CSRFResponseSchema = z.object({
-  success: z.boolean(),
+  success: z.boolean().optional(),
   csrfToken: z.string().min(1),
 });
 

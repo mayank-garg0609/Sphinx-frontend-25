@@ -18,6 +18,13 @@ interface UseGoogleAuthReturn {
   error: string | null;
 }
 
+// Simple headers for Google signup - no auth needed
+const getGoogleSignupHeaders = (): Record<string, string> => {
+  return {
+    "Content-Type": "application/json",
+  };
+};
+
 export function useGoogleAuth(
   router: any,
   clearErrors: () => void
@@ -69,14 +76,15 @@ export function useGoogleAuth(
             API_CONFIG.timeout
           );
 
+          // Use simple headers for Google signup - no auth required
+          const headers = getGoogleSignupHeaders();
+
           const response = await fetch(`${API_CONFIG.baseUrl}/auth/google`, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers,
             body: JSON.stringify({ code }),
             signal: controller.signal,
-            // credentials: "include",
+            // credentials: "include", // Uncomment if you need cookies
           });
 
           clearTimeout(timeoutId);
