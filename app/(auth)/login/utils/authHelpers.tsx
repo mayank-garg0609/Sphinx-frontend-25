@@ -1,14 +1,12 @@
-// Updated authHelpers.tsx with optional CSRF token handling
-
 import { z } from "zod";
 import type { UserData, User } from "../types/authTypes";
 
 const TokenResponseSchema = z.object({
   accessToken: z.string().min(1),
   refreshToken: z.string().min(1),
-  expiresIn: z.union([z.number().positive(), z.string()]).transform(val => 
-    typeof val === 'string' ? parseInt(val, 10) : val
-  ),
+  expiresIn: z
+    .union([z.number().positive(), z.string()])
+    .transform((val) => (typeof val === "string" ? parseInt(val, 10) : val)),
 });
 
 const UserSchema = z.object({
@@ -28,6 +26,23 @@ class TokenManager {
   private tokenExpiry: number | null = null;
   private refreshPromise: Promise<string> | null = null;
 
+  constructor() {
+    // Restore tokens from sessionStorage if available
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("auth_tokens");
+        if (stored) {
+          const { accessToken, refreshToken, tokenExpiry } = JSON.parse(stored);
+          this.accessToken = accessToken;
+          this.refreshToken = refreshToken;
+          this.tokenExpiry = tokenExpiry;
+        }
+      } catch (error) {
+        console.error("Failed to restore tokens from session:", error);
+      }
+    }
+  }
+
   setTokens(
     accessToken: string,
     refreshToken: string,
@@ -36,7 +51,22 @@ class TokenManager {
     this.accessToken = accessToken;
     this.refreshToken = refreshToken;
     this.tokenExpiry = Date.now() + expiresIn * 1000;
-    this.storeRefreshTokenSecurely(refreshToken);
+
+    // Save to sessionStorage
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem(
+          "auth_tokens",
+          JSON.stringify({
+            accessToken: this.accessToken,
+            refreshToken: this.refreshToken,
+            tokenExpiry: this.tokenExpiry,
+          })
+        );
+      } catch (error) {
+        console.error("Failed to store tokens in session:", error);
+      }
+    }
   }
 
   getAccessToken(): string | null {
@@ -52,7 +82,7 @@ class TokenManager {
 
   private isTokenExpired(): boolean {
     if (!this.tokenExpiry) return true;
-    return Date.now() >= this.tokenExpiry - 300000;
+    return Date.now() >= this.tokenExpiry - 300000; // 5 min early expiry
   }
 
   async getValidAccessToken(): Promise<string | null> {
@@ -107,38 +137,18 @@ class TokenManager {
     }
   }
 
-  private async storeRefreshTokenSecurely(refreshToken: string): Promise<void> {
-    // Skip server-side storage for now - store in memory only
-    // Uncomment below if you have the /api/auth/store-refresh-token endpoint
-    /*
-    try {
-      await fetch("/api/auth/store-refresh-token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refreshToken }),
-      });
-    } catch (error) {
-      console.error("Failed to store refresh token securely:", error);
-    }
-    */
-  }
-
   clearTokens(): void {
     this.accessToken = null;
     this.refreshToken = null;
     this.tokenExpiry = null;
 
-    // Skip server-side cleanup for now
-    // Uncomment below if you have the /api/auth/logout endpoint  
-    /*
-    fetch("/api/auth/logout", {
-      method: "POST",
-    }).catch((error) => {
-      console.error("Failed to clear refresh token:", error);
-    });
-    */
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.removeItem("auth_tokens");
+      } catch (error) {
+        console.error("Failed to clear tokens from session:", error);
+      }
+    }
   }
 
   isAuthenticated(): boolean {
@@ -245,20 +255,6 @@ export const csrfManager = new CSRFManager();
 
 export async function handleAuthSuccess(
   accessToken: string,
-  refreshToken: string,
-  expiresIn: number,
-  user: User,
-  router: any
-): Promise<void>;
-
-export async function handleAuthSuccess(
-  accessToken: string,
-  user: User,
-  router: any
-): Promise<void>;
-
-export async function handleAuthSuccess(
-  accessToken: string,
   refreshTokenOrUser: string | User,
   expiresInOrRouter: number | any,
   userOrUndefined?: User,
@@ -340,7 +336,7 @@ export const getAuthHeaders = async (
 ): Promise<Record<string, string>> => {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    "Accept": "application/json",
+    Accept: "application/json",
   };
 
   try {

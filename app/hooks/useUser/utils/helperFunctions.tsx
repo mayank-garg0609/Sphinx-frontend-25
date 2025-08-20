@@ -7,12 +7,16 @@ export const getUserData = (): UserData | null => {
 };
 
 export const getAuthToken = (): string | null => {
-  return authManager.getAccessToken();
+  const raw = authManager.getAccessToken();
+  console.log("📦 getAuthToken →", raw);
+  return raw;
 };
 
 export const getValidAuthToken = async (): Promise<string | null> => {
   try {
-    return await authManager.getValidAccessToken();
+    const t = await authManager.getValidAccessToken();
+    console.log("🔑 getValidAuthToken →", t);
+    return t;
   } catch (error) {
     console.error("Failed to get valid auth token:", error);
     return null;
@@ -20,7 +24,13 @@ export const getValidAuthToken = async (): Promise<string | null> => {
 };
 
 export const isUserLoggedIn = (): boolean => {
-  return authManager.isAuthenticated() && userManager.getUser() !== null;
+  const hasValidToken = authManager.isAuthenticated();
+  const hasUserData = userManager.getUser() !== null;
+  const result = hasValidToken && hasUserData;
+
+  console.log("isUserLoggedIn →", result, { hasValidToken, hasUserData });
+
+  return result;
 };
 
 export const getAuthStatus = (): AuthStatus => {
@@ -31,7 +41,11 @@ export const logoutUser = async (): Promise<void> => {
   try {
     authManager.clearTokens();
     userManager.clearUser();
-    
+
+    if (typeof window !== "undefined") {
+      sessionStorage.clear(); // ensure all persisted data is wiped
+    }
+
     console.log("User logged out successfully");
   } catch (error) {
     console.error("Failed to logout user:", error);
@@ -42,7 +56,13 @@ export const logoutUser = async (): Promise<void> => {
 export const refreshUserSession = async (): Promise<boolean> => {
   try {
     const validToken = await authManager.getValidAccessToken();
-    return validToken !== null;
+    if (!validToken) {
+      return false;
+    }
+
+    // Ensure user data is still available
+    const user = userManager.getUser();
+    return user !== null;
   } catch (error) {
     console.error("Failed to refresh user session:", error);
     return false;

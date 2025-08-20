@@ -1,8 +1,7 @@
 import { CARegisterFormData } from "@/app/schemas/CARegisterSchema";
-import { getAuthToken } from "@/app/hooks/useUser/utils/helperFunctions";
+import { getValidAuthToken } from "@/app/hooks/useUser/utils/helperFunctions";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-const token = getAuthToken();
 
 export interface RegistrationResponse {
   success: boolean;
@@ -14,28 +13,35 @@ export const registerCAUser = async (
   data: CARegisterFormData
 ): Promise<RegistrationResponse> => {
   try {
-    // Create FormData for file upload
+    const token = await getValidAuthToken();
+    console.log("🔑 registerCAUser → token:", token);
+
+    if (!token) {
+      throw new Error("No valid access token found. Please login again.");
+    }
+
     const formData = new FormData();
+    formData.append("q1", data.how_did_you_find_us);
+    formData.append("q2", data.why_should_we_choose_you);
+    formData.append("q3", data.past_experience);
+    formData.append("q4", data.your_strengths);
+    formData.append("q5", data.your_expectations);
+    formData.append("q6", data.your_expectations);
 
-    // Add text fields
-    formData.append("how_did_you_find_us", data.how_did_you_find_us);
-    formData.append("why_should_we_choose_you", data.why_should_we_choose_you);
-    formData.append("past_experience", data.past_experience);
-    formData.append("your_strengths", data.your_strengths);
-    formData.append("your_expectations", data.your_expectations);
-    formData.append("resume", data.resume[0]);
+    if (data.resume && data.resume[0]) {
+      formData.append("file", data.resume[0]);
+    }
 
-    const response = await fetch(`${API_BASE_URL}/ca/register`, {
+    const response = await fetch(`${API_BASE_URL}/ca/form`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
-        // Don't set Content-Type header - let the browser set it with boundary for multipart/form-data
+        Authorization: `Bearer ${token}`, 
       },
-      body: formData,
+      body: formData, 
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
       throw new Error(
         errorData.message ||
           `Registration failed with status ${response.status}`

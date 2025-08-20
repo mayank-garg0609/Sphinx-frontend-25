@@ -3,33 +3,80 @@ import { AuthStatus } from "../types/userCache";
 class AuthManagerSingleton {
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
-  private tokenExpiry: number | null = null;
   private refreshPromise: Promise<string> | null = null;
 
-  setTokens(accessToken: string, refreshToken: string, expiresIn: number): void {
+  constructor() {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("auth_tokens");
+        if (stored) {
+          const { accessToken, refreshToken } = JSON.parse(stored);
+          this.accessToken = accessToken;
+          this.refreshToken = refreshToken;
+
+          console.log("AuthManager initialized with:", { accessToken, refreshToken });
+        }
+      } catch (error) {
+        console.error("Failed to restore auth tokens:", error);
+      }
+    }
+  }
+
+  setTokens(accessToken: string, refreshToken: string): void {
     this.accessToken = accessToken;
     this.refreshToken = refreshToken;
-    this.tokenExpiry = Date.now() + expiresIn * 1000;
+
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem(
+          "auth_tokens",
+          JSON.stringify({
+            accessToken: this.accessToken,
+            refreshToken: this.refreshToken,
+          })
+        );
+      } catch (error) {
+        console.error("Failed to store auth tokens:", error);
+      }
+    }
   }
 
   getAccessToken(): string | null {
-    if (this.isTokenExpired()) {
+    try {
+      if (typeof window !== "undefined") {
+        const stored = sessionStorage.getItem("auth_tokens");
+        if (stored) {
+          const { accessToken } = JSON.parse(stored);
+          this.accessToken = accessToken;
+          return accessToken;
+        }
+      }
+      return this.accessToken;
+    } catch (error) {
+      console.error("Failed to get access token:", error);
       return null;
     }
-    return this.accessToken;
   }
 
   getRefreshToken(): string | null {
-    return this.refreshToken;
-  }
-
-  private isTokenExpired(): boolean {
-    if (!this.tokenExpiry) return true;
-    return Date.now() >= this.tokenExpiry - 300000;
+    try {
+      if (typeof window !== "undefined") {
+        const stored = sessionStorage.getItem("auth_tokens");
+        if (stored) {
+          const { refreshToken } = JSON.parse(stored);
+          this.refreshToken = refreshToken;
+          return refreshToken;
+        }
+      }
+      return this.refreshToken;
+    } catch (error) {
+      console.error("Failed to get refresh token:", error);
+      return null;
+    }
   }
 
   async getValidAccessToken(): Promise<string | null> {
-    if (!this.isTokenExpired() && this.accessToken) {
+    if (this.accessToken) {
       return this.accessToken;
     }
 
@@ -55,10 +102,12 @@ class AuthManagerSingleton {
     try {
       const response = await fetch("/api/auth/refresh", {
         method: "POST",
-        // credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          refreshToken: this.refreshToken,
+        }),
       });
 
       if (!response.ok) {
@@ -67,11 +116,8 @@ class AuthManagerSingleton {
 
       const data = await response.json();
 
-      this.setTokens(
-        data.accessToken,
-        data.refreshToken,
-        data.expiresIn
-      );
+      // Expect backend to return { accessToken, refreshToken }
+      this.setTokens(data.accessToken, data.refreshToken);
 
       return data.accessToken;
     } catch (error) {
@@ -83,12 +129,12 @@ class AuthManagerSingleton {
   clearTokens(): void {
     this.accessToken = null;
     this.refreshToken = null;
-    this.tokenExpiry = null;
 
-    fetch("/api/auth/logout", {
-      method: "POST",
-      // credentials: "include",
-    }).catch((error) => {
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("auth_tokens");
+    }
+
+    fetch("/api/auth/logout", { method: "POST" }).catch((error) => {
       console.error("Failed to clear refresh token:", error);
     });
   }
@@ -101,7 +147,7 @@ class AuthManagerSingleton {
     return {
       isAuthenticated: this.isAuthenticated(),
       hasValidToken: this.accessToken !== null,
-      tokenExpiry: this.tokenExpiry,
+      tokenExpiry: null, // no expiry tracking
     };
   }
 }

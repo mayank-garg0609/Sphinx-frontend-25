@@ -3,6 +3,19 @@ import { UserData } from "../types/userCache";
 class UserManagerSingleton {
   private userData: UserData | null = null;
 
+  constructor() {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("user_data");
+        if (stored) {
+          this.userData = JSON.parse(stored) as UserData;
+        }
+      } catch (error) {
+        console.error("Failed to restore user data from session:", error);
+      }
+    }
+  }
+
   setUser(user: UserData): void {
     this.userData = {
       sphinx_id: user.sphinx_id,
@@ -25,19 +38,15 @@ class UserManagerSingleton {
   }
 
   getUser(): UserData | null {
-    if (this.userData) {
-      return this.userData;
-    }
-
     if (typeof window !== "undefined") {
       try {
         const stored = sessionStorage.getItem("user_data");
-        if (stored) {
-          this.userData = JSON.parse(stored);
-          return this.userData;
-        }
+        console.log("works2");
+        this.userData = stored ? (JSON.parse(stored) as UserData) : null;
+        return this.userData;
       } catch (error) {
         console.error("Failed to restore user data from session:", error);
+        return null;
       }
     }
 
@@ -57,9 +66,17 @@ class UserManagerSingleton {
   }
 
   updateUser(updates: Partial<UserData>): void {
+    if (!this.userData && typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("user_data");
+        this.userData = stored ? (JSON.parse(stored) as UserData) : null;
+      } catch (error) {
+        console.error("Failed to load user data before update:", error);
+      }
+    }
+
     if (this.userData) {
       this.userData = { ...this.userData, ...updates };
-
       if (typeof window !== "undefined") {
         try {
           sessionStorage.setItem("user_data", JSON.stringify(this.userData));

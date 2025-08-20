@@ -36,7 +36,6 @@ export default function LoginPage() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
-// Add debugging useEffect after existing useEffects (around line 45):
 useEffect(() => {
   const debugApiConfig = () => {
     console.log("🔧 API Configuration Debug:", {
