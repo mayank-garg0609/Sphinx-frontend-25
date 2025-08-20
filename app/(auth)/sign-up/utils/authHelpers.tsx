@@ -18,7 +18,6 @@ const UserSchema = z.object({
   _id: z.string().optional(),
 });
 
-// Password strength calculation
 export const calculatePasswordStrength = (password: string): PasswordStrength => {
   if (!password) return "";
   
@@ -43,7 +42,7 @@ export const calculatePasswordStrength = (password: string): PasswordStrength =>
   return "Weak";
 };
 
-// Reuse token manager from login
+// Import token and user managers from login utils (reusable)
 import { 
   tokenManager, 
   userManager, 
@@ -144,22 +143,26 @@ export const checkAuthStatus = (): boolean => {
   return tokenManager.isAuthenticated();
 };
 
-export const getAuthHeaders = async (): Promise<Record<string, string>> => {
+// Signup-specific header function (no auth required)
+export const getSignupHeaders = (): Record<string, string> => {
+  return {
+    "Content-Type": "application/json",
+  };
+};
+
+// If you need CSRF for signup, use this version instead:
+export const getSignupHeadersWithCSRF = async (): Promise<Record<string, string>> => {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
 
   try {
-    const accessToken = await tokenManager.getValidAccessToken();
-    if (accessToken) {
-      headers["Authorization"] = `Bearer ${accessToken}`;
-    }
-
+    // Only get CSRF token for signup, no auth required
     const csrfToken = await csrfManager.getCSRFToken();
     headers["X-CSRF-Token"] = csrfToken;
-  } catch (error) {
-    console.error("Failed to get auth headers:", error);
-    throw error;
+  } catch (csrfError) {
+    console.warn("CSRF token not available for signup:", csrfError);
+    // Continue without CSRF for signup if not available
   }
 
   return headers;

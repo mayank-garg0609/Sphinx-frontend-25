@@ -5,14 +5,14 @@ import type { UseFormReset } from "react-hook-form";
 import { toast } from "sonner";
 import { debounce } from "lodash";
 import type { SignUpFormData } from "@/app/schemas/signupSchema";
-import { SignUpResponseSchema, type SignUpResponse } from "../types/authTypes";
+import { LenientSignUpResponseSchema, type SignUpResponse } from "../types/authTypes";
 import {
   API_CONFIG,
   API_ENDPOINTS,
   getApiUrl,
   rateLimiter,
 } from "../utils/config";
-import { handleAuthSuccess, getAuthHeaders } from "@/app/(auth)/login/utils/authHelpers";
+import { handleAuthSuccess } from "@/app/(auth)/login/utils/authHelpers";
 import {
   handleApiError,
   handleNetworkError,
@@ -25,6 +25,13 @@ interface UseAuthReturn {
   isPending: boolean;
   isRateLimited: boolean;
 }
+
+// Simple headers for signup - no auth needed
+const getSignupHeaders = (): Record<string, string> => {
+  return {
+    "Content-Type": "application/json",
+  };
+};
 
 export function useAuth(
   router: any,
@@ -54,14 +61,15 @@ export function useAuth(
             API_CONFIG.timeout
           );
 
-          const headers = await getAuthHeaders();
+          // Use simple headers for signup - no auth required
+          const headers = getSignupHeaders();
 
           const response = await fetch(getApiUrl(API_ENDPOINTS.SIGNUP), {
             method: "POST",
             headers,
             body: JSON.stringify(data),
             signal: controller.signal,
-            credentials: "include",
+            // credentials: "include", // Uncomment if you need cookies
           });
 
           clearTimeout(timeoutId);
@@ -80,8 +88,25 @@ export function useAuth(
 
           if (response.ok) {
             console.log("✅ Sign up successful");
+            console.log("📦 Raw API response:", result);
 
-            const validatedResult = SignUpResponseSchema.parse(result);
+            // Use lenient schema and add error handling
+            let validatedResult;
+            try {
+              validatedResult = LenientSignUpResponseSchema.parse(result);
+            } catch (validationError) {
+              console.error("❌ Response validation failed:", validationError);
+              console.log("📦 Failed response data:", result);
+              
+              // Try to handle the response anyway if it has the basic required fields
+              if (result.accessToken || (result.data && result.data.accessToken)) {
+                console.log("🔄 Using raw response data");
+                validatedResult = result;
+              } else {
+                toast.error("Invalid response from server. Please try again.");
+                return;
+              }
+            }
 
             let accessToken: string;
             let refreshToken: string;
@@ -91,14 +116,31 @@ export function useAuth(
             if (validatedResult.data) {
               accessToken = validatedResult.data.accessToken;
               refreshToken = validatedResult.data.refreshToken;
-              expiresIn = validatedResult.data.expiresIn;
+              expiresIn = typeof validatedResult.data.expiresIn === 'string' 
+                ? parseInt(validatedResult.data.expiresIn, 10) 
+                : validatedResult.data.expiresIn;
               user = validatedResult.data.user;
             } else {
               accessToken = validatedResult.accessToken!;
               refreshToken = validatedResult.refreshToken!;
-              expiresIn = validatedResult.expiresIn!;
+              expiresIn = typeof validatedResult.expiresIn === 'string'
+                ? parseInt(validatedResult.expiresIn!, 10)
+                : validatedResult.expiresIn!;
               user = validatedResult.user!;
             }
+
+            // Ensure expiresIn is a valid number
+            if (isNaN(expiresIn) || expiresIn <= 0) {
+              expiresIn = 3600; // Default to 1 hour
+              console.warn("⚠️ Invalid expiresIn, using default value:", expiresIn);
+            }
+
+            console.log("🔑 Extracted tokens:", {
+              hasAccessToken: !!accessToken,
+              hasRefreshToken: !!refreshToken,
+              expiresIn,
+              hasUser: !!user
+            });
 
             await handleAuthSuccess(
               accessToken,

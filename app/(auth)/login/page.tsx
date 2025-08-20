@@ -4,6 +4,9 @@ import { useEffect } from "react";
 import { LoginForm } from "./components/LoginForm";
 import { BackgroundImage } from "./components/BackgroundImage";
 import { MOBILE_STYLES } from "./utils/constants";
+import { API_ENDPOINTS } from "./utils/config";
+import { API_CONFIG } from "./utils/config";
+import { getApiUrl } from "./utils/config";
 
 export default function LoginPage() {
   useEffect(() => {
@@ -33,7 +36,42 @@ export default function LoginPage() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+// Add debugging useEffect after existing useEffects (around line 45):
+useEffect(() => {
+  const debugApiConfig = () => {
+    console.log("🔧 API Configuration Debug:", {
+      baseUrl: API_CONFIG.baseUrl,
+      loginEndpoint: getApiUrl(API_ENDPOINTS.LOGIN),
+      environment: process.env.NODE_ENV,
+      envVars: {
+        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+        hasGoogleClientId: !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+      }
+    });
+  };
 
+  const testBackendConnection = async () => {
+    const baseUrl = API_CONFIG.baseUrl;
+    console.log("🧪 Testing backend connection to:", baseUrl);
+    
+    try {
+      const response = await fetch(baseUrl, {
+        method: 'GET',
+        mode: 'cors'
+      });
+      
+      console.log("🧪 Backend connection test:", {
+        status: response.status,
+        ok: response.ok
+      });
+    } catch (error) {
+      console.error("🧪 Backend connection failed:", error);
+    }
+  };
+
+  debugApiConfig();
+  testBackendConnection();
+}, []);
   useEffect(() => {
     document.title = "Login - Sphinx'25";
 

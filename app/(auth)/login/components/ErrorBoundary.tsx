@@ -1,8 +1,8 @@
 // components/ErrorBoundary.tsx
-'use client';
+"use client";
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { handleComponentError } from '@/app/(auth)/login/utils/errorHandlers';
+import React, { Component, ErrorInfo, ReactNode } from "react";
+import { handleComponentError } from "@/app/(auth)/login/utils/errorHandlers";
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -31,7 +31,7 @@ const DefaultErrorFallback: React.ComponentType<ErrorFallbackProps> = ({
   resetErrorBoundary,
   errorId,
 }) => {
-  const isDev = process.env.NODE_ENV === 'development';
+  const isDev = process.env.NODE_ENV === "development";
 
   return (
     <div
@@ -62,7 +62,8 @@ const DefaultErrorFallback: React.ComponentType<ErrorFallbackProps> = ({
         </h2>
 
         <p className="text-red-700 mb-4 text-sm">
-          We're sorry for the inconvenience. The application encountered an unexpected error.
+          We're sorry for the inconvenience. The application encountered an
+          unexpected error.
         </p>
 
         {isDev && (
@@ -106,7 +107,7 @@ const DefaultErrorFallback: React.ComponentType<ErrorFallbackProps> = ({
 
           <button
             onClick={() => {
-              if (typeof window !== 'undefined') {
+              if (typeof window !== "undefined") {
                 window.location.reload();
               }
             }}
@@ -129,7 +130,10 @@ const DefaultErrorFallback: React.ComponentType<ErrorFallbackProps> = ({
   );
 };
 
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   private resetTimeoutId: number | null = null;
 
   constructor(props: ErrorBoundaryProps) {
@@ -139,14 +143,16 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       hasError: false,
       error: null,
       errorInfo: null,
-      errorId: '',
+      errorId: "",
     };
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     // Generate unique error ID
-    const errorId = `error_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    
+    const errorId = `error_${Date.now()}_${Math.random()
+      .toString(36)
+      .substring(2, 9)}`;
+
     return {
       hasError: true,
       error,
@@ -155,33 +161,34 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error details
-    console.error('Error Boundary caught an error:', {
-      error,
+    const errorDetails = {
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      },
       errorInfo,
       errorId: this.state.errorId,
       timestamp: new Date().toISOString(),
-      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown',
-      url: typeof window !== 'undefined' ? window.location.href : 'unknown',
-    });
+      userAgent:
+        typeof window !== "undefined" ? window.navigator.userAgent : "unknown",
+      url: typeof window !== "undefined" ? window.location.href : "unknown",
+      apiConfig: {
+        baseUrl: process.env.NEXT_PUBLIC_API_URL || "not set",
+        environment: process.env.NODE_ENV,
+      },
+    };
 
-    // Update state with error info
-    this.setState({
-      errorInfo,
-    });
+    console.error("🚨 Error Boundary - Complete error details:", errorDetails);
 
-    // Call custom error handler
-    if (this.props.onError) {
-      this.props.onError(error, errorInfo);
-    } else {
-      // Use default error handler
-      handleComponentError(error, errorInfo);
-    }
-
-    // Report to error tracking service (Sentry, LogRocket, etc.)
-    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
-      // Example: Sentry.captureException(error, { extra: errorInfo });
-      // Example: LogRocket.captureException(error);
+    if (
+      error.message.includes("Server error") ||
+      error.message.includes("refresh token")
+    ) {
+      console.error(
+        "🔍 This is the auth token error - check if backend is running"
+      );
+      console.error("🔍 Check network requests in browser dev tools");
     }
   }
 
@@ -224,7 +231,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         hasError: false,
         error: null,
         errorInfo: null,
-        errorId: '',
+        errorId: "",
       });
     }, 100);
   };
@@ -250,7 +257,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 // Higher-order component for easier usage
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>
+  errorBoundaryProps?: Omit<ErrorBoundaryProps, "children">
 ) {
   const WrappedComponent = (props: P) => (
     <ErrorBoundary {...errorBoundaryProps}>
@@ -258,7 +265,9 @@ export function withErrorBoundary<P extends object>(
     </ErrorBoundary>
   );
 
-  WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
+  WrappedComponent.displayName = `withErrorBoundary(${
+    Component.displayName || Component.name
+  })`;
 
   return WrappedComponent;
 }
@@ -267,13 +276,13 @@ export function withErrorBoundary<P extends object>(
 export function useErrorHandler() {
   return React.useCallback((error: Error, errorInfo?: ErrorInfo) => {
     // Manual error reporting
-    console.error('Manual error report:', {
+    console.error("Manual error report:", {
       error,
       errorInfo,
       timestamp: new Date().toISOString(),
-      url: typeof window !== 'undefined' ? window.location.href : 'unknown',
+      url: typeof window !== "undefined" ? window.location.href : "unknown",
     });
 
-    handleComponentError(error, errorInfo || { componentStack: '' });
+    handleComponentError(error, errorInfo || { componentStack: "" });
   }, []);
 }
