@@ -12,7 +12,8 @@ import {
   refreshUserSession, 
   logoutUser as logoutUserUtil,
   getValidAuthToken,
-  getAuthHeaders as getAuthHeadersUtil
+  getAuthHeaders as getAuthHeadersUtil,
+  attemptAutoAuth
 } from "./utils/helperFunctions";
 import { userManager } from "./utils/userManager";
 import { authManager } from "./utils/authManager";
@@ -103,13 +104,48 @@ export const useUser = (): UseUserReturn => {
   // Refs for cleanup
   const abortControllerRef = useRef<AbortController | null>(null);
   const rateLimitTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const autoAuthAttempted = useRef(false);
 
-  // Load initial user data
-  const loadUserData = useCallback(() => {
+  // Load initial user data with auto-authentication
+  const loadUserData = useCallback(async () => {
     try {
+      console.log("📊 Loading user data...");
+      
       const userData = getUserData();
       const loggedIn = isUserLoggedIn();
       const currentAuthStatus = getAuthStatus();
+
+      console.log("📊 Initial auth check:", {
+        hasUser: !!userData,
+        isLoggedIn: loggedIn,
+        authStatus: currentAuthStatus,
+        autoAuthAttempted: autoAuthAttempted.current
+      });
+
+      // If we have user data but are not logged in, attempt auto-authentication
+      if (userData && !loggedIn && !autoAuthAttempted.current) {
+        console.log("🔄 Attempting automatic authentication...");
+        autoAuthAttempted.current = true;
+        
+        try {
+          const autoAuthSuccess = await attemptAutoAuth();
+          if (autoAuthSuccess) {
+            console.log("✅ Auto-authentication successful");
+            const updatedLoggedIn = isUserLoggedIn();
+            const updatedAuthStatus = getAuthStatus();
+            
+            setUser(userData);
+            setIsLoggedIn(updatedLoggedIn);
+            setAuthStatus(updatedAuthStatus);
+            setIsLoading(false);
+            return;
+          } else {
+            console.log("❌ Auto-authentication failed");
+          }
+        } catch (error) {
+          console.error("❌ Auto-authentication error:", error);
+        }
+      }
 
       setUser(userData);
       setIsLoggedIn(loggedIn);
@@ -316,7 +352,7 @@ export const useUser = (): UseUserReturn => {
     try {
       const sessionValid = await refreshUserSession();
       if (sessionValid) {
-        loadUserData();
+        await loadUserData();
       } else {
         setUser(null);
         setIsLoggedIn(false);
@@ -345,6 +381,7 @@ export const useUser = (): UseUserReturn => {
         tokenExpiry: null,
       });
       clearErrors();
+      autoAuthAttempted.current = false; // Reset for next login
       toast.success("Logged out successfully");
     } catch (error) {
       console.error("Failed to logout user:", error);
@@ -391,11 +428,11 @@ export const useUser = (): UseUserReturn => {
     loadUserData();
   }, [loadUserData]);
 
-  // Token expiry monitoring
+  // Token expiry monitoring and auto-refresh
   useEffect(() => {
     if (!isLoggedIn) return;
 
-    const checkTokenExpiry = () => {
+    const checkTokenExpiry = async () => {
       const currentAuthStatus = getAuthStatus();
       setAuthStatus(currentAuthStatus);
 
@@ -405,12 +442,18 @@ export const useUser = (): UseUserReturn => {
 
         if (timeUntilExpiry < fiveMinutes && timeUntilExpiry > 0) {
           console.log("🔄 Token expiring soon, refreshing session");
-          refreshSession();
+          try {
+            await refreshSession();
+          } catch (error) {
+            console.error("Failed to auto-refresh session:", error);
+          }
         }
       }
     };
 
-    const interval = setInterval(checkTokenExpiry, 60000);
+    const interval = setInterval(checkTokenExpiry, 60000); // Check every minute
+    checkTokenExpiry(); // Check immediately
+    
     return () => clearInterval(interval);
   }, [isLoggedIn, refreshSession]);
 

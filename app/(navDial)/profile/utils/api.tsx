@@ -4,6 +4,8 @@ import { slideInOut } from "@/app/animations/pageTrans";
 import { ProfileResponse } from "../types/profileTypes";
 import { canMakeRequest, incrementRequestCount } from "./requestTracker";
 import { ProfileData } from "@/app/schemas/profileSchema";
+
+// Import the utility function directly instead of the hook
 import { getAuthHeaders } from "@/app/hooks/useUser/utils/helperFunctions";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -85,7 +87,7 @@ export const fetchProfileData = async (): Promise<ProfileData> => {
 export const handleApiError = (
   error: Error,
   router: ReturnType<typeof useTransitionRouter>,
-  logoutUser: () => Promise<void>,
+  logoutUser: () => Promise<void>, // Updated parameter type
   isRefresh: boolean = false
 ): boolean => {
   const message = error.message;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { useTransitionRouter } from "next-view-transitions";
 import { useUser } from "@/app/hooks/useUser/useUser";
@@ -18,7 +18,8 @@ const ProfilePage: React.FC = () => {
     user, 
     isLoggedIn, 
     isLoading: userLoading, 
-    authStatus 
+    authStatus,
+    auth
   } = useUser();
   
   const {
@@ -30,13 +31,29 @@ const ProfilePage: React.FC = () => {
     isRefreshing
   } = useProfile();
 
+  const [authCheckComplete, setAuthCheckComplete] = useState(false);
+
   const handleLogin = useCallback((): void => {
     router.push("/login", { onTransitionReady: slideInOut });
   }, [router]);
 
-  if (userLoading) {
-    console.log("🔄 User authentication loading...", {
+  // Wait for initial auth check to complete
+  useEffect(() => {
+    if (!userLoading) {
+      // Give a small delay to allow for automatic authentication attempts
+      const timer = setTimeout(() => {
+        setAuthCheckComplete(true);
+      }, 1000); // 1 second delay
+
+      return () => clearTimeout(timer);
+    }
+  }, [userLoading]);
+
+  // Show loading spinner while authentication is being checked
+  if (userLoading || !authCheckComplete) {
+    console.log("🔄 Authentication check in progress...", {
       userLoading,
+      authCheckComplete,
       isLoggedIn,
       hasUser: !!user,
       authStatus: authStatus.isAuthenticated
@@ -60,7 +77,7 @@ const ProfilePage: React.FC = () => {
           <div className={PROFILE_STYLES.mobileCard}>
             <div className="text-center text-white">
               <LoadingSpinner />
-              <p className="text-sm text-gray-400 mt-2">Authenticating...</p>
+              <p className="text-sm text-gray-400 mt-2">Checking authentication...</p>
             </div>
           </div>
         </div>
@@ -69,7 +86,7 @@ const ProfilePage: React.FC = () => {
           <div className={PROFILE_STYLES.desktopCard}>
             <div className="text-center text-white">
               <LoadingSpinner />
-              <p className="text-sm text-gray-400 mt-2">Authenticating...</p>
+              <p className="text-sm text-gray-400 mt-2">Checking authentication...</p>
             </div>
           </div>
         </div>
@@ -78,11 +95,39 @@ const ProfilePage: React.FC = () => {
   }
 
   const renderContent = () => {
+    // If user has data but tokens are expired, try to refresh first
+    if (user && !isLoggedIn && authStatus.tokenExpiry) {
+      const isTokenExpired = Date.now() >= authStatus.tokenExpiry;
+      
+      if (isTokenExpired) {
+        console.log("🔄 Token expired, attempting refresh...");
+        
+        // Attempt session refresh
+        auth.refreshSession().then((success) => {
+          if (!success) {
+            console.log("❌ Session refresh failed, will show login prompt");
+          } else {
+            console.log("✅ Session refreshed successfully");
+          }
+        }).catch((error) => {
+          console.error("❌ Session refresh error:", error);
+        });
+
+        return (
+          <div className="text-center text-white">
+            <LoadingSpinner />
+            <p className="text-sm text-gray-400 mt-2">Refreshing session...</p>
+          </div>
+        );
+      }
+    }
+
     if (!isLoggedIn) {
       console.log("🚫 User not logged in, showing login prompt", {
         isLoggedIn,
         hasUser: !!user,
-        authStatus: authStatus.isAuthenticated
+        authStatus: authStatus.isAuthenticated,
+        tokenExpiry: authStatus.tokenExpiry
       });
       return <LoginPrompt onLogin={handleLogin} />;
     }

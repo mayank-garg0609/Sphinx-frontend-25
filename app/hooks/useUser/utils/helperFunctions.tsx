@@ -24,11 +24,24 @@ export const getValidAuthToken = async (): Promise<string | null> => {
 };
 
 export const isUserLoggedIn = (): boolean => {
-  const hasValidToken = authManager.isAuthenticated();
   const hasUserData = userManager.getUser() !== null;
-  const result = hasValidToken && hasUserData;
+  
+  // Check if we can attempt authentication (has refresh token)
+  const canAttemptAuth = authManager.canAttemptAuth();
+  const hasValidToken = authManager.getAccessToken() !== null;
+  
+  // User is logged in if they have user data AND either:
+  // 1. A valid access token, OR
+  // 2. A refresh token that can be used to get a new access token
+  const result = hasUserData && (hasValidToken || canAttemptAuth);
 
-  console.log("🔍 isUserLoggedIn →", result, { hasValidToken, hasUserData });
+  console.log("🔍 isUserLoggedIn →", result, { 
+    hasValidToken, 
+    hasUserData, 
+    canAttemptAuth,
+    authStatus: authManager.getAuthStatus()
+  });
+  
   return result;
 };
 
@@ -58,9 +71,11 @@ export const logoutUser = async (): Promise<void> => {
 
 export const refreshUserSession = async (): Promise<boolean> => {
   try {
+    console.log("🔄 Attempting to refresh user session...");
+    
     const validToken = await authManager.getValidAccessToken();
     if (!validToken) {
-      console.log("❌ Token refresh failed");
+      console.log("❌ Token refresh failed - no valid token obtained");
       return false;
     }
 
@@ -68,7 +83,12 @@ export const refreshUserSession = async (): Promise<boolean> => {
     const user = userManager.getUser();
     const success = user !== null;
     
-    console.log("🔄 Session refresh:", { success, hasUser: !!user });
+    console.log("🔄 Session refresh result:", { 
+      success, 
+      hasUser: !!user, 
+      hasToken: !!validToken 
+    });
+    
     return success;
   } catch (error) {
     console.error("❌ Failed to refresh user session:", error);
@@ -86,12 +106,39 @@ export const getAuthHeaders = async (): Promise<Record<string, string>> => {
     const accessToken = await getValidAuthToken();
     if (accessToken) {
       headers["Authorization"] = `Bearer ${accessToken}`;
+      console.log("🔐 Auth headers created with valid token");
+    } else {
+      console.log("⚠️ No valid auth token available for headers");
     }
   } catch (error) {
     console.error("Failed to get auth headers:", error);
   }
 
   return headers;
+};
+
+// Enhanced function to attempt automatic authentication
+export const attemptAutoAuth = async (): Promise<boolean> => {
+  try {
+    const hasUserData = userManager.getUser() !== null;
+    const canRefresh = authManager.canAttemptAuth();
+    
+    if (!hasUserData || !canRefresh) {
+      console.log("🚫 Cannot attempt auto auth:", { hasUserData, canRefresh });
+      return false;
+    }
+    
+    console.log("🔄 Attempting automatic authentication...");
+    
+    const validToken = await authManager.getValidAccessToken();
+    const success = !!validToken;
+    
+    console.log("🔄 Auto auth result:", success);
+    return success;
+  } catch (error) {
+    console.error("❌ Auto authentication failed:", error);
+    return false;
+  }
 };
 
 // Utility function to check if user needs to be redirected

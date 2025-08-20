@@ -103,7 +103,7 @@ export const FormField = memo<FormFieldProps>(({ field, register, error }) => {
 
       {isFileInput && (
         <div className="text-xs text-gray-400 mt-1">
-          Only PDF files up to 5MB are allowed
+          Only PDF files (file.pdf) up to 5MB are allowed
         </div>
       )}
 
