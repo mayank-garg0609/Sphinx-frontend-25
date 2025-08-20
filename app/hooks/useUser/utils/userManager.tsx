@@ -1,12 +1,19 @@
+// Fixed userManager.tsx
 import { UserData, User } from "../types/userCache";
 
 class UserManagerSingleton {
   private userData: UserData | null = null;
+  private storageKey = 'user_data_v2'; // Changed key to avoid conflicts
 
   constructor() {
     if (typeof window !== "undefined") {
       try {
-        const stored = sessionStorage.getItem("user_data");
+        // Try localStorage first (more persistent), then sessionStorage
+        let stored = localStorage.getItem(this.storageKey);
+        if (!stored) {
+          stored = sessionStorage.getItem(this.storageKey);
+        }
+        
         if (stored) {
           this.userData = JSON.parse(stored) as UserData;
           console.log("👤 UserManager restored user data:", {
@@ -17,7 +24,7 @@ class UserManagerSingleton {
           });
         }
       } catch (error) {
-        console.error("Failed to restore user data from session:", error);
+        console.error("Failed to restore user data from storage:", error);
         this.clearUser();
       }
     }
@@ -30,7 +37,6 @@ class UserManagerSingleton {
       sphinx_id: user.sphinx_id,
       role: user.role
     });
-    console.trace("setUser stack trace:");
 
     this.userData = {
       sphinx_id: user.sphinx_id,
@@ -46,30 +52,14 @@ class UserManagerSingleton {
     if (typeof window !== "undefined") {
       try {
         const userDataString = JSON.stringify(this.userData);
-        console.log("💾 Storing user data in sessionStorage...");
-        sessionStorage.setItem("user_data", userDataString);
         
-        // Immediately verify it was stored
-        setTimeout(() => {
-          const verification = sessionStorage.getItem("user_data");
-          if (verification) {
-            console.log("✅ User data verified in storage after 100ms");
-          } else {
-            console.log("🚨 USER DATA DISAPPEARED FROM STORAGE WITHIN 100MS!");
-          }
-        }, 100);
-
-        setTimeout(() => {
-          const verification = sessionStorage.getItem("user_data");
-          if (verification) {
-            console.log("✅ User data still in storage after 1s");
-          } else {
-            console.log("🚨 USER DATA DISAPPEARED FROM STORAGE WITHIN 1 SECOND!");
-          }
-        }, 1000);
-
+        // Store in both localStorage and sessionStorage for maximum reliability
+        localStorage.setItem(this.storageKey, userDataString);
+        sessionStorage.setItem(this.storageKey, userDataString);
+        
+        console.log("💾 User data stored in both localStorage and sessionStorage");
       } catch (error) {
-        console.error("Failed to store user data in session:", error);
+        console.error("Failed to store user data:", error);
       }
     }
 
@@ -77,19 +67,24 @@ class UserManagerSingleton {
   }
 
   getUser(): UserData | null {
-    // Always try to get fresh data from sessionStorage
+    // Always try to get fresh data from storage
     if (typeof window !== "undefined") {
       try {
-        const stored = sessionStorage.getItem("user_data");
+        // Try localStorage first, then sessionStorage
+        let stored = localStorage.getItem(this.storageKey);
+        if (!stored) {
+          stored = sessionStorage.getItem(this.storageKey);
+        }
+        
         if (stored) {
           this.userData = JSON.parse(stored) as UserData;
           return this.userData;
         } else if (this.userData) {
-          console.log("⚠️ User data was in memory but not in sessionStorage - data was cleared externally");
+          console.log("⚠️ User data was in memory but not in storage - data was cleared externally");
           this.userData = null;
         }
       } catch (error) {
-        console.error("Failed to restore user data from session:", error);
+        console.error("Failed to restore user data from storage:", error);
         this.clearUser();
         return null;
       }
@@ -100,16 +95,20 @@ class UserManagerSingleton {
 
   clearUser(): void {
     console.log("🧹 UserManager clearUser() called");
-    console.trace("Clear user stack trace:");
 
     this.userData = null;
     if (typeof window !== "undefined") {
       try {
+        localStorage.removeItem(this.storageKey);
+        sessionStorage.removeItem(this.storageKey);
+        // Also remove old storage keys if they exist
+        localStorage.removeItem("user_data");
         sessionStorage.removeItem("user_data");
+        localStorage.removeItem("user_preferences");
         sessionStorage.removeItem("user_preferences");
-        console.log("🧹 Removed user_data and user_preferences from sessionStorage");
+        console.log("🧹 Removed user data from both storage types");
       } catch (error) {
-        console.error("Failed to clear user data from session:", error);
+        console.error("Failed to clear user data from storage:", error);
       }
     }
 
@@ -127,9 +126,11 @@ class UserManagerSingleton {
       
       if (typeof window !== "undefined") {
         try {
-          sessionStorage.setItem("user_data", JSON.stringify(this.userData));
+          const userDataString = JSON.stringify(this.userData);
+          localStorage.setItem(this.storageKey, userDataString);
+          sessionStorage.setItem(this.storageKey, userDataString);
         } catch (error) {
-          console.error("Failed to update user data in session:", error);
+          console.error("Failed to update user data in storage:", error);
         }
       }
 

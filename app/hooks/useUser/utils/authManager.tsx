@@ -1,3 +1,4 @@
+// Fixed authManager.tsx
 import { AuthStatus } from "../types/userCache";
 
 interface TokenData {
@@ -11,51 +12,22 @@ class AuthManagerSingleton {
   private refreshToken: string | null = null;
   private tokenExpiry: number | null = null;
   private refreshPromise: Promise<string> | null = null;
+  private storageKey = 'auth_tokens_v2'; // Changed key to avoid conflicts
 
   constructor() {
     if (typeof window !== "undefined") {
       this.restoreTokens();
-      this.setupTokenWatcher();
     }
-  }
-
-  // Watch for tokens being cleared and log what's doing it
-  private setupTokenWatcher(): void {
-    const originalSetItem = Storage.prototype.setItem;
-    const originalRemoveItem = Storage.prototype.removeItem;
-    const originalClear = Storage.prototype.clear;
-
-    Storage.prototype.removeItem = function(key: string) {
-      if (key === 'auth_tokens') {
-        console.log("🚨 TOKENS BEING REMOVED!");
-        console.trace("Token removal stack trace:");
-      }
-      return originalRemoveItem.call(this, key);
-    };
-
-    Storage.prototype.clear = function() {
-      console.log("🚨 SESSION STORAGE BEING CLEARED!");
-      console.trace("Storage clear stack trace:");
-      return originalClear.call(this);
-    };
-
-    // Also watch for direct access to sessionStorage
-    const originalSessionStorage = window.sessionStorage;
-    Object.defineProperty(window, 'sessionStorage', {
-      get() {
-        return originalSessionStorage;
-      },
-      set(value) {
-        console.log("🚨 SessionStorage being replaced!");
-        console.trace();
-        return value;
-      }
-    });
   }
 
   private restoreTokens(): void {
     try {
-      const stored = sessionStorage.getItem("auth_tokens");
+      // Try localStorage first (more persistent), then sessionStorage
+      let stored = localStorage.getItem(this.storageKey);
+      if (!stored) {
+        stored = sessionStorage.getItem(this.storageKey);
+      }
+      
       if (stored) {
         const { accessToken, refreshToken, tokenExpiry } = JSON.parse(stored);
         this.accessToken = accessToken;
@@ -96,28 +68,13 @@ class AuthManagerSingleton {
           tokenExpiry: this.tokenExpiry,
         };
 
-        console.log("💾 Storing tokens in sessionStorage...");
-        sessionStorage.setItem("auth_tokens", JSON.stringify(tokenData));
+        const tokenString = JSON.stringify(tokenData);
         
-        // Immediately verify they were stored
-        setTimeout(() => {
-          const verification = sessionStorage.getItem("auth_tokens");
-          if (verification) {
-            console.log("✅ Tokens verified in storage after 100ms");
-          } else {
-            console.log("🚨 TOKENS DISAPPEARED FROM STORAGE WITHIN 100MS!");
-          }
-        }, 100);
-
-        setTimeout(() => {
-          const verification = sessionStorage.getItem("auth_tokens");
-          if (verification) {
-            console.log("✅ Tokens still in storage after 1s");
-          } else {
-            console.log("🚨 TOKENS DISAPPEARED FROM STORAGE WITHIN 1 SECOND!");
-          }
-        }, 1000);
-
+        // Store in both localStorage and sessionStorage for maximum reliability
+        localStorage.setItem(this.storageKey, tokenString);
+        sessionStorage.setItem(this.storageKey, tokenString);
+        
+        console.log("💾 Tokens stored in both localStorage and sessionStorage");
       } catch (error) {
         console.error("Failed to store auth tokens:", error);
       }
@@ -198,83 +155,56 @@ class AuthManagerSingleton {
     try {
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       
-      // Try different possible refresh endpoints
-      const possibleEndpoints = [
-        `${API_BASE_URL}/auth/refresh`,
-        `${API_BASE_URL}/auth/refresh-token`,
-        `${API_BASE_URL}/api/auth/refresh`,
-        `${API_BASE_URL}/user/refresh`
-      ];
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          refreshToken: this.refreshToken,
+        }),
+      });
 
-      let lastError: Error | null = null;
+      console.log("🔄 Refresh response status:", response.status);
 
-      for (const endpoint of possibleEndpoints) {
-        try {
-          console.log("🔄 Trying refresh endpoint:", endpoint);
-          
-          const response = await fetch(endpoint, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${this.refreshToken}`,
-            },
-            body: JSON.stringify({
-              refreshToken: this.refreshToken,
-              refresh_token: this.refreshToken,
-              token: this.refreshToken,
-            }),
-          });
+      if (response.ok) {
+        const data = await response.json();
+        console.log("🔄 Refresh response data:", data);
 
-          console.log("🔄 Refresh response status:", response.status);
+        // Handle different response formats
+        let accessToken, refreshToken, expiresIn;
 
-          if (response.ok) {
-            const data = await response.json();
-            console.log("🔄 Refresh response data:", data);
-
-            // Handle different response formats
-            let accessToken, refreshToken, expiresIn;
-
-            if (data.data) {
-              accessToken = data.data.accessToken || data.data.access_token;
-              refreshToken = data.data.refreshToken || data.data.refresh_token;
-              expiresIn = data.data.expiresIn || data.data.expires_in;
-            } else {
-              accessToken = data.accessToken || data.access_token;
-              refreshToken = data.refreshToken || data.refresh_token || this.refreshToken;
-              expiresIn = data.expiresIn || data.expires_in;
-            }
-
-            if (!accessToken) {
-              throw new Error("No access token in refresh response");
-            }
-
-            // Update tokens
-            this.setTokens(
-              accessToken,
-              refreshToken,
-              expiresIn || 3600
-            );
-
-            console.log("✅ Token refresh successful with endpoint:", endpoint);
-            return accessToken;
-          } else if (response.status === 401 || response.status === 403) {
-            console.log("🔄 Refresh token is invalid or expired at:", endpoint);
-            lastError = new Error("Refresh token expired. Please log in again.");
-          } else {
-            console.log("❌ Refresh failed at endpoint:", endpoint, "Status:", response.status);
-            lastError = new Error(`Token refresh failed: ${response.status}`);
-          }
-        } catch (fetchError) {
-          console.log("❌ Network error with endpoint:", endpoint, fetchError);
-          lastError = fetchError as Error;
+        if (data.data) {
+          accessToken = data.data.accessToken || data.data.access_token;
+          refreshToken = data.data.refreshToken || data.data.refresh_token;
+          expiresIn = data.data.expiresIn || data.data.expires_in;
+        } else {
+          accessToken = data.accessToken || data.access_token;
+          refreshToken = data.refreshToken || data.refresh_token || this.refreshToken;
+          expiresIn = data.expiresIn || data.expires_in;
         }
+
+        if (!accessToken) {
+          throw new Error("No access token in refresh response");
+        }
+
+        // Update tokens
+        this.setTokens(
+          accessToken,
+          refreshToken,
+          expiresIn || 3600
+        );
+
+        console.log("✅ Token refresh successful");
+        return accessToken;
+      } else if (response.status === 401 || response.status === 403) {
+        console.log("🔄 Refresh token is invalid or expired");
+        this.clearTokens();
+        throw new Error("Refresh token expired. Please log in again.");
+      } else {
+        console.log("❌ Refresh failed. Status:", response.status);
+        throw new Error(`Token refresh failed: ${response.status}`);
       }
-
-      // If we get here, all endpoints failed
-      console.error("❌ All refresh endpoints failed");
-      this.clearTokens();
-      throw lastError || new Error("All token refresh endpoints failed");
-
     } catch (error) {
       console.error("❌ Token refresh failed:", error);
       this.clearTokens();
@@ -284,7 +214,6 @@ class AuthManagerSingleton {
 
   clearTokens(): void {
     console.log("🧹 AuthManager clearTokens() called");
-    console.trace("Clear tokens stack trace:");
 
     this.accessToken = null;
     this.refreshToken = null;
@@ -292,8 +221,12 @@ class AuthManagerSingleton {
 
     if (typeof window !== "undefined") {
       try {
+        localStorage.removeItem(this.storageKey);
+        sessionStorage.removeItem(this.storageKey);
+        // Also remove old storage keys if they exist
+        localStorage.removeItem("auth_tokens");
         sessionStorage.removeItem("auth_tokens");
-        console.log("🧹 Removed auth_tokens from sessionStorage");
+        console.log("🧹 Removed auth tokens from both storage types");
       } catch (error) {
         console.error("Failed to clear auth tokens:", error);
       }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { debounce } from "lodash";
 import type { LoginFormData } from "@/app/schemas/loginSchema";
@@ -76,6 +77,8 @@ export interface UseUserReturn {
 }
 
 export const useUser = (): UseUserReturn => {
+  const router = useRouter();
+  
   // Core state
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -214,7 +217,7 @@ export const useUser = (): UseUserReturn => {
 
       const result = await handleAuthResponse(response, 'login');
       
-      // Success
+      // Success - Update local state first
       setUser(result.user);
       setIsLoggedIn(true);
       setAuthStatus(getAuthStatus());
@@ -222,9 +225,9 @@ export const useUser = (): UseUserReturn => {
       
       toast.success("✅ Logged in successfully!");
       
-      // Navigate after a brief delay
+      // Use Next.js router instead of window.location.href
       setTimeout(() => {
-        window.location.href = "/profile";
+        router.push("/profile");
       }, 500);
 
     } catch (error: any) {
@@ -242,7 +245,7 @@ export const useUser = (): UseUserReturn => {
       setLoginLoading(false);
       abortControllerRef.current = null;
     }
-  }, [isRateLimited, loginLoading, loginRetryCount, clearErrors, handleRateLimit]);
+  }, [isRateLimited, loginLoading, loginRetryCount, clearErrors, handleRateLimit, router]);
 
   // Signup with credentials
   const signUpWithCredentials = useCallback(async (data: SignUpFormData) => {
@@ -270,7 +273,7 @@ export const useUser = (): UseUserReturn => {
 
       const result = await handleAuthResponse(response, 'signup');
       
-      // Success
+      // Success - Update local state first
       setUser(result.user);
       setIsLoggedIn(true);
       setAuthStatus(getAuthStatus());
@@ -278,9 +281,9 @@ export const useUser = (): UseUserReturn => {
       
       toast.success("✅ Account created successfully!");
       
-      // Navigate after a brief delay
+      // Use Next.js router instead of window.location.href
       setTimeout(() => {
-        window.location.href = "/profile";
+        router.push("/profile");
       }, 500);
 
     } catch (error: any) {
@@ -298,7 +301,7 @@ export const useUser = (): UseUserReturn => {
       setSignupLoading(false);
       abortControllerRef.current = null;
     }
-  }, [isRateLimited, signupLoading, signupRetryCount, clearErrors, handleRateLimit]);
+  }, [isRateLimited, signupLoading, signupRetryCount, clearErrors, handleRateLimit, router]);
 
   // Google authentication (login or signup)
   const handleGoogleAuth = useCallback(async (code: string, mode: 'login' | 'signup') => {
@@ -311,7 +314,7 @@ export const useUser = (): UseUserReturn => {
     try {
       const result = await processGoogleAuth(code);
       
-      // Success
+      // Success - Update local state first
       setUser(result.user);
       setIsLoggedIn(true);
       setAuthStatus(getAuthStatus());
@@ -321,9 +324,9 @@ export const useUser = (): UseUserReturn => {
         : "✅ Account created successfully with Google!";
       toast.success(successMessage);
       
-      // Navigate after a brief delay
+      // Use Next.js router instead of window.location.href
       setTimeout(() => {
-        window.location.href = "/profile";
+        router.push("/profile");
       }, 500);
 
     } catch (error: any) {
@@ -336,7 +339,7 @@ export const useUser = (): UseUserReturn => {
     } finally {
       setGoogleLoading(false);
     }
-  }, [isRateLimited, googleLoading, clearErrors, handleRateLimit]);
+  }, [isRateLimited, googleLoading, clearErrors, handleRateLimit, router]);
 
   // Individual Google methods
   const loginWithGoogle = useCallback(async (code: string) => {
@@ -369,10 +372,14 @@ export const useUser = (): UseUserReturn => {
     }
   }, [loadUserData]);
 
-  // Logout
+  // Logout - Updated to use router
   const logout = useCallback(async () => {
     try {
-      await logoutUserUtil();
+      // Clear tokens and user data
+      authManager.clearTokens();
+      userManager.clearUser();
+      
+      // Update local state
       setUser(null);
       setIsLoggedIn(false);
       setAuthStatus({
@@ -382,12 +389,16 @@ export const useUser = (): UseUserReturn => {
       });
       clearErrors();
       autoAuthAttempted.current = false; // Reset for next login
+      
       toast.success("Logged out successfully");
+      
+      // Use Next.js router instead of window.location.href
+      router.push("/login");
     } catch (error) {
       console.error("Failed to logout user:", error);
       throw error;
     }
-  }, [clearErrors]);
+  }, [clearErrors, router]);
 
   // Check auth status
   const checkAuthStatus = useCallback((): boolean => {

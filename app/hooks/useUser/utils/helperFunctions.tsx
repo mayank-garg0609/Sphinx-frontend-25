@@ -49,18 +49,11 @@ export const getAuthStatus = (): AuthStatus => {
   return authManager.getAuthStatus();
 };
 
+// Updated logoutUser function - removed window.location.href and sessionStorage.clear()
 export const logoutUser = async (): Promise<void> => {
   try {
     authManager.clearTokens();
     userManager.clearUser();
-
-    if (typeof window !== "undefined") {
-      // Clear all auth-related storage
-      sessionStorage.clear();
-      
-      // Redirect to login page
-      window.location.href = "/login";
-    }
 
     console.log("✅ User logged out successfully");
   } catch (error) {
