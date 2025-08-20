@@ -9,6 +9,17 @@ export interface UserData {
   last_login?: string;
 }
 
+export interface User {
+  readonly sphinx_id: string;
+  readonly name: string;
+  readonly email: string;
+  readonly role: string;
+  readonly is_verified: boolean;
+  readonly applied_ca: boolean;
+  readonly created_at?: string;
+  readonly _id?: string;
+}
+
 export interface AuthStatus {
   isAuthenticated: boolean;
   hasValidToken: boolean;

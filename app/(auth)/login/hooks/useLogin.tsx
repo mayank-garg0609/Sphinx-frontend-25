@@ -3,10 +3,10 @@
 import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signUpSchema, SignUpFormData } from "@/app/schemas/signupSchema";
+import { loginSchema, LoginFormData } from "@/app/schemas/loginSchema";
 import { useUser } from "@/app/hooks/useUser/useUser";
 
-interface UseSignUpReturn {
+interface UseLoginReturn {
   // Form methods
   register: any;
   handleSubmit: any;
@@ -14,15 +14,15 @@ interface UseSignUpReturn {
   errors: any;
   
   // Auth methods and state
-  onSubmit: (data: SignUpFormData) => Promise<void>;
-  onGoogleSignUp: (code: string) => Promise<void>;
+  onSubmit: (data: LoginFormData) => Promise<void>;
+  onGoogleLogin: (code: string) => Promise<void>;
   
   // Loading states
   isSubmitting: boolean;
   isGoogleLoading: boolean;
   
   // Error states
-  signupError: string | null;
+  loginError: string | null;
   googleError: string | null;
   
   // Other states
@@ -33,14 +33,14 @@ interface UseSignUpReturn {
   clearErrors: () => void;
 }
 
-export const useSignUp = (): UseSignUpReturn => {
+export const useLogin = (): UseLoginReturn => {
   const {
     auth,
-    signupLoading,
+    loginLoading,
     googleLoading,
-    signupError,
+    loginError,
     googleError,
-    signupRetryCount,
+    loginRetryCount,
     isRateLimited
   } = useUser();
 
@@ -51,32 +51,29 @@ export const useSignUp = (): UseSignUpReturn => {
     formState: { errors, isSubmitting },
     reset,
     clearErrors: clearFormErrors,
-  } = useForm<SignUpFormData>({
-    resolver: zodResolver(signUpSchema),
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
     mode: "onChange",
     defaultValues: {
-      name: "",
       email: "",
       password: "",
-      confirmPassword: "",
-      agreed: false,
     },
   });
 
-  const onSubmit = useCallback(async (data: SignUpFormData) => {
+  const onSubmit = useCallback(async (data: LoginFormData) => {
     try {
-      await auth.signUpWithCredentials(data);
+      await auth.loginWithCredentials(data);
       reset(); // Clear form on success
     } catch (error) {
-      console.error('Signup submission error:', error);
+      console.error('Login submission error:', error);
     }
   }, [auth, reset]);
 
-  const onGoogleSignUp = useCallback(async (code: string) => {
+  const onGoogleLogin = useCallback(async (code: string) => {
     try {
-      await auth.signUpWithGoogle(code);
+      await auth.loginWithGoogle(code);
     } catch (error) {
-      console.error('Google signup error:', error);
+      console.error('Google login error:', error);
     }
   }, [auth]);
 
@@ -93,18 +90,18 @@ export const useSignUp = (): UseSignUpReturn => {
     
     // Auth methods
     onSubmit,
-    onGoogleSignUp,
+    onGoogleLogin,
     
     // Loading states
-    isSubmitting: isSubmitting || signupLoading,
+    isSubmitting: isSubmitting || loginLoading,
     isGoogleLoading: googleLoading,
     
     // Error states
-    signupError,
+    loginError,
     googleError,
     
     // Other states
-    retryCount: signupRetryCount,
+    retryCount: loginRetryCount,
     isRateLimited,
     
     // Utility
