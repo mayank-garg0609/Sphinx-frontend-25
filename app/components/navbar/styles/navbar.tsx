@@ -1,53 +1,38 @@
 export const navbarStyles = `
   /* Core dial container with GPU acceleration - Topmost overlay */
-/* Darker full-width overlay */
-.dial-container.full-width-container {
-  background: linear-gradient(
-    90deg,
-    rgba(10, 10, 20, 0.2) 0%,
-    rgba(10, 10, 25, 0.85) 15%,
-    rgba(5, 5, 15, 0.95) 50%,
-    rgba(10, 10, 25, 0.85) 85%,
-    rgba(10, 10, 20, 0.2) 100%
-  );
-  border-bottom: 1px solid rgba(0, 255, 255, 0.25);
-  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.6);
-}
+  .dial-container {
+    position: fixed;
+    z-index: 9999; /* Maximum z-index for topmost positioning */
+    overflow: visible;
+    contain: layout style paint;
+    will-change: transform;
+    perspective: 1000px;
+    transform-style: preserve-3d;
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    pointer-events: none; /* Allow clicks to pass through transparent areas */
+  }
 
-/* Darker cyberpunk track */
-.cyberpunk-track {
-  background: linear-gradient(
-    90deg,
-    #0a0a1a 0%,
-    #12122a 25%,
-    #1a1a33 50%,
-    #12122a 75%,
-    #0a0a1a 100%
-  );
-}
-
-/* Darker inner track */
-.cyberpunk-inner-track {
-  background: linear-gradient(
-    90deg,
-    #1c1c28 0%,
-    #202036 50%,
-    #1c1c28 100%
-  );
-}
-
-/* Dark mode adjustment */
-@media (prefers-color-scheme: dark) {
-  .cyberpunk-inner-track {
+  /* Full-width expanded state - responsive overlay at topmost level */
+  .dial-container.full-width-container {
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: clamp(100px, 12vh, 160px); /* Responsive height */
+    z-index: 9999;
     background: linear-gradient(
       90deg,
-      #181822 0%,
-      #222238 50%,
-      #181822 100%
+      rgba(26, 26, 46, 0.1) 0%,
+      rgba(26, 26, 46, 0.8) 15%,
+      rgba(26, 26, 46, 0.95) 50%,
+      rgba(26, 26, 46, 0.8) 85%,
+      rgba(26, 26, 46, 0.1) 100%
     );
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    pointer-events: auto;
   }
-}
-
 
   .dial-wrapper {
     position: relative;
@@ -77,14 +62,14 @@ export const navbarStyles = `
   }
 
   .cyberpunk-inner-track {
-    background: linear-gradient(
-      90deg,
-      #e8e8e8 0%,
-      #f5f5f5 25%,
-      #ffffff 50%,
-      #f5f5f5 75%,
-      #e8e8e8 100%
-    );
+   background: linear-gradient(
+    90deg,
+    #0d0d18 0%,    /* near black */
+    #181830 25%,   /* deep indigo */
+    #222244 50%,   /* muted navy highlight */
+    #181830 75%, 
+    #0d0d18 100%
+  );
     position: relative;
     overflow: hidden;
     border-radius: clamp(30px, 6vw, 50px);

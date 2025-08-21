@@ -84,7 +84,7 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
 
   const handleNavClick = useCallback(
     (item: any) => {
-      setHoveredTooltip(null); 
+      setHoveredTooltip(null);
       onNavigation(item);
     },
     [onNavigation]
@@ -109,12 +109,12 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
         @keyframes neonPulse {
           0%,
           100% {
-            filter: drop-shadow(0 0 8px currentColor)
-              drop-shadow(0 0 16px currentColor);
+            filter: drop-shadow(0 0 6px currentColor)
+              drop-shadow(0 0 12px currentColor);
           }
           50% {
-            filter: drop-shadow(0 0 12px currentColor)
-              drop-shadow(0 0 24px currentColor);
+            filter: drop-shadow(0 0 10px currentColor)
+              drop-shadow(0 0 20px currentColor);
           }
         }
 
@@ -127,30 +127,6 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           }
           100% {
             background-position: 0% 50%;
-          }
-        }
-
-        @keyframes signupGlow {
-          0%,
-          100% {
-            box-shadow: 0 0 15px #28a745, 0 0 30px #28a74540, 0 0 45px #28a74520,
-              inset 0 0 15px #28a74520;
-          }
-          50% {
-            box-shadow: 0 0 25px #28a745, 0 0 50px #28a74560, 0 0 75px #28a74540,
-              inset 0 0 25px #28a74530;
-          }
-        }
-
-        @keyframes profileGlow {
-          0%,
-          100% {
-            box-shadow: 0 0 15px #4a90e2, 0 0 30px #4a90e240, 0 0 45px #4a90e220,
-              inset 0 0 15px #4a90e220;
-          }
-          50% {
-            box-shadow: 0 0 25px #4a90e2, 0 0 50px #4a90e260, 0 0 75px #4a90e240,
-              inset 0 0 25px #4a90e230;
           }
         }
 
@@ -171,57 +147,57 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           justify-content: center;
           background: linear-gradient(
             90deg,
-            rgba(26, 26, 46, 0.1) 0%,
-            rgba(26, 26, 46, 0.8) 20%,
-            rgba(26, 26, 46, 0.95) 50%,
-            rgba(26, 26, 46, 0.8) 80%,
-            rgba(26, 26, 46, 0.1) 100%
+            rgba(10, 10, 20, 0.2) 0%,
+            rgba(15, 15, 30, 0.85) 20%,
+            rgba(10, 10, 25, 0.95) 50%,
+            rgba(15, 15, 30, 0.85) 80%,
+            rgba(10, 10, 20, 0.2) 100%
           );
-          backdrop-filter: blur(10px);
-          border-bottom: 1px solid #00ffff20;
+          backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(0, 200, 255, 0.25);
         }
 
         .neon-glow-cyan {
-          box-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff40, 0 0 30px #00ffff20,
-            inset 0 0 10px #00ffff20;
+          box-shadow: 0 0 8px #00e5ff, 0 0 16px #00e5ff40, 0 0 24px #00e5ff20,
+            inset 0 0 8px #00e5ff20;
         }
 
         .neon-glow-magenta {
-          box-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff40, 0 0 30px #ff00ff20,
-            inset 0 0 10px #ff00ff20;
+          box-shadow: 0 0 8px #b84dff, 0 0 16px #b84dff40, 0 0 24px #b84dff20,
+            inset 0 0 8px #b84dff20;
         }
 
         .neon-glow-amber {
-          box-shadow: 0 0 10px #ffbf00, 0 0 20px #ffbf0040, 0 0 30px #ffbf0020,
-            inset 0 0 10px #ffbf0020;
+          box-shadow: 0 0 8px #ffae42, 0 0 16px #ffae4240, 0 0 24px #ffae4220,
+            inset 0 0 8px #ffae4220;
         }
 
         .cyberpunk-track {
           background: linear-gradient(
             90deg,
-            #1a1a2e 0%,
-            #16213e 25%,
-            #0f0f23 50%,
-            #16213e 75%,
-            #1a1a2e 100%
+            #0d0d18 0%,
+            #181828 25%,
+            #202035 50%,
+            #181828 75%,
+            #0d0d18 100%
           );
           background-size: 200% 200%;
-          animation: gradientShift 8s ease infinite;
+          animation: gradientShift 10s ease infinite;
           border-radius: 60px;
-          border: 1px solid #00ffff40;
+          border: 1px solid rgba(0, 200, 255, 0.2);
         }
 
         .cyberpunk-inner-track {
           background: linear-gradient(
             90deg,
-            #00ffcc 0%,
-            #00ffcc 50%,
-            #00ffcc 100%
+            #11111a 0%,
+            #1a1a2a 50%,
+            #11111a 100%
           );
           position: relative;
           overflow: hidden;
           border-radius: 45px;
-          border: 0.5px solid #ffbf0060;
+          border: 1px solid rgba(0, 200, 255, 0.15);
           cursor: pointer;
         }
 
@@ -235,7 +211,7 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           background: linear-gradient(
             90deg,
             transparent 0%,
-            #00ffff10 50%,
+            rgba(0, 200, 255, 0.1) 50%,
             transparent 100%
           );
           opacity: 0;
@@ -249,18 +225,19 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
         .center-hub-cyberpunk {
           background: radial-gradient(
             circle at 30% 30%,
-            #2a2a4e 0%,
-            #1a1a2e 50%,
-            #0f0f23 100%
+            #11111a 0%,
+            #1a1a2a 50%,
+            #11111a 100%
           );
-          border: 2px solid #00ffff;
+          );
+          border: 2px solid #00c8ff;
           transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
           position: relative;
           overflow: hidden;
           border-radius: 50%;
           cursor: pointer;
-          box-shadow: 0 0 15px #00ffff80, inset 0 0 10px #00ffff20,
-            0 0 25px #00ffff40;
+          box-shadow: 0 0 12px #00c8ff60, inset 0 0 8px #00c8ff20,
+            0 0 20px #00c8ff30;
         }
 
         .center-hub-cyberpunk::before {
@@ -273,10 +250,10 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           background: conic-gradient(
             from 0deg,
             transparent 0deg,
-            #00ffff40 60deg,
+            #00c8ff40 60deg,
             transparent 120deg
           );
-          animation: spin 4s linear infinite;
+          animation: spin 5s linear infinite;
           opacity: 0;
           transition: opacity 0.3s ease;
         }
@@ -286,9 +263,9 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
         }
 
         .center-hub-cyberpunk:hover {
-          transform: scale(1.1);
-          box-shadow: 0 0 20px #00ffff80, inset 0 0 20px #00ffff20,
-            0 0 40px #00ffff40;
+          transform: scale(1.08);
+          box-shadow: 0 0 18px #00c8ff80, inset 0 0 12px #00c8ff20,
+            0 0 30px #00c8ff40;
         }
 
         @keyframes spin {
@@ -303,11 +280,11 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
         .inner-profile-cyberpunk {
           background: linear-gradient(
             135deg,
-            #4a90e2 0%,
-            #357abd 50%,
-            #2563eb 100%
+            #2d4a7a 0%,
+            #243a63 50%,
+            #1c2e50 100%
           );
-          border: 2px solid #4a90e2;
+          border: 2px solid #3a7bd5;
           position: relative;
           overflow: hidden;
           border-radius: 50%;
@@ -325,7 +302,7 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
           background: linear-gradient(
             135deg,
             transparent 0%,
-            #ffffff20 50%,
+            rgba(255, 255, 255, 0.08) 50%,
             transparent 100%
           );
           transform: translateX(-100%);
@@ -337,26 +314,26 @@ const DesktopDialComponent: React.FC<DesktopDialProps> = ({
         }
 
         .inner-profile-cyberpunk:hover {
-          transform: scale(1.15);
-          box-shadow: 0 0 20px #4a90e280, inset 0 0 20px #ffffff20,
-            0 0 40px #4a90e240;
+          transform: scale(1.1);
+          box-shadow: 0 0 18px #3a7bd580,
+            inset 0 0 18px rgba(255, 255, 255, 0.1), 0 0 30px #3a7bd540;
           animation: none;
         }
 
         .inner-profile-cyberpunk.signup {
           background: linear-gradient(
             135deg,
-            #28a745 0%,
-            #1e7e34 50%,
-            #16a085 100%
+            #1e7e34 0%,
+            #16632a 50%,
+            #115522 100%
           );
           border: 2px solid #28a745;
           animation: signupGlow 3s ease-in-out infinite;
         }
 
         .inner-profile-cyberpunk.signup:hover {
-          box-shadow: 0 0 20px #28a74580, inset 0 0 20px #ffffff20,
-            0 0 40px #28a74540;
+          box-shadow: 0 0 18px #28a74580,
+            inset 0 0 18px rgba(255, 255, 255, 0.1), 0 0 30px #28a74540;
           animation: none;
         }
 
