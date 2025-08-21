@@ -119,7 +119,7 @@ export async function handleAuthSuccess(
 
     // Navigate to profile after successful signup
     setTimeout(() => {
-      router.push("/profile");
+      router.push("/update");
     }, 500);
   } catch (error) {
     console.error("Auth success handling failed:", error);
@@ -150,23 +150,23 @@ export const getSignupHeaders = (): Record<string, string> => {
   };
 };
 
-// If you need CSRF for signup, use this version instead:
-export const getSignupHeadersWithCSRF = async (): Promise<Record<string, string>> => {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+// // If you need CSRF for signup, use this version instead:
+// export const getSignupHeadersWithCSRF = async (): Promise<Record<string, string>> => {
+//   const headers: Record<string, string> = {
+//     "Content-Type": "application/json",
+//   };
 
-  try {
-    // Only get CSRF token for signup, no auth required
-    const csrfToken = await csrfManager.getCSRFToken();
-    headers["X-CSRF-Token"] = csrfToken;
-  } catch (csrfError) {
-    console.warn("CSRF token not available for signup:", csrfError);
-    // Continue without CSRF for signup if not available
-  }
+//   try {
+//     // Only get CSRF token for signup, no auth required
+//     const csrfToken = await csrfManager.getCSRFToken();
+//     headers["X-CSRF-Token"] = csrfToken;
+//   } catch (csrfError) {
+//     console.warn("CSRF token not available for signup:", csrfError);
+//     // Continue without CSRF for signup if not available
+//   }
 
-  return headers;
-};
+//   return headers;
+// };
 
 // Validation helpers specific to signup
 export const validateSignUpData = (data: any): boolean => {
@@ -202,3 +202,4 @@ export const sanitizeSignUpData = (data: any) => {
     agreed: Boolean(data.agreed),
   };
 };
+

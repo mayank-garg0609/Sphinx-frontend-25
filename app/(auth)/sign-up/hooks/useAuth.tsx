@@ -12,7 +12,7 @@ import {
   getApiUrl,
   rateLimiter,
 } from "../utils/config";
-import { handleAuthSuccess } from "@/app/(auth)/login/utils/authHelpers";
+import { handleAuthSuccess } from "@/app/(auth)/sign-up/utils/authHelpers";
 import {
   handleApiError,
   handleNetworkError,
@@ -26,7 +26,6 @@ interface UseAuthReturn {
   isRateLimited: boolean;
 }
 
-// Simple headers for signup - no auth needed
 const getSignupHeaders = (): Record<string, string> => {
   return {
     "Content-Type": "application/json",
@@ -61,7 +60,6 @@ export function useAuth(
             API_CONFIG.timeout
           );
 
-          // Use simple headers for signup - no auth required
           const headers = getSignupHeaders();
 
           const response = await fetch(getApiUrl(API_ENDPOINTS.SIGNUP), {
@@ -69,7 +67,6 @@ export function useAuth(
             headers,
             body: JSON.stringify(data),
             signal: controller.signal,
-            // credentials: "include", // Uncomment if you need cookies
           });
 
           clearTimeout(timeoutId);
@@ -90,7 +87,6 @@ export function useAuth(
             console.log("✅ Sign up successful");
             console.log("📦 Raw API response:", result);
 
-            // Use lenient schema and add error handling
             let validatedResult;
             try {
               validatedResult = LenientSignUpResponseSchema.parse(result);
@@ -98,7 +94,6 @@ export function useAuth(
               console.error("❌ Response validation failed:", validationError);
               console.log("📦 Failed response data:", result);
               
-              // Try to handle the response anyway if it has the basic required fields
               if (result.accessToken || (result.data && result.data.accessToken)) {
                 console.log("🔄 Using raw response data");
                 validatedResult = result;
