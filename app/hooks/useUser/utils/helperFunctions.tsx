@@ -57,12 +57,18 @@ export const refreshUserSession = async (): Promise<boolean> => {
   try {
     const validToken = await authManager.getValidAccessToken();
     if (!validToken) {
+      console.log("❌ No valid token available - session invalid");
       return false;
     }
 
-    // Ensure user data is still available
     const user = userManager.getUser();
-    return user !== null;
+    if (!user) {
+      console.log("❌ No user data available - session invalid");
+      return false;
+    }
+
+    console.log("✅ Session refresh successful");
+    return true;
   } catch (error) {
     console.error("Failed to refresh user session:", error);
     return false;

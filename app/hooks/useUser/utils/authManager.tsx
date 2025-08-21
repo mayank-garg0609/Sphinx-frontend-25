@@ -68,9 +68,13 @@ class AuthManagerSingleton {
     try {
       if (typeof window !== "undefined") {
         const stored = sessionStorage.getItem("auth_tokens");
+        console.log("🔍 Raw stored tokens:", stored); // Debug log
         if (stored) {
-          const { refreshToken } = JSON.parse(stored);
+          const parsed = JSON.parse(stored);
+          console.log("🔍 Parsed tokens:", parsed); // Debug log
+          const { refreshToken } = parsed;
           this.refreshToken = refreshToken;
+          console.log("🔍 Extracted refresh token:", refreshToken ? `${refreshToken.substring(0, 20)}...` : 'null'); // Debug log
           return refreshToken;
         }
       }
@@ -84,14 +88,11 @@ class AuthManagerSingleton {
   async getValidAccessToken(): Promise<string | null> {
     const currentToken = this.getAccessToken();
     
-    // If we have a token, check if it's likely expired by trying to decode it
     if (currentToken) {
       try {
-        // Simple JWT expiry check without external libraries
         const payload = JSON.parse(atob(currentToken.split('.')[1]));
         const currentTime = Math.floor(Date.now() / 1000);
         
-        // If token expires in more than 60 seconds, use it
         if (payload.exp && payload.exp > currentTime + 60) {
           console.log("🔑 Using existing valid token");
           return currentToken;
@@ -103,13 +104,11 @@ class AuthManagerSingleton {
       }
     }
 
-    // If we already have a refresh in progress, wait for it
     if (this.refreshPromise) {
       console.log("⏳ Waiting for ongoing token refresh...");
       return this.refreshPromise;
     }
 
-    // Start a new refresh
     this.refreshPromise = this.refreshAccessToken();
 
     try {
@@ -117,31 +116,45 @@ class AuthManagerSingleton {
       return newToken;
     } catch (error) {
       console.error("❌ Token refresh failed:", error);
-      this.clearTokens();
+      
+      if (error instanceof Error && 
+          (error.message.includes('expired') || 
+           error.message.includes('invalid') ||
+           error.message.includes('No refresh token'))) {
+        console.log("🗑️ Clearing tokens due to permanent auth failure");
+        this.clearTokens();
+      }
+      
       return null;
     } finally {
       this.refreshPromise = null;
     }
   }
 
-  private async refreshAccessToken(): Promise<string> {
+  private async refreshAccessToken(retryCount = 0): Promise<string> {
+    const MAX_RETRIES = 2;
     const refreshToken = this.getRefreshToken();
     
     if (!refreshToken) {
       throw new Error("No refresh token available");
     }
 
-    console.log("🔄 Attempting to refresh access token...");
+    console.log(`🔄 Attempting to refresh access token... (attempt ${retryCount + 1})`);
+    console.log(`🔍 Using refresh token: ${refreshToken.substring(0, 20)}...`); // Debug log
 
     try {
+      const requestBody = {
+        refreshToken: refreshToken, // ✅ Correct field name for your backend
+      };
+      
+      console.log(`📤 Request body:`, requestBody); // Debug log
+      
       const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          refresh_token: refreshToken,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -152,15 +165,23 @@ class AuthManagerSingleton {
           throw new Error("Refresh token expired or invalid");
         }
         
+        if (response.status === 400) {
+          if (errorData.message?.includes('required') && retryCount < MAX_RETRIES) {
+            console.log(`⏳ Retrying token refresh after delay... (${retryCount + 1}/${MAX_RETRIES})`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
+            return this.refreshAccessToken(retryCount + 1);
+          }
+          throw new Error("Refresh token validation failed");
+        }
+        
         throw new Error(`Token refresh failed with status ${response.status}`);
       }
 
       const data = await response.json();
-      console.log("✅ Token refresh successful");
+      console.log("✅ Token refresh successful, response data:", data);
 
-      // Backend might return different field names, handle both cases
-      const newAccessToken = data.access_token || data.accessToken;
-      const newRefreshToken = data.refresh_token || data.refreshToken || refreshToken;
+      const newAccessToken = data.accessToken || data.access_token;
+      const newRefreshToken = data.refreshToken || data.refresh_token || refreshToken;
 
       if (!newAccessToken) {
         throw new Error("No access token in refresh response");
@@ -171,7 +192,17 @@ class AuthManagerSingleton {
 
     } catch (error) {
       console.error("❌ Token refresh error:", error);
-      this.clearTokens();
+      
+      if (retryCount < MAX_RETRIES && 
+          error instanceof Error && 
+          !error.message.includes('expired') && 
+          !error.message.includes('invalid')) {
+        
+        console.log(`⏳ Retrying token refresh... (${retryCount + 1}/${MAX_RETRIES})`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
+        return this.refreshAccessToken(retryCount + 1);
+      }
+      
       throw error;
     }
   }
