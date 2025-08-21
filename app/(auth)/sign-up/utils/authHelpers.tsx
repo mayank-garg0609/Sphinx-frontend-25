@@ -174,70 +174,97 @@ export const tokenManager = new SignupTokenManager();
 export const userManager = new SignupUserManager();
 export const csrfManager = new SignupCSRFManager();
 
-// Handle authentication success for signup
+// Fixed handleAuthSuccess function with proper parameter handling
 export async function handleAuthSuccess(
   accessToken: string,
-  refreshToken: string,
-  expiresIn: number,
-  user: User,
-  router: any
-): Promise<void>;
-
-export async function handleAuthSuccess(
-  accessToken: string,
-  user: User,
-  router: any
-): Promise<void>;
-
-export async function handleAuthSuccess(
-  accessToken: string,
-  refreshTokenOrUser: string | User,
+  refreshToken: string | User,
   expiresInOrRouter: number | any,
-  userOrUndefined?: User,
-  routerOrUndefined?: any
+  userOrRouter?: User | any,
+  routerOptional?: any
 ): Promise<void> {
   try {
-    let refreshToken: string;
-    let expiresIn: number;
-    let user: User;
-    let router: any;
-
     console.log("🔄 Processing signup authentication success...");
+    console.log("📥 Parameters received:", {
+      accessToken: typeof accessToken,
+      refreshToken: typeof refreshToken,
+      expiresInOrRouter: typeof expiresInOrRouter,
+      userOrRouter: typeof userOrRouter,
+      routerOptional: typeof routerOptional
+    });
 
-    // Parameter detection logic
+    let finalRefreshToken: string;
+    let finalExpiresIn: number;
+    let finalUser: User;
+    let finalRouter: any;
+
+    // Detect parameter pattern based on types and properties
     if (
-      typeof refreshTokenOrUser === "string" &&
+      typeof refreshToken === "string" &&
       typeof expiresInOrRouter === "number" &&
-      userOrUndefined &&
-      routerOrUndefined
+      userOrRouter &&
+      typeof userOrRouter === "object" &&
+      "sphinx_id" in userOrRouter &&
+      routerOptional
     ) {
-      // 5-parameter version: (accessToken, refreshToken, expiresIn, user, router)
-      refreshToken = refreshTokenOrUser;
-      expiresIn = expiresInOrRouter;
-      user = userOrUndefined;
-      router = routerOrUndefined;
-      console.log("📋 Using 5-parameter signature");
+      // Pattern 1: (accessToken: string, refreshToken: string, expiresIn: number, user: User, router: any)
+      console.log("📋 Detected 5-parameter pattern");
+      finalRefreshToken = refreshToken;
+      finalExpiresIn = expiresInOrRouter;
+      finalUser = userOrRouter as User;
+      finalRouter = routerOptional;
     } else if (
-      typeof refreshTokenOrUser === "object" &&
-      refreshTokenOrUser !== null &&
-      !Array.isArray(refreshTokenOrUser) &&
-      'sphinx_id' in refreshTokenOrUser // Check if it's a User object
+      typeof refreshToken === "object" &&
+      refreshToken !== null &&
+      "sphinx_id" in refreshToken &&
+      typeof expiresInOrRouter === "object" &&
+      expiresInOrRouter !== null
     ) {
-      // 3-parameter version: (accessToken, user, router)
-      refreshToken = "";
-      expiresIn = 3600; // Default to 1 hour
-      user = refreshTokenOrUser as User;
-      router = expiresInOrRouter;
-      console.log("📋 Using 3-parameter signature");
+      // Pattern 2: (accessToken: string, user: User, router: any) - userOrRouter and routerOptional are undefined
+      console.log("📋 Detected 3-parameter pattern");
+      finalRefreshToken = ""; // No refresh token provided
+      finalExpiresIn = 3600; // Default 1 hour
+      finalUser = refreshToken as User;
+      finalRouter = expiresInOrRouter;
+    } else if (
+      typeof refreshToken === "string" &&
+      typeof expiresInOrRouter === "object" &&
+      expiresInOrRouter !== null &&
+      "sphinx_id" in expiresInOrRouter
+    ) {
+      // Pattern 3: (accessToken: string, refreshToken: string, user: User, router: any) - missing expiresIn
+      console.log("📋 Detected 4-parameter pattern (missing expiresIn)");
+      finalRefreshToken = refreshToken;
+      finalExpiresIn = 3600; // Default 1 hour
+      finalUser = expiresInOrRouter as User;
+      finalRouter = userOrRouter;
     } else {
-      console.error("❌ Invalid parameters received:", {
-        accessToken: typeof accessToken,
-        refreshTokenOrUser: typeof refreshTokenOrUser,
-        expiresInOrRouter: typeof expiresInOrRouter,
-        userOrUndefined: typeof userOrUndefined,
-        routerOrUndefined: typeof routerOrUndefined
-      });
-      throw new Error("Invalid parameters for handleAuthSuccess");
+      // Try to handle any other patterns or provide fallback
+      console.warn("⚠️ Unrecognized parameter pattern, attempting fallback detection");
+      
+      // Look for user object in any of the parameters
+      const userParam = [refreshToken, expiresInOrRouter, userOrRouter].find(
+        param => param && typeof param === "object" && "sphinx_id" in param
+      ) as User | undefined;
+
+      // Look for router object (usually has push method)
+      const routerParam = [expiresInOrRouter, userOrRouter, routerOptional].find(
+        param => param && typeof param === "object" && typeof param.push === "function"
+      );
+
+      if (!userParam) {
+        throw new Error("Could not identify user parameter");
+      }
+
+      if (!routerParam) {
+        throw new Error("Could not identify router parameter");
+      }
+
+      finalRefreshToken = typeof refreshToken === "string" ? refreshToken : "";
+      finalExpiresIn = typeof expiresInOrRouter === "number" ? expiresInOrRouter : 3600;
+      finalUser = userParam;
+      finalRouter = routerParam;
+      
+      console.log("📋 Used fallback parameter detection");
     }
 
     // Validate required parameters
@@ -245,28 +272,35 @@ export async function handleAuthSuccess(
       throw new Error("Invalid access token");
     }
 
-    if (!user || typeof user !== 'object') {
+    if (!finalUser || typeof finalUser !== 'object' || !finalUser.sphinx_id) {
       throw new Error("Invalid user data");
     }
 
-    if (!router) {
-      throw new Error("Router is required");
+    if (!finalRouter || typeof finalRouter.push !== 'function') {
+      throw new Error("Invalid router object");
     }
 
-    console.log("🔑 Authentication details:", {
+    // Ensure expiresIn is valid
+    if (isNaN(finalExpiresIn) || finalExpiresIn <= 0) {
+      finalExpiresIn = 3600; // Default to 1 hour
+      console.warn("⚠️ Invalid expiresIn, using default value:", finalExpiresIn);
+    }
+
+    console.log("🔑 Final authentication details:", {
       hasAccessToken: !!accessToken,
-      hasRefreshToken: !!refreshToken,
-      expiresIn,
-      userId: user.sphinx_id,
-      userName: user.name
+      hasRefreshToken: !!finalRefreshToken,
+      expiresIn: finalExpiresIn,
+      userId: finalUser.sphinx_id,
+      userName: finalUser.name,
+      hasRouter: !!finalRouter
     });
 
     // Store tokens using simple signup token manager
-    if (refreshToken) {
+    if (finalRefreshToken) {
       const tokenData = TokenResponseSchema.parse({
         accessToken,
-        refreshToken,
-        expiresIn,
+        refreshToken: finalRefreshToken,
+        expiresIn: finalExpiresIn,
       });
 
       tokenManager.setTokens(
@@ -276,17 +310,17 @@ export async function handleAuthSuccess(
       );
     } else {
       // For cases where we only have access token
-      tokenManager.setTokens(accessToken, "", expiresIn);
+      tokenManager.setTokens(accessToken, "", finalExpiresIn);
     }
 
     // Store user data
-    userManager.setUser(user);
+    userManager.setUser(finalUser);
 
     console.log("✅ Signup authentication setup complete, redirecting to profile update");
 
     // Navigate to profile update page after successful signup
     setTimeout(() => {
-      router.push("/update");
+      finalRouter.push("/update");
     }, 500);
   } catch (error) {
     console.error("❌ Signup auth success handling failed:", error);
