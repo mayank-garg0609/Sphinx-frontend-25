@@ -23,6 +23,7 @@ const NO_BG_PATHS = new Set([
   "/profile",
   "/update",
   "/devTeam",
+  "/little",
 ]);
 
 const UPCOMING_PATHS = new Set([
