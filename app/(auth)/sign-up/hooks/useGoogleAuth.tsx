@@ -3,7 +3,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { toast } from "sonner";
 import type { SignUpResponse } from "../types/authTypes";
 import { API_CONFIG, rateLimiter } from "../utils/config";
-import { handleAuthSuccess } from "@/app/(auth)/login/utils/authHelpers";
+import { handleAuthSuccess } from "@/app/(auth)/sign-up/utils/authHelpers";
 import {
   handleGoogleApiError,
   handleGoogleNetworkError,

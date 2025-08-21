@@ -73,7 +73,7 @@ export function useGoogleAuth(
             },
             body: JSON.stringify({ code }),
             signal: controller.signal,
-            credentials: 'include',
+            // credentials: 'include',
           });
 
           clearTimeout(timeoutId);
@@ -101,23 +101,45 @@ export function useGoogleAuth(
               // Nested structure
               accessToken = result.data.accessToken;
               refreshToken = result.data.refreshToken;
-              expiresIn = result.data.expiresIn;
+              expiresIn = typeof result.data.expiresIn === 'string' 
+                ? parseInt(result.data.expiresIn, 10) 
+                : result.data.expiresIn;
               user = result.data.user;
             } else {
               // Flat structure
               accessToken = result.accessToken!;
               refreshToken = result.refreshToken!;
-              expiresIn = result.expiresIn!;
+              expiresIn = typeof result.expiresIn === 'string' 
+                ? parseInt(result.expiresIn!, 10) 
+                : result.expiresIn!;
               user = result.user!;
             }
-            
-            await handleAuthSuccess(
-              accessToken,
-              refreshToken,
+
+            console.log('🔍 Extracted auth data:', {
+              hasAccessToken: !!accessToken,
+              hasRefreshToken: !!refreshToken,
               expiresIn,
-              user,
-              router
-            );
+              expiresInType: typeof expiresIn,
+              userEmail: user?.email,
+            });
+
+            if (refreshToken && refreshToken.trim()) {
+              // 5-parameter version: accessToken, refreshToken, expiresIn, user, router
+              await handleAuthSuccess(
+                accessToken,
+                refreshToken,
+                expiresIn || 3600,
+                user,
+                router
+              );
+            } else {
+              // 3-parameter version: accessToken, user, router
+              await handleAuthSuccess(
+                accessToken,
+                user,
+                router
+              );
+            }
             
             toast.success('✅ Logged in successfully with Google!');
             setRetryCount(0);
@@ -131,11 +153,20 @@ export function useGoogleAuth(
           }
         } catch (error) {
           console.error('🚨 Google Auth Error:', error);
-          const errorMessage = error instanceof Error ? error.message : 'Google authentication failed';
-          setError(errorMessage);
-          handleGoogleNetworkError(error, retryCount, API_CONFIG.maxRetries);
-          if (retryCount < API_CONFIG.maxRetries) {
-            setRetryCount(prev => prev + 1);
+          
+          // Check if this is an auth success handling error
+          if (error instanceof Error && 
+              (error.message.includes('Login successful but setup failed') ||
+               error.message.includes('Auth success handling failed'))) {
+            setError('Login successful but setup failed. Please try again.');
+            toast.error('Login successful but setup failed. Please try again.');
+          } else {
+            const errorMessage = error instanceof Error ? error.message : 'Google authentication failed';
+            setError(errorMessage);
+            handleGoogleNetworkError(error, retryCount, API_CONFIG.maxRetries);
+            if (retryCount < API_CONFIG.maxRetries) {
+              setRetryCount(prev => prev + 1);
+            }
           }
         } finally {
           setIsGoogleLoading(false);
