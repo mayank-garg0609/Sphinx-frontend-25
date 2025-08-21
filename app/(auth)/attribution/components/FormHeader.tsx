@@ -24,8 +24,11 @@ export const FormHeader = memo<FormHeaderProps>(({ logo }) => (
 
     <div className="text-center pt-2 sm:pt-4 lg:pt-0">
       <h2 className="text-xl lg:text-2xl font-bold leading-tight">
-        Just a Little More
+        Help Us Improve
       </h2>
+      <p className="text-sm text-zinc-300 mt-1">
+        Tell us how you heard about us
+      </p>
     </div>
   </div>
 ));

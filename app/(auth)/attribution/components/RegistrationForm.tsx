@@ -5,10 +5,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSearchParams } from "next/navigation";
 import { useTransitionRouter } from "next-view-transitions";
-import { RegisterFormData, registerSchema } from "@/app/schemas/registerSchema";
+// import { RegisterFormData } from "../types/registrations";
+import { attributionSchema,AttributionFormData } from "@/app/schemas/attributionSchema";
 import { FORM_FIELDS } from "../utils/constants";
 import { formClasses, buttonClasses } from "../utils/constants";
-import { useRegistration } from "../hooks/useRegistrations";
+import { useAttribution } from "../hooks/useAttribution";
 import { useUser } from "@/app/hooks/useUser/useUser";
 import { FormField } from "./FormField";
 import { LoadingSpinner } from "./LoadingSpinner";
@@ -22,7 +23,6 @@ interface RegistrationFormProps {
 export const RegistrationForm = memo<RegistrationFormProps>(({ logo }) => {
   const router = useTransitionRouter();
   const searchParams = useSearchParams();
-  const redirectedFrom = searchParams.get("redirectedFrom");
   const { user, isLoggedIn, isLoading: userLoading } = useUser();
 
   const {
@@ -32,43 +32,28 @@ export const RegistrationForm = memo<RegistrationFormProps>(({ logo }) => {
     reset,
     watch,
     clearErrors,
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
+  } = useForm<AttributionFormData>({
+    resolver: zodResolver(attributionSchema),
     mode: "onChange",
     reValidateMode: "onChange",
     defaultValues: {
-      phone_no: "",
-      college_name: "",
-      city: "",
-      state: "",
-      college_id: "",
-      college_branch: "",
-      gender: "other",
+      refCode: "",
+      source: "",
     },
   });
 
   const { 
-    handleRegistration, 
+    handleSubmission, 
     isSubmitting, 
-    retryCount, 
-    checkStatus, 
-    isCheckingStatus 
-  } = useRegistration(reset);
+    retryCount
+  } = useAttribution(reset);
 
-  // Check if user is logged in
+  // Check if user is logged in (optional for attribution page)
   useEffect(() => {
-    if (!userLoading && !isLoggedIn) {
-      console.log("User not logged in, redirecting to login");
-      router.push("/login");
-      return;
-    }
-
     if (!userLoading && user) {
       console.log("User data loaded:", user);
-      // Check registration status on component mount
-      checkStatus();
     }
-  }, [userLoading, isLoggedIn, user, router, checkStatus]);
+  }, [userLoading, user]);
 
   // Watch form values for better UX feedback
   const watchedValues = watch();
@@ -87,12 +72,12 @@ export const RegistrationForm = memo<RegistrationFormProps>(({ logo }) => {
     [register, errors]
   );
 
-  const onSubmit = async (data: RegisterFormData) => {
+  const onSubmit = async (data: AttributionFormData) => {
     // Clear any existing errors
     clearErrors();
 
     try {
-      await handleRegistration(data);
+      await handleSubmission(data);
     } catch (error) {
       console.error("Form submission error:", error);
     }
@@ -110,27 +95,20 @@ export const RegistrationForm = memo<RegistrationFormProps>(({ logo }) => {
   };
 
   // Show loading state while checking user authentication
-  if (userLoading || isCheckingStatus) {
+  if (userLoading) {
     return (
       <div className={formClasses}>
         <div className="flex items-center justify-center py-8">
           <div className="flex flex-col items-center gap-4">
             <LoadingSpinner />
-            <p className="text-zinc-300">
-              {userLoading ? "Loading..." : "Checking profile status..."}
-            </p>
+            <p className="text-zinc-300">Loading...</p>
           </div>
         </div>
       </div>
     );
   }
 
-  // Don't render form if user is not logged in
-  if (!isLoggedIn) {
-    return null;
-  }
-
-  const isFormDisabled = isSubmitting || isCheckingStatus;
+  const isFormDisabled = isSubmitting;
 
   return (
     <form
@@ -145,16 +123,16 @@ export const RegistrationForm = memo<RegistrationFormProps>(({ logo }) => {
       }}
       noValidate
       role="form"
-      aria-label="Registration form"
-      data-testid="registration-form"
+      aria-label="Attribution form"
+      data-testid="attribution-form"
     >
       <div className="flex flex-col gap-3 mt-2">
         <FormHeader logo={logo} />
 
-        {/* User info display */}
+        {/* User info display (if logged in) */}
         {user && (
           <div className="text-center text-sm text-zinc-400 pb-2">
-            Completing profile for: <span className="text-white font-medium">{user.name}</span>
+            Welcome: <span className="text-white font-medium">{user.name}</span>
           </div>
         )}
 
@@ -162,44 +140,44 @@ export const RegistrationForm = memo<RegistrationFormProps>(({ logo }) => {
           disabled={isFormDisabled}
           className="space-y-4 pt-1"
         >
-          <legend className="sr-only">Profile information</legend>
+          <legend className="sr-only">Attribution information</legend>
           {memoizedFormFields}
         </fieldset>
 
         <div className="space-y-3 pt-6">
-          <button
-            type="submit"
-            disabled={isFormDisabled || !isValid}
-            className={`${buttonClasses} ${!isValid ? 'opacity-50 cursor-not-allowed' : ''}`}
-            aria-describedby="submit-button-help"
-          >
-            {isSubmitting ? (
-              <span className="flex items-center justify-center gap-2">
-                <LoadingSpinner />
-                {retryCount > 0 ? `Retrying... (${retryCount}/3)` : "Updating Profile..."}
-              </span>
-            ) : (
-              "Update Your Profile"
-            )}
-          </button>
+          {/* Submit and Skip buttons side by side */}
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              disabled={isFormDisabled || !isValid}
+              className={`flex-1 ${buttonClasses} ${!isValid ? 'opacity-50 cursor-not-allowed' : ''}`}
+              aria-describedby="submit-button-help"
+            >
+              {isSubmitting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <LoadingSpinner />
+                  {retryCount > 0 ? `Retrying... (${retryCount}/3)` : "Submitting..."}
+                </span>
+              ) : (
+                "Submit"
+              )}
+            </button>
+
+            <button
+              type="button"
+              disabled={isFormDisabled}
+              className="flex-1 bg-transparent text-white font-semibold py-3 sm:py-3 rounded-lg border border-white/50 transition-all duration-300 transform hover:scale-[1.02] hover:bg-white/10 hover:border-white disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none active:scale-[0.98] text-sm sm:text-base min-h-[48px] sm:min-h-[44px]"
+              onClick={handleSkip}
+              aria-label="Skip attribution form"
+            >
+              Skip
+            </button>
+          </div>
 
           {/* Form validation helper text */}
           <div id="submit-button-help" className="sr-only">
             {!isValid && "Please fill in all required fields correctly"}
           </div>
-
-          {/* Skip button */}
-          {redirectedFrom === "/sign-up" && (
-            <button
-              type="button"
-              disabled={isFormDisabled}
-              className="w-full mt-2 text-md text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-black rounded px-2 py-1"
-              onClick={handleSkip}
-              aria-label="Skip profile completion for now"
-            >
-              Skip for now
-            </button>
-          )}
 
           {/* Retry count indicator */}
           {retryCount > 0 && (
@@ -221,8 +199,8 @@ export const RegistrationForm = memo<RegistrationFormProps>(({ logo }) => {
       {isSubmitting && (
         <div className="sr-only" role="status" aria-live="polite">
           {retryCount > 0 
-            ? `Retrying profile update, attempt ${retryCount} of 3` 
-            : "Updating your profile, please wait"
+            ? `Retrying submission, attempt ${retryCount} of 3` 
+            : "Submitting your information, please wait"
           }
         </div>
       )}

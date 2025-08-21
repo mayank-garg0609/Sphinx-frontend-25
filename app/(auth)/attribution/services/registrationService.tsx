@@ -1,10 +1,10 @@
-import { RegisterFormData } from "../types/registrations";
 import { getValidAuthToken } from "@/app/hooks/useUser/utils/helperFunctions";
 import { API_CONFIG } from "../../login/utils/config";
+import { AttributionFormData } from "@/app/schemas/attributionSchema";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || API_CONFIG.baseUrl;
 
-export interface RegistrationResponse {
+export interface AttributionResponse {
   success: boolean;
   message: string;
   data?: any;
@@ -17,20 +17,20 @@ export interface ApiError {
   code?: string;
 }
 
-class RegistrationError extends Error {
+class AttributionError extends Error {
   status?: number;
   code?: string;
 
   constructor(message: string, code?: string, status?: number) {
     super(message);
-    this.name = "RegistrationError";
+    this.name = "AttributionError";
     this.code = code;
     this.status = status;
   }
 }
 
-const handleApiError = (response: Response, result: any): never => {
-  console.error("Registration API Error:", {
+const handleApiError = (response: Response, result: any, context: string): never => {
+  console.error(`${context} API Error:`, {
     status: response.status,
     statusText: response.statusText,
     error: result?.error || result?.message || "Unknown error",
@@ -41,24 +41,8 @@ const handleApiError = (response: Response, result: any): never => {
 
   switch (response.status) {
     case 400:
-      if (result.error?.toLowerCase().includes("phone")) {
-        errorMessage =
-          "Invalid phone number format. Please check and try again.";
-        errorCode = "PHONE_INVALID";
-      } else if (result.error?.toLowerCase().includes("college")) {
-        errorMessage =
-          "Invalid college information. Please check your details.";
-        errorCode = "COLLEGE_INVALID";
-      } else if (result.error?.toLowerCase().includes("already")) {
-        errorMessage = "Your profile is already complete. Redirecting...";
-        errorCode = "PROFILE_COMPLETE";
-      } else {
-        errorMessage =
-          result.error ||
-          result.message ||
-          "Invalid registration data. Please check all fields.";
-        errorCode = "VALIDATION_ERROR";
-      }
+      errorMessage = result.error || result.message || "Invalid data provided";
+      errorCode = "VALIDATION_ERROR";
       break;
 
     case 401:
@@ -67,24 +51,20 @@ const handleApiError = (response: Response, result: any): never => {
       break;
 
     case 403:
-      errorMessage = "You are not authorized to perform this action.";
-      errorCode = "AUTH_ERROR";
-      break;
-
-    case 409:
-      errorMessage =
-        "Phone number or college ID already exists. Please use different details.";
-      errorCode = "CONFLICT_ERROR";
-      break;
-
-    case 422:
-      errorMessage = "Validation failed. Please check all required fields.";
-      errorCode = "VALIDATION_ERROR";
+      if (result.error?.includes("Invalid sphinxID")) {
+        errorMessage = "Invalid referral code. Please check and try again.";
+        errorCode = "INVALID_REFERRAL_CODE";
+      } else if (result.error?.includes("Referral already applied")) {
+        errorMessage = "You have already used a referral code.";
+        errorCode = "REFERRAL_ALREADY_APPLIED";
+      } else {
+        errorMessage = "Access denied. Please contact support.";
+        errorCode = "AUTH_ERROR";
+      }
       break;
 
     case 429:
-      errorMessage =
-        "Too many requests. Please wait a moment before trying again.";
+      errorMessage = "Too many requests. Please wait a moment before trying again.";
       errorCode = "RATE_LIMIT_ERROR";
       break;
 
@@ -92,130 +72,58 @@ const handleApiError = (response: Response, result: any): never => {
     case 502:
     case 503:
     case 504:
-      errorMessage = "Server error. Please try again later.";
+      if (context === "referral") {
+        errorMessage = "Failed to apply referral. Please try again later.";
+      } else {
+        errorMessage = "Failed to submit source information. Please try again later.";
+      }
       errorCode = "SERVER_ERROR";
       break;
 
     default:
-      errorMessage =
-        result.error ||
-        result.message ||
-        "Registration failed. Please try again.";
+      errorMessage = result.error || result.message || `${context} failed. Please try again.`;
       errorCode = "UNKNOWN_ERROR";
   }
 
-  throw new RegistrationError(errorMessage, errorCode, response.status);
+  throw new AttributionError(errorMessage, errorCode, response.status);
 };
 
-const validateFormData = (data: RegisterFormData): void => {
-  const errors: string[] = [];
-  const phoneRegex = /^[6-9]\d{9}$/;
-  if (!phoneRegex.test(data.phone_no)) {
-    errors.push("Phone number must be a valid 10-digit Indian mobile number");
-  }
-  const requiredFields: (keyof RegisterFormData)[] = [
-    "college_name",
-    "city",
-    "state",
-    "college_id",
-    "college_branch",
-    "gender",
-  ];
-
-  requiredFields.forEach((field) => {
-    if (!data[field]?.trim()) {
-      errors.push(`${field.replace("_", " ")} is required`);
-    }
-  });
-
-  if (data.college_id && data.college_id.length < 5) {
-    errors.push("College ID must be at least 5 characters long");
-  }
-
-  if (
-    data.gender &&
-    !["male", "female", "other"].includes(data.gender.toLowerCase())
-  ) {
-    errors.push("Please select a valid gender option");
-  }
-
-  if (errors.length > 0) {
-    throw new RegistrationError(errors[0], "VALIDATION_ERROR", 422);
-  }
-};
-
-export const registerUser = async (
-  data: RegisterFormData
-): Promise<RegistrationResponse> => {
+const submitReferral = async (refCode: string): Promise<AttributionResponse> => {
   try {
-    console.log("🚀 Starting user registration process");
-
-    validateFormData(data);
-
     const token = await getValidAuthToken();
     if (!token) {
-      throw new RegistrationError(
+      throw new AttributionError(
         "Authentication required. Please log in again.",
         "AUTH_ERROR",
         401
       );
     }
 
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    };
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.timeout);
-
-    console.log(
-      "📤 Sending registration request to:",
-      `${API_BASE_URL}/user/register`
-    );
-
-    const response = await fetch(`${API_BASE_URL}/user/register`, {
+    const response = await fetch(`${API_BASE_URL}/user/referral`, {
       method: "POST",
-      headers,
-      body: JSON.stringify(data),
-      signal: controller.signal,
-      // credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ sphinxId: refCode }),
     });
-
-    clearTimeout(timeoutId);
-
-    const contentType = response.headers.get("content-type");
-    if (!contentType?.includes("application/json")) {
-      console.error("❌ Server returned non-JSON response:", response.status);
-      throw new RegistrationError(
-        "Server configuration error. Please contact support.",
-        "SERVER_ERROR",
-        response.status
-      );
-    }
 
     const result = await response.json();
 
     if (response.ok) {
-      console.log("✅ Registration successful:", result);
       return {
         success: true,
-        message: result.message || "Profile updated successfully!",
-        data: result.data || result,
+        message: result.message || "Referral applied successfully!",
+        data: result,
       };
     } else {
-      handleApiError(response, result);
-
-      return {
-        success: false,
-        message: "API error occurred",
-        error: "API_ERROR",
-      };
+      handleApiError(response, result, "referral");
+      return { success: false, message: "API error occurred", error: "API_ERROR" };
     }
   } catch (error) {
-    console.error("❌ Registration error:", error);
+    console.error("❌ Referral submission error:", error);
 
-    if (error instanceof RegistrationError) {
+    if (error instanceof AttributionError) {
       return {
         success: false,
         message: error.message,
@@ -223,66 +131,119 @@ export const registerUser = async (
       };
     }
 
-    if (error instanceof Error) {
-      if (error.name === "AbortError") {
-        return {
-          success: false,
-          message:
-            "Request timed out. Please check your connection and try again.",
-          error: "TIMEOUT_ERROR",
-        };
-      } else if (
-        error.message.includes("Failed to fetch") ||
-        error.message.includes("NetworkError")
-      ) {
-        return {
-          success: false,
-          message: navigator.onLine
-            ? "Server is temporarily unavailable. Please try again later."
-            : "You appear to be offline. Please check your connection.",
-          error: "NETWORK_ERROR",
-        };
-      }
-    }
-
     return {
       success: false,
-      message: "Registration failed. Please try again.",
+      message: "Failed to apply referral. Please try again.",
       error: "UNKNOWN_ERROR",
     };
   }
 };
 
-export const checkRegistrationStatus = async (): Promise<{
-  isComplete: boolean;
-  missingFields?: string[];
-}> => {
+const submitSource = async (source: string): Promise<AttributionResponse> => {
   try {
-    const token = await getValidAuthToken();
-    if (!token) {
-      return { isComplete: false };
-    }
-
-    const response = await fetch(`${API_BASE_URL}/user/info`, {
-      method: "GET",
+    const response = await fetch(`${API_BASE_URL}/api/source`, {
+      method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      // credentials: 'include',
+      body: JSON.stringify({ source }),
     });
 
+    const result = await response.json();
+
     if (response.ok) {
-      const result = await response.json();
       return {
-        isComplete: result.isComplete || false,
-        missingFields: result.missingFields || [],
+        success: true,
+        message: result.message || "Thank you for the source information!",
+        data: result,
+      };
+    } else {
+      handleApiError(response, result, "source");
+      return { success: false, message: "API error occurred", error: "API_ERROR" };
+    }
+  } catch (error) {
+    console.error("❌ Source submission error:", error);
+
+    if (error instanceof AttributionError) {
+      return {
+        success: false,
+        message: error.message,
+        error: error.code,
       };
     }
 
-    return { isComplete: false };
+    return {
+      success: false,
+      message: "Failed to submit source information. Please try again.",
+      error: "UNKNOWN_ERROR",
+    };
+  }
+};
+
+export const submitAttribution = async (
+  data: AttributionFormData
+): Promise<AttributionResponse> => {
+  try {
+    console.log("🚀 Starting attribution submission:", data);
+
+    const results: { referral?: AttributionResponse; source?: AttributionResponse } = {};
+
+    // Submit referral if provided
+    if (data.refCode?.trim()) {
+      console.log("📤 Submitting referral code:", data.refCode);
+      results.referral = await submitReferral(data.refCode.trim());
+    }
+
+    // Submit source (required)
+    if (data.source?.trim()) {
+      console.log("📤 Submitting source:", data.source);
+      results.source = await submitSource(data.source.trim());
+    } else {
+      return {
+        success: false,
+        message: "Please select how you heard about us.",
+        error: "VALIDATION_ERROR",
+      };
+    }
+
+    const referralSuccess = !results.referral || results.referral.success;
+    const sourceSuccess = results.source?.success || false;
+
+    if (referralSuccess && sourceSuccess) {
+      let message = "Thank you for the information!";
+      
+      if (results.referral?.success) {
+        message = "Referral applied successfully! Thank you for the information!";
+      }
+
+      return {
+        success: true,
+        message,
+        data: { referral: results.referral?.data, source: results.source?.data },
+      };
+    } else {
+      const failedResult = !results.referral?.success ? results.referral : results.source;
+      return {
+        success: false,
+        message: failedResult?.message || "Submission failed. Please try again.",
+        error: failedResult?.error || "UNKNOWN_ERROR",
+      };
+    }
   } catch (error) {
-    console.error("Failed to check registration status:", error);
-    return { isComplete: false };
+    console.error("❌ Attribution submission error:", error);
+
+    if (error instanceof AttributionError) {
+      return {
+        success: false,
+        message: error.message,
+        error: error.code,
+      };
+    }
+
+    return {
+      success: false,
+      message: "Submission failed. Please try again.",
+      error: "UNKNOWN_ERROR",
+    };
   }
 };

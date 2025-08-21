@@ -43,7 +43,7 @@ export const useRegistration = (reset: () => void): UseRegistrationReturn => {
             refreshUserData();
 
             setTimeout(() => {
-              router.push("/profile", { onTransitionReady: slideInOut });
+              router.push("/attribution", { onTransitionReady: slideInOut });
             }, 500);
           } else {
             console.error("❌ Registration failed:", result.message);
@@ -111,7 +111,7 @@ export const useRegistration = (reset: () => void): UseRegistrationReturn => {
       if (status.isComplete) {
         toast.info("Your profile is already complete!");
         setTimeout(() => {
-          router.push("/profilw", { onTransitionReady: slideInOut });
+          router.push("/attribution", { onTransitionReady: slideInOut });
         }, 500);
       } else if (status.missingFields && status.missingFields.length > 0) {
         console.log("Missing fields:", status.missingFields);

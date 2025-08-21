@@ -1,11 +1,30 @@
 import { FormField } from "../types/registrations";
 
-export const FORM_FIELDS: FormField[] = [
-  { key: "refCode", label: "refCode ", placeholder: "SPH****" },
-  { key: "source", label: "source ", placeholder: "Instagram, LinkedIN, CA, etc" },
-
+export const SOURCE_OPTIONS = [
+  { value: "publicity_team", label: "Publicity team / On-ground promotion" },
+  { value: "friend", label: "Friend" },
+  { value: "student_mnit", label: "Student at MNIT" },
+  { value: "campus_ambassador", label: "Campus Ambassador (CA)" },
+  { value: "social_media", label: "Social Media" },
+  { value: "previous_edition", label: "Previous edition of the fest" },
+  { value: "event_listing", label: "Event listing site" },
 ];
 
+export const FORM_FIELDS: FormField[] = [
+  { 
+    key: "refCode", 
+    label: "Referral Code", 
+    placeholder: "SPH**** (Optional - CA Referral Code)",
+    type: "text"
+  },
+  { 
+    key: "source", 
+    label: "How did you hear about us?", 
+    placeholder: "Select source",
+    type: "select",
+    options: SOURCE_OPTIONS
+  },
+];
 
 export const formClasses =
   "bg-black/40 backdrop-blur-md text-white p-4 sm:p-6 lg:p-8 rounded-2xl shadow-[0_8px_32px_0_rgba(255,255,255,0.2)] w-full max-w-sm sm:max-w-md border border-white/30 space-y-4 sm:space-y-6 font-main max-h-[89vh] sm:max-h-[93vh] overflow-y-auto relative";
