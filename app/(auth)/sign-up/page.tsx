@@ -1,3 +1,4 @@
+// app/(auth)/sign-up/page.tsx (Updated)
 "use client";
 
 import { memo, useCallback, useEffect } from "react";
@@ -9,8 +10,9 @@ import { BackgroundImage } from "./components/BackgroundImage";
 import { ActionButtons } from "./components/ActionButtons";
 import { TermsCheckbox } from "./components/TermsCheckbox";
 import { LoginLink } from "./components/LoginLink";
+import { OTPVerification } from "./components/OTPVerification";
 import { ErrorBoundary } from "../login/components/ErrorBoundary";
-import { useSignUp } from "./hooks/useSignUp";
+import { useSignUpWithOTP, SignUpStep } from "./hooks/useSignUp";
 import { FORM_FIELDS, FORM_STYLES, MOBILE_STYLES, ACCESSIBILITY, MESSAGES } from "./utils/constants";
 import { handleComponentError } from "./utils/errorHandlers";
 
@@ -71,6 +73,43 @@ const ErrorFallback = memo(function ErrorFallback({ error, resetErrorBoundary }:
   );
 });
 
+// Success completion step
+const SignUpSuccess = memo(function SignUpSuccess() {
+  return (
+    <div className="text-center space-y-6">
+      <div className="space-y-4">
+        <div className="mx-auto w-16 h-16 bg-green-500 rounded-full flex items-center justify-center">
+          <svg 
+            className="w-8 h-8 text-white" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        </div>
+        
+        <div>
+          <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
+            Account Verified Successfully!
+          </h3>
+          <p className="text-zinc-300">
+            Your email has been verified. Redirecting to complete your profile...
+          </p>
+        </div>
+      </div>
+      
+      <div className="animate-spin mx-auto w-6 h-6 border-2 border-white border-t-transparent rounded-full"></div>
+    </div>
+  );
+});
+
 const SignUpFormInner = memo(function SignUpFormInner() {
   const router = useTransitionRouter();
   
@@ -88,7 +127,11 @@ const SignUpFormInner = memo(function SignUpFormInner() {
     isRateLimited,
     isGoogleRateLimited,
     googleError,
-  } = useSignUp(router);
+    currentStep,
+    userEmail,
+    goBackToForm,
+    handleOTPVerificationSuccess,
+  } = useSignUpWithOTP(router);
 
   const password = watch("password");
   const isFormDisabled = isSubmitting || isGoogleLoading;
@@ -116,110 +159,156 @@ const SignUpFormInner = memo(function SignUpFormInner() {
     return describedBy.length > 0 ? describedBy.join(' ') : undefined;
   }, [errors, isAnyRateLimited]);
 
+  // Render based on current step
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case SignUpStep.OTP_VERIFICATION:
+        return (
+          <div className="space-y-6">
+            <SignUpHeader />
+            <OTPVerification
+              email={userEmail}
+              onVerificationSuccess={handleOTPVerificationSuccess}
+              onBack={goBackToForm}
+              disabled={isFormDisabled}
+              router={router}
+            />
+          </div>
+        );
+        
+      case SignUpStep.COMPLETE:
+        return (
+          <div className="space-y-6">
+            <SignUpHeader />
+            <SignUpSuccess />
+          </div>
+        );
+        
+      case SignUpStep.FORM:
+      default:
+        return (
+          <>
+            <SignUpHeader />
+            
+            <fieldset 
+              disabled={isFormDisabled}
+              className="space-y-3 sm:space-y-4 md:space-y-5 lg:space-y-6 xl:space-y-7 2xl:space-y-8 pt-3 sm:pt-4 md:pt-5 lg:pt-6 xl:pt-7 2xl:pt-8 pb-3 sm:pb-4 md:pb-5 lg:pb-6 xl:pb-7 2xl:pb-8"
+            >
+              <legend className="sr-only">Sign up credentials</legend>
+              
+              <FormField
+                field={FORM_FIELDS.name}
+                register={register}
+                error={errors.name?.message?.toString()}
+                disabled={isFormDisabled}
+              />
+
+              <FormField
+                field={FORM_FIELDS.email}
+                register={register}
+                error={errors.email?.message?.toString()}
+                disabled={isFormDisabled}
+              />
+
+              <FormField
+                field={FORM_FIELDS.password}
+                register={register}
+                error={errors.password?.message?.toString()}
+                disabled={isFormDisabled}
+              >
+                <PasswordValidationMessage
+                  password={password || ""}
+                  error={errors.password?.message?.toString()}
+                />
+              </FormField>
+
+              <FormField
+                field={FORM_FIELDS.confirmPassword}
+                register={register}
+                error={errors.confirmPassword?.message?.toString()}
+                disabled={isFormDisabled}
+              />
+
+              <TermsCheckbox
+                register={register}
+                error={errors.agreed?.message?.toString()}
+                disabled={isFormDisabled}
+              />
+            </fieldset>
+            
+            <ActionButtons
+              isSubmitting={isSubmitting}
+              onGoogleSignup={handleGoogleSignup}
+              isGoogleLoading={isGoogleLoading}
+              googlePopupClosed={googlePopupClosed}
+              isRateLimited={isRateLimited}
+              isGoogleRateLimited={isGoogleRateLimited}
+              googleError={googleError}
+            />
+            
+            <LoginLink />
+            
+            {retryCount > 0 && (
+              <div 
+                className="text-yellow-400 text-xs sm:text-sm text-center"
+                role="status"
+                aria-live="polite"
+              >
+                Retry attempt {retryCount}
+              </div>
+            )}
+            
+            {Object.keys(errors).length > 0 && (
+              <div 
+                id="form-errors"
+                className="sr-only"
+                role="alert"
+                aria-live="assertive"
+              >
+                Form has {Object.keys(errors).length} error{Object.keys(errors).length > 1 ? 's' : ''}: {
+                  getErrorMessages().join(', ')
+                }
+              </div>
+            )}
+            
+            {(isSubmitting || isGoogleLoading) && (
+              <div 
+                className="sr-only"
+                role="status"
+                aria-live="polite"
+              >
+                {isSubmitting ? MESSAGES.LOADING.CREATING_ACCOUNT : MESSAGES.LOADING.AUTHENTICATING}
+              </div>
+            )}
+          </>
+        );
+    }
+  };
+
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
+    <div
       className={FORM_STYLES.container}
       style={FORM_STYLES.scrollbar}
-      noValidate 
-      role="form"
+      role="main"
       aria-label={ACCESSIBILITY.ARIA_LABELS.SIGNUP_FORM}
       aria-describedby={getFormAriaDescribedBy()}
-      data-testid="signup-form"
+      data-testid="signup-container"
     >
-      <SignUpHeader />
-      
-      <fieldset 
-        disabled={isFormDisabled}
-        className="space-y-3 sm:space-y-4 md:space-y-5 lg:space-y-6 xl:space-y-7 2xl:space-y-8 pt-3 sm:pt-4 md:pt-5 lg:pt-6 xl:pt-7 2xl:pt-8 pb-3 sm:pb-4 md:pb-5 lg:pb-6 xl:pb-7 2xl:pb-8"
-      >
-        <legend className="sr-only">Sign up credentials</legend>
-        
-        <FormField
-          field={FORM_FIELDS.name}
-          register={register}
-          error={errors.name?.message?.toString()}
-          disabled={isFormDisabled}
-        />
-
-        <FormField
-          field={FORM_FIELDS.email}
-          register={register}
-          error={errors.email?.message?.toString()}
-          disabled={isFormDisabled}
-        />
-
-        <FormField
-          field={FORM_FIELDS.password}
-          register={register}
-          error={errors.password?.message?.toString()}
-          disabled={isFormDisabled}
+      {currentStep === SignUpStep.FORM ? (
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate 
+          role="form"
+          data-testid="signup-form"
         >
-          <PasswordValidationMessage
-            password={password || ""}
-            error={errors.password?.message?.toString()}
-          />
-        </FormField>
-
-        <FormField
-          field={FORM_FIELDS.confirmPassword}
-          register={register}
-          error={errors.confirmPassword?.message?.toString()}
-          disabled={isFormDisabled}
-        />
-
-        <TermsCheckbox
-          register={register}
-          error={errors.agreed?.message?.toString()}
-          disabled={isFormDisabled}
-        />
-      </fieldset>
-      
-      <ActionButtons
-        isSubmitting={isSubmitting}
-        onGoogleSignup={handleGoogleSignup}
-        isGoogleLoading={isGoogleLoading}
-        googlePopupClosed={googlePopupClosed}
-        isRateLimited={isRateLimited}
-        isGoogleRateLimited={isGoogleRateLimited}
-        googleError={googleError}
-      />
-      
-      <LoginLink />
-      
-      {retryCount > 0 && (
-        <div 
-          className="text-yellow-400 text-xs sm:text-sm text-center"
-          role="status"
-          aria-live="polite"
-        >
-          Retry attempt {retryCount}
+          {renderStepContent()}
+        </form>
+      ) : (
+        <div>
+          {renderStepContent()}
         </div>
       )}
-      
-      {Object.keys(errors).length > 0 && (
-        <div 
-          id="form-errors"
-          className="sr-only"
-          role="alert"
-          aria-live="assertive"
-        >
-          Form has {Object.keys(errors).length} error{Object.keys(errors).length > 1 ? 's' : ''}: {
-            getErrorMessages().join(', ')
-          }
-        </div>
-      )}
-      
-      {(isSubmitting || isGoogleLoading) && (
-        <div 
-          className="sr-only"
-          role="status"
-          aria-live="polite"
-        >
-          {isSubmitting ? MESSAGES.LOADING.CREATING_ACCOUNT : MESSAGES.LOADING.AUTHENTICATING}
-        </div>
-      )}
-    </form>
+    </div>
   );
 });
 
