@@ -1,4 +1,4 @@
-// app/(auth)/sign-up/utils/authHelpers.tsx (Updated with OTP support)
+// app/(auth)/sign-up/utils/authHelpers.tsx - UPDATED
 import { z } from "zod";
 import type { UserData, User, PasswordStrength } from "../types/authTypes";
 
@@ -43,12 +43,11 @@ export const calculatePasswordStrength = (password: string): PasswordStrength =>
   return "Weak";
 };
 
-// Enhanced token manager with OTP support
+// Updated token manager - simplified since user is created only after OTP verification
 class SignupTokenManager {
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
   private tokenExpiry: number | null = null;
-  private pendingVerification: boolean = false;
 
   setTokens(
     accessToken: string,
@@ -58,7 +57,6 @@ class SignupTokenManager {
     this.accessToken = accessToken;
     this.refreshToken = refreshToken;
     this.tokenExpiry = Date.now() + expiresIn * 1000;
-    this.pendingVerification = true; // Set as pending until OTP is verified
 
     // Save to sessionStorage
     if (typeof window !== "undefined") {
@@ -69,10 +67,9 @@ class SignupTokenManager {
             accessToken: this.accessToken,
             refreshToken: this.refreshToken,
             tokenExpiry: this.tokenExpiry,
-            pendingVerification: this.pendingVerification,
           })
         );
-        console.log("✅ Tokens stored successfully (pending OTP verification)");
+        console.log("✅ Tokens stored successfully");
       } catch (error) {
         console.error("Failed to store tokens in session:", error);
       }
@@ -96,7 +93,6 @@ class SignupTokenManager {
           this.accessToken = parsed.accessToken;
           this.refreshToken = parsed.refreshToken;
           this.tokenExpiry = parsed.tokenExpiry;
-          this.pendingVerification = parsed.pendingVerification || false;
           return this.accessToken;
         }
       } catch (error) {
@@ -111,33 +107,10 @@ class SignupTokenManager {
     return this.tokenExpiry !== null && this.tokenExpiry > Date.now() + 60000; // 1 minute buffer
   }
 
-  isPendingVerification(): boolean {
-    return this.pendingVerification;
-  }
-
-  markAsVerified(): void {
-    this.pendingVerification = false;
-    
-    if (typeof window !== "undefined") {
-      try {
-        const tokenData = sessionStorage.getItem("auth_tokens");
-        if (tokenData) {
-          const parsed = JSON.parse(tokenData);
-          parsed.pendingVerification = false;
-          sessionStorage.setItem("auth_tokens", JSON.stringify(parsed));
-          console.log("✅ User marked as verified");
-        }
-      } catch (error) {
-        console.error("Failed to update verification status:", error);
-      }
-    }
-  }
-
   clearTokens(): void {
     this.accessToken = null;
     this.refreshToken = null;
     this.tokenExpiry = null;
-    this.pendingVerification = false;
 
     if (typeof window !== "undefined") {
       try {
@@ -149,7 +122,7 @@ class SignupTokenManager {
   }
 }
 
-// Enhanced user manager with OTP support
+// Updated user manager - user is fully verified when created
 class SignupUserManager {
   private userData: UserData | null = null;
 
@@ -162,8 +135,8 @@ class SignupUserManager {
         name: validatedUser.name,
         email: validatedUser.email,
         role: validatedUser.role,
-        is_verified: Boolean(validatedUser.is_verified), // Ensure boolean
-        applied_ca: Boolean(validatedUser.applied_ca), // Ensure boolean
+        is_verified: Boolean(validatedUser.is_verified), // Should be true after OTP verification
+        applied_ca: Boolean(validatedUser.applied_ca),
         last_login: new Date().toISOString(),
         created_at: validatedUser.created_at,
       };
@@ -206,21 +179,6 @@ class SignupUserManager {
     }
 
     return null;
-  }
-
-  updateUserVerificationStatus(isVerified: boolean): void {
-    if (this.userData) {
-      this.userData.is_verified = Boolean(isVerified); // Ensure boolean type
-      
-      if (typeof window !== "undefined") {
-        try {
-          sessionStorage.setItem("user_data", JSON.stringify(this.userData));
-          console.log("✅ User verification status updated");
-        } catch (error) {
-          console.error("Failed to update user verification status:", error);
-        }
-      }
-    }
   }
 
   clearUser(): void {
@@ -269,14 +227,14 @@ class SignupCSRFManager {
   }
 }
 
-// Export signup-specific managers
+// Export managers
 export const tokenManager = new SignupTokenManager();
 export const userManager = new SignupUserManager();
 export const csrfManager = new SignupCSRFManager();
 
 /**
- * Enhanced handleAuthSuccess for OTP flow
- * This function is called after successful signup but before OTP verification
+ * Updated handleAuthSuccess for the new flow
+ * This function is called after successful account creation (user is already verified)
  */
 export async function handleAuthSuccess(
   accessToken: string,
@@ -286,7 +244,7 @@ export async function handleAuthSuccess(
   routerOptional?: any
 ): Promise<void> {
   try {
-    console.log("🔄 Processing signup authentication success (pre-OTP verification)...");
+    console.log("🔄 Processing authentication success...");
     console.log("📥 Parameters received:", {
       accessToken: typeof accessToken,
       refreshToken: typeof refreshToken,
@@ -300,7 +258,7 @@ export async function handleAuthSuccess(
     let finalUser: User;
     let finalRouter: any;
 
-    // Parameter detection logic (same as before)
+    // Parameter detection logic
     if (
       typeof refreshToken === "string" &&
       typeof expiresInOrRouter === "number" &&
@@ -373,7 +331,7 @@ export async function handleAuthSuccess(
       throw new Error("Invalid user data");
     }
 
-    // Router is not required for OTP flow since we handle navigation differently
+    // Router validation
     if (finalRouter && typeof finalRouter.push !== 'function') {
       console.warn("Invalid router object, proceeding without it");
       finalRouter = null;
@@ -392,10 +350,11 @@ export async function handleAuthSuccess(
       userId: finalUser.sphinx_id,
       userName: finalUser.name,
       userEmail: finalUser.email,
+      userVerified: finalUser.is_verified,
       hasRouter: !!finalRouter
     });
 
-    // Store tokens - these will be marked as pending verification
+    // Store tokens
     if (finalRefreshToken) {
       const tokenData = TokenResponseSchema.parse({
         accessToken,
@@ -415,40 +374,12 @@ export async function handleAuthSuccess(
     // Store user data
     userManager.setUser(finalUser);
 
-    console.log("✅ Signup authentication setup complete (pending OTP verification)");
-    console.log("📧 User will need to verify email via OTP before proceeding");
+    console.log("✅ Authentication setup complete - user is verified and authenticated");
 
-    // Don't navigate automatically - let the OTP flow handle navigation
-    // The signup form will transition to OTP verification step
+    // Don't navigate automatically - let the component handle navigation
   } catch (error) {
-    console.error("❌ Signup auth success handling failed:", error);
-    throw new Error("Sign up successful but setup failed. Please try again.");
-  }
-}
-
-/**
- * Handle successful OTP verification
- * This function is called after OTP is successfully verified
- */
-export async function handleOTPVerificationSuccess(router: any): Promise<void> {
-  try {
-    console.log("🔄 Processing OTP verification success...");
-    
-    // Mark user as verified in token manager
-    tokenManager.markAsVerified();
-    
-    // Update user verification status
-    userManager.updateUserVerificationStatus(true);
-    
-    console.log("✅ OTP verification complete, user is now fully verified");
-    
-    // Now navigate to the next page
-    setTimeout(() => {
-      router.push("/update");
-    }, 500);
-  } catch (error) {
-    console.error("❌ OTP verification success handling failed:", error);
-    throw new Error("OTP verified but setup failed. Please try again.");
+    console.error("❌ Auth success handling failed:", error);
+    throw new Error("Account created but setup failed. Please try logging in.");
   }
 }
 
@@ -464,40 +395,17 @@ export const handleLogout = async (router: any): Promise<void> => {
   }
 };
 
-// Signup-specific header function (no auth required for initial signup)
+// Signup-specific header functions
 export const getSignupHeaders = (): Record<string, string> => {
   return {
     "Content-Type": "application/json",
   };
 };
 
-// OTP-specific header function (requires auth token)
-export const getOTPHeaders = (): Record<string, string> => {
-  const token = tokenManager.getAccessToken();
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-  
-  return headers;
-};
-
-// Get stored email for OTP verification
+// Get stored email for resend functionality
 export const getStoredUserEmail = (): string | null => {
   const userData = userManager.getUser();
   return userData ? userData.email : null;
-};
-
-// Check if user is pending email verification
-export const isPendingEmailVerification = (): boolean => {
-  const userData = userManager.getUser();
-  const tokensPending = tokenManager.isPendingVerification();
-  
-  // Ensure we return a boolean, handle null cases
-  return Boolean(tokensPending && userData && !userData.is_verified);
 };
 
 // Validation helpers specific to signup

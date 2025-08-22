@@ -3,13 +3,26 @@ import { SignUpResponse } from "../types/authTypes";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export const signUpUser = async (data: SignUpFormData): Promise<SignUpResponse> => {
+export const signUpUser = async (
+  data: SignUpFormData,
+  verificationToken?: string
+): Promise<SignUpResponse> => {
+  const body: any = {
+    name: data.name,
+    email: data.email,
+    password: data.password,
+  };
+
+  if (verificationToken) {
+    body.verificationToken = verificationToken;
+  }
+
   const res = await fetch(`${API_BASE_URL}/auth/signup`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify(body),
   });
 
   const contentType = res.headers.get("content-type");

@@ -1,4 +1,4 @@
-// app/(auth)/sign-up/page.tsx (Updated)
+// app/(auth)/sign-up/page.tsx - UPDATED
 "use client";
 
 import { memo, useCallback, useEffect } from "react";
@@ -97,10 +97,10 @@ const SignUpSuccess = memo(function SignUpSuccess() {
         
         <div>
           <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
-            Account Verified Successfully!
+            Account Created Successfully!
           </h3>
           <p className="text-zinc-300">
-            Your email has been verified. Redirecting to complete your profile...
+            Your account has been created and verified. Redirecting to complete your profile...
           </p>
         </div>
       </div>
@@ -131,6 +131,7 @@ const SignUpFormInner = memo(function SignUpFormInner() {
     userEmail,
     goBackToForm,
     handleOTPVerificationSuccess,
+    resendOTP,
   } = useSignUpWithOTP(router);
 
   const password = watch("password");
@@ -170,8 +171,8 @@ const SignUpFormInner = memo(function SignUpFormInner() {
               email={userEmail}
               onVerificationSuccess={handleOTPVerificationSuccess}
               onBack={goBackToForm}
+              onResend={resendOTP}
               disabled={isFormDisabled}
-              router={router}
             />
           </div>
         );
@@ -277,7 +278,7 @@ const SignUpFormInner = memo(function SignUpFormInner() {
                 role="status"
                 aria-live="polite"
               >
-                {isSubmitting ? MESSAGES.LOADING.CREATING_ACCOUNT : MESSAGES.LOADING.AUTHENTICATING}
+                {isSubmitting ? "Sending OTP to your email..." : MESSAGES.LOADING.AUTHENTICATING}
               </div>
             )}
           </>
