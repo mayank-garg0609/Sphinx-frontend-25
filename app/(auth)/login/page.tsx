@@ -1,5 +1,6 @@
 "use client";
-
+import LoginDebugger from "./components/LoginDebugger"; // adjust path as needed
+// Then add <LoginDebugger /> somewhere in your login page JSX
 import { useEffect } from "react";
 import { LoginForm } from "./components/LoginForm";
 import { BackgroundImage } from "./components/BackgroundImage";
@@ -36,42 +37,41 @@ export default function LoginPage() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
-// Add debugging useEffect after existing useEffects (around line 45):
-useEffect(() => {
-  const debugApiConfig = () => {
-    console.log("🔧 API Configuration Debug:", {
-      baseUrl: API_CONFIG.baseUrl,
-      loginEndpoint: getApiUrl(API_ENDPOINTS.LOGIN),
-      environment: process.env.NODE_ENV,
-      envVars: {
-        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-        hasGoogleClientId: !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+  useEffect(() => {
+    const debugApiConfig = () => {
+      console.log("🔧 API Configuration Debug:", {
+        baseUrl: API_CONFIG.baseUrl,
+        loginEndpoint: getApiUrl(API_ENDPOINTS.LOGIN),
+        environment: process.env.NODE_ENV,
+        envVars: {
+          NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+          hasGoogleClientId: !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        },
+      });
+    };
+
+    const testBackendConnection = async () => {
+      const baseUrl = API_CONFIG.baseUrl;
+      console.log("🧪 Testing backend connection to:", baseUrl);
+
+      try {
+        const response = await fetch(baseUrl, {
+          method: "GET",
+          mode: "cors",
+        });
+
+        console.log("🧪 Backend connection test:", {
+          status: response.status,
+          ok: response.ok,
+        });
+      } catch (error) {
+        console.error("🧪 Backend connection failed:", error);
       }
-    });
-  };
+    };
 
-  const testBackendConnection = async () => {
-    const baseUrl = API_CONFIG.baseUrl;
-    console.log("🧪 Testing backend connection to:", baseUrl);
-    
-    try {
-      const response = await fetch(baseUrl, {
-        method: 'GET',
-        mode: 'cors'
-      });
-      
-      console.log("🧪 Backend connection test:", {
-        status: response.status,
-        ok: response.ok
-      });
-    } catch (error) {
-      console.error("🧪 Backend connection failed:", error);
-    }
-  };
-
-  debugApiConfig();
-  testBackendConnection();
-}, []);
+    debugApiConfig();
+    testBackendConnection();
+  }, []);
   useEffect(() => {
     document.title = "Login - Sphinx'25";
 
@@ -112,6 +112,7 @@ useEffect(() => {
         <BackgroundImage />
         <div className="absolute inset-0 bg-black/20 lg:bg-gradient-to-r lg:from-black/40 lg:via-black/20 lg:to-transparent" />
       </section>
+      <LoginDebugger/>
 
       <section
         className={MOBILE_STYLES.formWrapper}

@@ -27,7 +27,8 @@ interface UseProfileReturn {
 
 export const useProfile = (): UseProfileReturn => {
   const router = useTransitionRouter();
-  const { user, isLoggedIn, isLoading, logoutUser, refreshSession } = useUser();
+  // Updated to use the new useUser API structure
+  const { user, isLoggedIn, isLoading, auth } = useUser();
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +61,7 @@ export const useProfile = (): UseProfileReturn => {
 
         if (showRefreshing) {
           console.log("🔄 Attempting to refresh session before profile fetch...");
-          const sessionValid = await refreshSession();
+          const sessionValid = await auth.refreshSession();
           if (!sessionValid) {
             throw new Error("Session refresh failed. Please log in again.");
           }
@@ -98,7 +99,7 @@ export const useProfile = (): UseProfileReturn => {
         const shouldStopRetrying = handleApiError(
           error,
           router,
-          logoutUser,
+          auth.logout, // Updated to use auth.logout
           showRefreshing
         );
         setError(error.message || "Failed to load profile.");
@@ -117,7 +118,7 @@ export const useProfile = (): UseProfileReturn => {
         setIsRefreshing(false);
       }
     },
-    [router, retryCount, user, isLoggedIn, logoutUser, refreshSession]
+    [router, retryCount, user, isLoggedIn, auth.logout, auth.refreshSession]
   );
 
   const handleRefresh = useCallback((): void => {

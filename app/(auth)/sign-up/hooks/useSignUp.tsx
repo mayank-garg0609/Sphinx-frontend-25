@@ -1,38 +1,56 @@
 "use client";
 
-import { useCallback, memo } from "react";
+import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signUpSchema, SignUpFormData } from "@/app/schemas/signupSchema";
-import { useAuth } from "./useAuth";
-import { useGoogleAuth } from "./useGoogleAuth";
+import { useUser } from "@/app/hooks/useUser/useUser";
 
 interface UseSignUpReturn {
+  // Form methods
   register: any;
   handleSubmit: any;
   watch: any;
   errors: any;
-  isSubmitting: boolean;
+  
+  // Auth methods and state
   onSubmit: (data: SignUpFormData) => Promise<void>;
-  handleGoogleSignup: () => void;
+  onGoogleSignUp: (code: string) => Promise<void>;
+  
+  // Loading states
+  isSubmitting: boolean;
   isGoogleLoading: boolean;
-  googlePopupClosed: boolean;
-  retryCount: number;
-  isPending: boolean;
-  isRateLimited: boolean;
-  isGoogleRateLimited: boolean;
+  
+  // Error states
+  signupError: string | null;
   googleError: string | null;
+  
+  // Other states
+  retryCount: number;
+  isRateLimited: boolean;
+  
+  // Utility
   clearErrors: () => void;
 }
 
-export const useSignUp = (router: any): UseSignUpReturn => {
+export const useSignUp = (): UseSignUpReturn => {
+  const {
+    auth,
+    signupLoading,
+    googleLoading,
+    signupError,
+    googleError,
+    signupRetryCount,
+    isRateLimited
+  } = useUser();
+
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors, isSubmitting },
     reset,
-    clearErrors,
+    clearErrors: clearFormErrors,
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
     mode: "onChange",
@@ -45,42 +63,51 @@ export const useSignUp = (router: any): UseSignUpReturn => {
     },
   });
 
-  const { signUpUser, retryCount, isPending, isRateLimited } = useAuth(router, reset);
-  const { 
-    isGoogleLoading, 
-    googlePopupClosed, 
-    handleGoogleSignup, 
-    isRateLimited: isGoogleRateLimited,
-    error: googleError 
-  } = useGoogleAuth(router, clearErrors);
-
   const onSubmit = useCallback(async (data: SignUpFormData) => {
-    if (isRateLimited || isGoogleRateLimited) {
-      return;
-    }
-
     try {
-      await signUpUser(data);
+      await auth.signUpWithCredentials(data);
+      reset(); // Clear form on success
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error('Signup submission error:', error);
     }
-  }, [signUpUser, isRateLimited, isGoogleRateLimited]);
+  }, [auth, reset]);
+
+  const onGoogleSignUp = useCallback(async (code: string) => {
+    try {
+      await auth.signUpWithGoogle(code);
+    } catch (error) {
+      console.error('Google signup error:', error);
+    }
+  }, [auth]);
+
+  const clearErrors = useCallback(() => {
+    clearFormErrors();
+  }, [clearFormErrors]);
 
   return {
+    // Form methods
     register,
     handleSubmit,
     watch,
     errors,
-    isSubmitting: isSubmitting || isPending,
+    
+    // Auth methods
     onSubmit,
-    handleGoogleSignup,
-    isGoogleLoading,
-    googlePopupClosed,
-    retryCount,
-    isPending,
-    isRateLimited,
-    isGoogleRateLimited,
+    onGoogleSignUp,
+    
+    // Loading states
+    isSubmitting: isSubmitting || signupLoading,
+    isGoogleLoading: googleLoading,
+    
+    // Error states
+    signupError,
     googleError,
+    
+    // Other states
+    retryCount: signupRetryCount,
+    isRateLimited,
+    
+    // Utility
     clearErrors,
   };
 };

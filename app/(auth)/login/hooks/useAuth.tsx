@@ -12,7 +12,7 @@ import {
   getApiUrl,
   rateLimiter,
 } from "../utils/config";
-import { handleAuthSuccess, getAuthHeaders } from "../utils/authHelpers";
+import { handleAuthSuccess } from "../utils/authHelpers";
 import {
   handleApiError,
   handleNetworkError,
@@ -54,7 +54,6 @@ export function useAuth(
             API_CONFIG.timeout
           );
 
-          // Use minimal headers for login request
           const headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
@@ -128,7 +127,6 @@ export function useAuth(
                 userEmail: user?.email,
               });
 
-              // Handle auth success with better error handling
               await handleAuthSuccess(
                 accessToken,
                 refreshToken,
@@ -173,7 +171,7 @@ export function useAuth(
                   await handleAuthSuccess(
                     accessToken,
                     refreshToken,
-                    expiresIn || 3600, // default to 1 hour
+                    expiresIn || 3600, 
                     user,
                     router
                   );
