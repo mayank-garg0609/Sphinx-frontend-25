@@ -16,12 +16,12 @@ export const SignUpLink = memo(function SignUpLink() {
   );
 
   return (
-    <div className="text-center text-xs sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg text-zinc-400 mt-1 sm:mt-1.5 md:mt-2 lg:mt-2 xl:mt-2.5 2xl:mt-3">
+    <div className="text-center text-sm text-zinc-400 border-t border-zinc-700 pt-6">
       Don't have an account?{' '}
       <Link
         href="/sign-up"
         onClick={handleSignUpClick}
-        className="text-blue-400 hover:underline font-medium focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-black rounded"
+        className="text-blue-400 hover:text-blue-300 font-medium focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-black rounded transition-colors"
       >
         Sign Up
       </Link>

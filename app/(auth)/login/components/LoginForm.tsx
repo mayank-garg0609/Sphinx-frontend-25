@@ -12,7 +12,7 @@ import { ActionButtons } from './ActionButtons';
 import { SignUpLink } from './SignUpLink';
 import { LoginHeader } from './LoginHeader';
 import { ErrorBoundary } from './ErrorBoundary';
-import { FORM_FIELDS, FORM_STYLES, ACCESSIBILITY, MESSAGES } from '../utils/constants';
+import { FORM_FIELDS, ACCESSIBILITY, MESSAGES } from '../utils/constants';
 import { handleComponentError } from '../utils/errorHandlers';
 
 interface ErrorFallbackProps {
@@ -23,13 +23,13 @@ interface ErrorFallbackProps {
 const ErrorFallback = memo(function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
   return (
     <div 
-      className="bg-red-50 border border-red-200 rounded-lg p-4 text-center"
+      className="bg-red-500/10 border border-red-500/20 rounded-lg p-6 text-center"
       role="alert"
       aria-live="assertive"
     >
-      <div className="flex flex-col items-center gap-3">
+      <div className="flex flex-col items-center gap-4">
         <svg 
-          className="w-8 h-8 text-red-600" 
+          className="w-12 h-12 text-red-400" 
           fill="none" 
           stroke="currentColor" 
           viewBox="0 0 24 24"
@@ -43,17 +43,17 @@ const ErrorFallback = memo(function ErrorFallback({ error, resetErrorBoundary }:
           />
         </svg>
         
-        <div>
-          <h2 className="text-lg font-semibold text-red-800 mb-1">
+        <div className="space-y-2">
+          <h2 className="text-xl font-semibold text-red-400">
             Something went wrong
           </h2>
-          <p className="text-sm text-red-600 mb-3">
+          <p className="text-sm text-red-300">
             The login form encountered an error. Please try again.
           </p>
           {process.env.NODE_ENV === 'development' && (
-            <details className="text-xs text-red-500 mb-3">
+            <details className="text-xs text-red-300 mt-3">
               <summary className="cursor-pointer font-mono">Error details (dev only)</summary>
-              <pre className="mt-2 text-left bg-red-100 p-2 rounded overflow-auto">
+              <pre className="mt-2 text-left bg-red-500/20 p-2 rounded overflow-auto text-red-200">
                 {error.message}
               </pre>
             </details>
@@ -62,7 +62,7 @@ const ErrorFallback = memo(function ErrorFallback({ error, resetErrorBoundary }:
         
         <button
           onClick={resetErrorBoundary}
-          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black transition-colors"
           aria-label="Try again"
         >
           Try Again
@@ -78,10 +78,9 @@ const LoginFormInner = memo(function LoginFormInner() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting, isValid },
+    formState: { errors, isSubmitting },
     reset,
     clearErrors,
-    watch,
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     mode: 'onChange',
@@ -102,8 +101,6 @@ const LoginFormInner = memo(function LoginFormInner() {
 
   const isFormDisabled = isSubmitting || isGoogleLoading || isPending;
   const isAnyRateLimited = isRateLimited || isGoogleRateLimited;
-
-  const watchedValues = watch();
 
   const onSubmit = useCallback(async (data: LoginFormData) => {
     if (isAnyRateLimited) {
@@ -129,84 +126,89 @@ const LoginFormInner = memo(function LoginFormInner() {
   }, [errors, isAnyRateLimited]);
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className={FORM_STYLES.container}
-      style={FORM_STYLES.scrollbar}
-      noValidate 
-      role="form"
-      aria-label={ACCESSIBILITY.ARIA_LABELS.LOGIN_FORM}
-      aria-describedby={getFormAriaDescribedBy()}
-      data-testid="login-form"
-    >
-      <LoginHeader />
-      
-      <fieldset 
-        disabled={isFormDisabled}
-        className="space-y-3 sm:space-y-4 md:space-y-5 lg:space-y-6 xl:space-y-7 2xl:space-y-8 pt-3 sm:pt-4 md:pt-5 lg:pt-6 xl:pt-7 2xl:pt-8 pb-3 sm:pb-4 md:pb-5 lg:pb-6 xl:pb-7 2xl:pb-8"
-      >
-        <legend className="sr-only">Login credentials</legend>
-        
-        <FormField
-          field={FORM_FIELDS.email}
-          register={register}
-          error={errors.email?.message}
-          disabled={isFormDisabled}
-        />
-        
-        <FormField
-          field={FORM_FIELDS.password}
-          register={register}
-          error={errors.password?.message}
-          disabled={isFormDisabled}
-        />
-      </fieldset>
-      
-      <ActionButtons
-        isSubmitting={isSubmitting || isPending}
-        onGoogleLogin={handleGoogleLogin}
-        isGoogleLoading={isGoogleLoading}
-        googlePopupClosed={googlePopupClosed}
-        isRateLimited={isRateLimited}
-        isGoogleRateLimited={isGoogleRateLimited}
-        googleError={googleError}
-      />
-      
-      <SignUpLink />
-      
-      {retryCount > 0 && (
-        <div 
-          className="text-yellow-400 text-xs sm:text-sm text-center"
-          role="status"
-          aria-live="polite"
+    <div className="w-full max-w-md mx-auto">
+      {/* Card Container */}
+      <div className="bg-black/40 backdrop-blur-md border border-zinc-700 rounded-2xl p-8 shadow-2xl">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate 
+          role="form"
+          aria-label={ACCESSIBILITY.ARIA_LABELS.LOGIN_FORM}
+          aria-describedby={getFormAriaDescribedBy()}
+          data-testid="login-form"
+          className="space-y-6"
         >
-          Retry attempt {retryCount}
-        </div>
-      )}
-      
-      {Object.keys(errors).length > 0 && (
-        <div 
-          id="form-errors"
-          className="sr-only"
-          role="alert"
-          aria-live="assertive"
-        >
-          Form has {Object.keys(errors).length} error{Object.keys(errors).length > 1 ? 's' : ''}: {
-            Object.values(errors).map(error => error?.message).filter(Boolean).join(', ')
-          }
-        </div>
-      )}
-      
-      {(isSubmitting || isGoogleLoading || isPending) && (
-        <div 
-          className="sr-only"
-          role="status"
-          aria-live="polite"
-        >
-          {isSubmitting || isPending ? MESSAGES.LOADING.PROCESSING : MESSAGES.LOADING.AUTHENTICATING}
-        </div>
-      )}
-    </form>
+          <LoginHeader />
+          
+          {/* Form Fields */}
+          <fieldset 
+            disabled={isFormDisabled}
+            className="space-y-4"
+          >
+            <legend className="sr-only">Login credentials</legend>
+            
+            <FormField
+              field={FORM_FIELDS.email}
+              register={register}
+              error={errors.email?.message}
+              disabled={isFormDisabled}
+            />
+            
+            <FormField
+              field={FORM_FIELDS.password}
+              register={register}
+              error={errors.password?.message}
+              disabled={isFormDisabled}
+            />
+          </fieldset>
+          
+          <ActionButtons
+            isSubmitting={isSubmitting || isPending}
+            onGoogleLogin={handleGoogleLogin}
+            isGoogleLoading={isGoogleLoading}
+            googlePopupClosed={googlePopupClosed}
+            isRateLimited={isRateLimited}
+            isGoogleRateLimited={isGoogleRateLimited}
+            googleError={googleError}
+          />
+          
+          <SignUpLink />
+          
+          {retryCount > 0 && (
+            <div 
+              className="text-yellow-400 text-sm text-center p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg"
+              role="status"
+              aria-live="polite"
+            >
+              Retry attempt {retryCount}
+            </div>
+          )}
+          
+          {Object.keys(errors).length > 0 && (
+            <div 
+              id="form-errors"
+              className="sr-only"
+              role="alert"
+              aria-live="assertive"
+            >
+              Form has {Object.keys(errors).length} error{Object.keys(errors).length > 1 ? 's' : ''}: {
+                Object.values(errors).map(error => error?.message).filter(Boolean).join(', ')
+              }
+            </div>
+          )}
+          
+          {(isSubmitting || isGoogleLoading || isPending) && (
+            <div 
+              className="sr-only"
+              role="status"
+              aria-live="polite"
+            >
+              {isSubmitting || isPending ? MESSAGES.LOADING.PROCESSING : MESSAGES.LOADING.AUTHENTICATING}
+            </div>
+          )}
+        </form>
+      </div>
+    </div>
   );
 });
 

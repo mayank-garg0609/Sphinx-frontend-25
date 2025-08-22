@@ -2,7 +2,7 @@
 
 import { memo, useCallback } from 'react';
 import { FcGoogle } from 'react-icons/fc';
-import { BUTTON_STYLES, MESSAGES, ACCESSIBILITY } from '../utils/constants';
+import { MESSAGES, ACCESSIBILITY } from '../utils/constants';
 
 interface ActionButtonsProps {
   readonly isSubmitting: boolean;
@@ -50,12 +50,20 @@ export const ActionButtons = memo(function ActionButtons({
   const isGoogleDisabled = isGoogleLoading || isSubmitting || isGoogleRateLimited;
 
   return (
-    <div className="space-y-2 sm:space-y-2.5 md:space-y-3 lg:space-y-3 xl:space-y-4 2xl:space-y-5">
+    <div className="space-y-4">
       {/* Primary Login Button */}
       <button
         type="submit"
         disabled={isLoginDisabled}
-        className={BUTTON_STYLES.primary}
+        className={`
+          w-full h-12 px-4 
+          bg-blue-600 hover:bg-blue-700 
+          disabled:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed
+          text-white font-semibold rounded-lg
+          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-black
+          transition-all duration-200
+          flex items-center justify-center
+        `}
         aria-label={
           isSubmitting 
             ? ACCESSIBILITY.ARIA_LABELS.LOADING_SPINNER 
@@ -64,15 +72,39 @@ export const ActionButtons = memo(function ActionButtons({
         aria-describedby={isRateLimited ? 'rate-limit-message' : undefined}
         data-testid="login-button"
       >
+        {isSubmitting && (
+          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        )}
         {getLoginButtonText()}
       </button>
+
+      {/* Divider */}
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-zinc-600" />
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="bg-black px-4 text-zinc-400">or continue with</span>
+        </div>
+      </div>
 
       {/* Google Login Button */}
       <button
         type="button"
         onClick={onGoogleLogin}
         disabled={isGoogleDisabled}
-        className={BUTTON_STYLES.secondary}
+        className={`
+          w-full h-12 px-4
+          bg-zinc-800 hover:bg-zinc-700 border border-zinc-600
+          disabled:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed
+          text-white font-medium rounded-lg
+          focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 focus:ring-offset-black
+          transition-all duration-200
+          flex items-center justify-center gap-3
+        `}
         aria-label={ACCESSIBILITY.ARIA_LABELS.GOOGLE_LOGIN_BUTTON}
         aria-describedby={
           googleError 
@@ -83,10 +115,14 @@ export const ActionButtons = memo(function ActionButtons({
         }
         data-testid="google-login-button"
       >
-        <FcGoogle 
-          className="w-3 h-3 sm:w-4 sm:h-4 md:w-4 md:h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 2xl:w-7 2xl:h-7" 
-          aria-hidden="true" 
-        />
+        {isGoogleLoading ? (
+          <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        ) : (
+          <FcGoogle className="w-5 h-5" aria-hidden="true" />
+        )}
         <span>{getGoogleButtonText()}</span>
       </button>
 
@@ -94,7 +130,7 @@ export const ActionButtons = memo(function ActionButtons({
       {googleError && (
         <div
           id="google-error-message"
-          className="text-red-400 text-xs sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg text-center"
+          className="text-red-400 text-sm text-center p-3 bg-red-500/10 border border-red-500/20 rounded-lg"
           role="alert"
           aria-live={ACCESSIBILITY.LIVE_REGIONS.ASSERTIVE}
         >
@@ -106,7 +142,7 @@ export const ActionButtons = memo(function ActionButtons({
       {(isRateLimited || isGoogleRateLimited) && (
         <div
           id="rate-limit-message"
-          className="text-yellow-400 text-xs sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg text-center"
+          className="text-yellow-400 text-sm text-center p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg"
           role="alert"
           aria-live={ACCESSIBILITY.LIVE_REGIONS.POLITE}
         >

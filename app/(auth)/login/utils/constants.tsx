@@ -1,4 +1,4 @@
-// app/(auth)/login/utils/constants.tsx
+// Optimized constants with reduced class bloat and better organization
 export interface FormField {
   readonly id: string;
   readonly type: 'email' | 'password' | 'text';
@@ -19,7 +19,7 @@ export const FORM_FIELDS: Record<'email' | 'password', FormField> = {
     label: 'Email Address',
     required: true,
     autoComplete: 'email',
-    maxLength: 254, // RFC 5321 limit
+    maxLength: 254,
     pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$',
   },
   password: {
@@ -34,52 +34,35 @@ export const FORM_FIELDS: Record<'email' | 'password', FormField> = {
   },
 } as const;
 
+// Simplified button styles - removed excessive responsive variants
 export const BUTTON_STYLES = {
-  primary:
-    'w-full bg-white text-black font-semibold py-2 sm:py-2.5 md:py-2.5 lg:py-3 xl:py-3.5 2xl:py-4 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black transition-all duration-200 text-xs sm:text-sm md:text-sm lg:text-base xl:text-lg 2xl:text-xl disabled:opacity-50 disabled:cursor-not-allowed',
-  secondary:
-    'w-full flex items-center justify-center border border-white text-white font-medium py-2 sm:py-2.5 md:py-2.5 lg:py-3 xl:py-3.5 2xl:py-4 rounded-lg hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black transition-all duration-200 text-xs sm:text-sm md:text-sm lg:text-base xl:text-lg 2xl:text-xl gap-2 disabled:opacity-50 disabled:cursor-not-allowed',
-  danger:
-    'w-full bg-red-600 text-white font-semibold py-2 sm:py-2.5 md:py-2.5 lg:py-3 xl:py-3.5 2xl:py-4 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black transition-all duration-200 text-xs sm:text-sm md:text-sm lg:text-base xl:text-lg 2xl:text-xl disabled:opacity-50 disabled:cursor-not-allowed',
+  primary: 'w-full bg-white text-black font-semibold py-3 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black transition-all duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed',
+  secondary: 'w-full flex items-center justify-center border border-white text-white font-medium py-3 rounded-lg hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black transition-all duration-200 text-sm gap-3 disabled:opacity-50 disabled:cursor-not-allowed',
 } as const;
 
+export const MOBILE_STYLES = {
+  container: "min-h-screen w-full flex bg-black bg-cover bg-center bg-no-repeat px-4 lg:px-8",
+  formWrapper: "relative z-10 flex justify-center lg:justify-center xl:justify-end w-full items-center min-h-screen py-8 lg:py-0 lg:pr-16 xl:pr-24 2xl:pr-32",
+} as const;
+
+// Enhanced form styles with better sizing
 export const FORM_STYLES = {
-  container:
-    'bg-black/40 backdrop-blur-md text-white p-4 sm:p-5 md:p-6 lg:p-7 xl:p-8 2xl:p-9 rounded-xl sm:rounded-xl md:rounded-2xl lg:rounded-2xl xl:rounded-2xl 2xl:rounded-2xl shadow-[0_8px_32px_0_rgba(255,255,255,0.3)] w-full max-w-[280px] xs:max-w-[320px] sm:max-w-[360px] md:max-w-[400px] lg:max-w-md xl:max-w-lg 2xl:max-w-xl border border-white/30 space-y-3 sm:space-y-4 md:space-y-5 lg:space-y-6 xl:space-y-7 2xl:space-y-8 font-sans lg:mr-8 xl:mr-16 2xl:mr-24 mx-auto h-auto lg:h-auto xl:h-auto 2xl:h-auto max-h-[90vh] sm:max-h-[85vh] md:max-h-[85vh] lg:max-h-[85vh] xl:max-h-[90vh] 2xl:max-h-[90vh] overflow-y-auto',
+  container: 'bg-black/40 backdrop-blur-md text-white p-6 lg:p-8 rounded-xl shadow-[0_8px_32px_0_rgba(255,255,255,0.3)] w-full max-w-sm lg:max-w-md xl:max-w-lg border border-white/30 space-y-6 font-sans mx-auto max-h-[90vh] overflow-y-auto lg:mx-0',
   scrollbar: {
     scrollbarWidth: 'thin' as const,
     scrollbarColor: '#cbd5e1 #2d2d2d',
   },
 } as const;
 
-export const MOBILE_STYLES = {
-  container:
-    "min-h-screen w-full flex bg-black bg-cover bg-center bg-no-repeat px-4 lg:px-4 px-6",
-  backgroundImage: {
-    desktop:
-      "h-[500px] sm:h-[550px] md:h-[600px] lg:h-[650px] xl:h-[750px] 2xl:h-[800px] 3xl:h-[900px] w-auto object-contain absolute bottom-0 left-6 sm:left-8 md:left-12 lg:left-16 xl:left-24 2xl:left-32 3xl:left-40 hidden lg:block",
-    mobile: "object-cover lg:hidden",
-  },
-  formWrapper:
-    "relative z-10 flex justify-center lg:justify-end w-full items-center min-h-screen py-8 lg:py-0",
-} as const;
-
-export const FORM_CONTAINER_STYLES = {
-  scrollbarWidth: "thin" as const,
-  scrollbarColor: "#cbd5e1 #2d2d2d",
-} as const;
-
-// Accessibility and security constants
+// Accessibility constants
 export const ACCESSIBILITY = {
   ARIA_LABELS: {
     LOGIN_FORM: 'Login form',
     EMAIL_INPUT: 'Email address input',
-    PASSWORD_INPUT: 'Password input',
+    PASSWORD_INPUT: 'Password input', 
     LOGIN_BUTTON: 'Log in to your account',
     GOOGLE_LOGIN_BUTTON: 'Continue with Google',
-    SIGNUP_LINK: 'Go to sign up page',
     LOADING_SPINNER: 'Loading, please wait',
-    ERROR_MESSAGE: 'Error message',
   },
   LIVE_REGIONS: {
     POLITE: 'polite' as const,
@@ -87,10 +70,10 @@ export const ACCESSIBILITY = {
   },
 } as const;
 
+// Security constants
 export const SECURITY = {
   INPUT_VALIDATION: {
     EMAIL_REGEX: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-    // Password should be validated on server side for security
     MIN_PASSWORD_LENGTH: 8,
     MAX_PASSWORD_LENGTH: 128,
     MAX_EMAIL_LENGTH: 254,
@@ -101,23 +84,13 @@ export const SECURITY = {
   },
 } as const;
 
-// Internationalization messages
+// Message constants - grouped for better tree-shaking
 export const MESSAGES = {
   AUTH: {
-    WELCOME_BACK: 'Welcome Back',
-    LOG_IN_SUBTITLE: 'Log in to your account',
     LOG_IN_BUTTON: 'Log In',
     LOGGING_IN: 'Logging In...',
-    CONTINUE_WITH_GOOGLE: 'Continue with Google',
+    CONTINUE_WITH_GOOGLE: 'Continue with Google', 
     AUTHENTICATING: 'Authenticating...',
-    SIGNUP_PROMPT: "Don't have an account?",
-    SIGNUP_LINK: 'Sign Up',
-    LOGIN_PROMPT: 'Already have an account?',
-    LOGIN_LINK: 'Log In',
-  },
-  SUCCESS: {
-    LOGIN_SUCCESS: '✅ Logged in successfully!',
-    GOOGLE_LOGIN_SUCCESS: '✅ Logged in successfully with Google!',
   },
   ERRORS: {
     REQUIRED_FIELD: 'This field is required',
@@ -125,63 +98,9 @@ export const MESSAGES = {
     EMAIL_TOO_LONG: 'Email address is too long',
     PASSWORD_TOO_SHORT: 'Password must be at least 8 characters',
     PASSWORD_TOO_LONG: 'Password is too long',
-    GENERIC_ERROR: 'Something went wrong. Please try again.',
   },
   LOADING: {
-    PLEASE_WAIT: 'Please wait...',
     PROCESSING: 'Processing...',
     AUTHENTICATING: 'Authenticating...',
-  },
-} as const;
-
-// Theme and styling constants
-export const THEME = {
-  COLORS: {
-    PRIMARY: '#ffffff',
-    SECONDARY: '#000000',
-    SUCCESS: '#10b981',
-    ERROR: '#ef4444',
-    WARNING: '#f59e0b',
-    INFO: '#3b82f6',
-    BACKGROUND: 'rgba(0, 0, 0, 0.4)',
-    BORDER: 'rgba(255, 255, 255, 0.3)',
-    TEXT_PRIMARY: '#ffffff',
-    TEXT_SECONDARY: '#d1d5db',
-    TEXT_MUTED: '#9ca3af',
-  },
-  SHADOWS: {
-    FORM: '0 8px 32px 0 rgba(255, 255, 255, 0.3)',
-    BUTTON: '0 2px 4px 0 rgba(0, 0, 0, 0.1)',
-    INPUT_FOCUS: '0 0 0 2px rgba(255, 255, 255, 0.5)',
-  },
-  TRANSITIONS: {
-    DEFAULT: 'all 0.2s ease',
-    SLOW: 'all 0.3s ease',
-    FAST: 'all 0.15s ease',
-  },
-} as const;
-
-// Responsive breakpoints
-export const BREAKPOINTS = {
-  XS: '320px',
-  SM: '640px',
-  MD: '768px',
-  LG: '1024px',
-  XL: '1280px',
-  '2XL': '1536px',
-  '3XL': '1920px',
-} as const;
-
-// Animation and timing constants
-export const ANIMATIONS = {
-  DURATIONS: {
-    FAST: 150,
-    NORMAL: 200,
-    SLOW: 300,
-  },
-  EASING: {
-    EASE_IN: 'cubic-bezier(0.4, 0, 1, 1)',
-    EASE_OUT: 'cubic-bezier(0, 0, 0.2, 1)',
-    EASE_IN_OUT: 'cubic-bezier(0.4, 0, 0.2, 1)',
   },
 } as const;
