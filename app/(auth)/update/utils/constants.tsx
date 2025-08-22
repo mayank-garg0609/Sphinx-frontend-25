@@ -5,7 +5,7 @@ export const FORM_FIELDS: FormField[] = [
   { key: "college_name", label: "College Name", placeholder: "ABC College" },
   { key: "city", label: "College City", placeholder: "Jaipur" },
   { key: "state", label: "College State", placeholder: "Rajasthan" },
-  { key: "college_id", label: "College ID", placeholder: "2023uch1219" },
+  { key: "college_id", label: "College ID", placeholder: "20XXXXXX" },
   { key: "college_branch", label: "Branch", placeholder: "Chemical Engg" },
   { key: "gender", label: "Gender", placeholder: "Select your gender" },
 ];

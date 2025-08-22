@@ -2,6 +2,13 @@ import React, { useMemo, useRef, useEffect, useState } from "react";
 import { Camera, Play } from "lucide-react";
 import { AboutSectionProps } from "../types/aboutUs";
 
+// Extend window type for YouTube API callback
+declare global {
+  interface Window {
+    onYouTubeIframeAPIReady: () => void;
+  }
+}
+
 const AboutSection: React.FC<AboutSectionProps> = React.memo(({ isLoaded }) => {
   const leftColumnClasses = useMemo(
     () =>
@@ -21,10 +28,21 @@ const AboutSection: React.FC<AboutSectionProps> = React.memo(({ isLoaded }) => {
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [isClient, setIsClient] = useState(false);
+  const [playerId, setPlayerId] = useState<string>('');
   const playerRef = useRef<any>(null);
 
+  // Handle client-side mounting
   useEffect(() => {
+    setIsClient(true);
+    setPlayerId(`youtube-player-${Math.random().toString(36).substr(2, 9)}`);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient || !playerId) return;
+    
+    let isComponentMounted = true;
+
     // Load YouTube IFrame API
     const loadYouTubeAPI = () => {
       if (window.YT && window.YT.Player) {
@@ -33,56 +51,44 @@ const AboutSection: React.FC<AboutSectionProps> = React.memo(({ isLoaded }) => {
       }
 
       // Check if script is already loaded
-      if (document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+      const existingScript = document.querySelector('script[src*="youtube.com/iframe_api"]');
+      if (existingScript) {
         // If script exists but API not ready, wait for it
         const checkAPI = setInterval(() => {
           if (window.YT && window.YT.Player) {
             clearInterval(checkAPI);
-            initializePlayer();
+            if (isComponentMounted) {
+              initializePlayer();
+            }
           }
         }, 100);
+        
+        // Clear interval after 10 seconds to prevent infinite checking
+        setTimeout(() => clearInterval(checkAPI), 10000);
         return;
       }
 
       const script = document.createElement('script');
       script.src = 'https://www.youtube.com/iframe_api';
       script.async = true;
-      document.body.appendChild(script);
-
-      // Create a unique callback name for this instance
-      const callbackName = `onYouTubeIframeAPIReady_${Math.random().toString(36).substr(2, 9)}`;
-      window[callbackName] = initializePlayer;
       
-      // If global callback doesn't exist, create it
+      // Set up the global callback before adding the script
       if (!window.onYouTubeIframeAPIReady) {
         window.onYouTubeIframeAPIReady = () => {
-          // Call all instance callbacks
-          Object.keys(window).forEach(key => {
-            if (key.startsWith('onYouTubeIframeAPIReady_') && typeof window[key] === 'function') {
-              window[key]();
-            }
-          });
+          if (isComponentMounted) {
+            initializePlayer();
+          }
         };
       }
+      
+      document.head.appendChild(script);
     };
 
     const initializePlayer = () => {
-      if (!iframeRef.current) return;
+      if (!isComponentMounted) return;
 
       try {
-        // Create a container div for the YouTube player
-        const playerId = `youtube-player-${Math.random().toString(36).substr(2, 9)}`;
-        
-        // Replace iframe with div for YouTube API
-        const container = iframeRef.current.parentElement;
-        const playerDiv = document.createElement('div');
-        playerDiv.id = playerId;
-        playerDiv.style.width = '100%';
-        playerDiv.style.height = '100%';
-        playerDiv.className = 'rounded-2xl';
-        
-        container?.replaceChild(playerDiv, iframeRef.current);
-
+        // Initialize YouTube player directly on the div with playerId
         playerRef.current = new window.YT.Player(playerId, {
           width: '100%',
           height: '100%',
@@ -93,10 +99,12 @@ const AboutSection: React.FC<AboutSectionProps> = React.memo(({ isLoaded }) => {
             controls: 1,
             modestbranding: 1,
             rel: 0,
+            origin: window.location.origin,
           },
           events: {
             onReady: onPlayerReady,
             onStateChange: onPlayerStateChange,
+            onError: onPlayerError,
           },
         });
       } catch (error) {
@@ -105,7 +113,11 @@ const AboutSection: React.FC<AboutSectionProps> = React.memo(({ isLoaded }) => {
     };
 
     const onPlayerReady = (event: any) => {
+      if (!isComponentMounted) return;
+      
+      console.log('YouTube player ready');
       setPlayerReady(true);
+      
       // Get initial state
       try {
         const state = event.target.getPlayerState();
@@ -116,33 +128,51 @@ const AboutSection: React.FC<AboutSectionProps> = React.memo(({ isLoaded }) => {
     };
 
     const onPlayerStateChange = (event: any) => {
+      if (!isComponentMounted) return;
+      
       const state = event.data;
+      console.log('Player state changed:', state);
       setIsPlaying(state === window.YT.PlayerState.PLAYING);
+    };
+
+    const onPlayerError = (event: any) => {
+      console.error('YouTube player error:', event.data);
     };
 
     loadYouTubeAPI();
 
     // Cleanup function
     return () => {
-      if (playerRef.current && typeof playerRef.current.destroy === 'function') {
+      isComponentMounted = false;
+      
+      if (playerRef.current) {
         try {
-          playerRef.current.destroy();
+          if (typeof playerRef.current.destroy === 'function') {
+            playerRef.current.destroy();
+          }
         } catch (error) {
           console.error('Error destroying player:', error);
         }
+        playerRef.current = null;
       }
     };
-  }, []);
+  }, [playerId]);
 
   const handlePlayPause = () => {
-    if (!playerRef.current || !playerReady) return;
+    if (!playerRef.current || !playerReady) {
+      console.log('Player not ready or not available');
+      return;
+    }
 
     try {
       const state = playerRef.current.getPlayerState();
+      console.log('Current player state:', state);
       
       if (state === window.YT.PlayerState.PLAYING) {
+        console.log('Pausing video');
         playerRef.current.pauseVideo();
       } else {
+        console.log('Playing video');
         playerRef.current.playVideo();
       }
     } catch (error) {
@@ -155,42 +185,56 @@ const AboutSection: React.FC<AboutSectionProps> = React.memo(({ isLoaded }) => {
       <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
         <div className={leftColumnClasses}>
           <div className="relative group">
-            <div className="aspect-[4/3] bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-3xl overflow-hidden shadow-2xl flex items-center justify-center">
-              <iframe
-                ref={iframeRef}
-                width="100%"
-                height="100%"
-                src="https://www.youtube.com/embed/xd50KJh1AIo?enablejsapi=1&start=68"
-                title="YouTube video player"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allowFullScreen
-                className="rounded-2xl"
-                style={{ minHeight: "315px", minWidth: "420px", background: "#000" }}
-              />
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center p-2 bg-black/60 rounded-xl">
-                <p className="text-zinc-300 text-lg font-medium">Technical Festival</p>
-              </div> 
+            <div className="aspect-[4/3] bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-3xl overflow-hidden shadow-2xl">
+              {isClient && playerId ? (
+                <div
+                  id={playerId}
+                  className="w-full h-full rounded-2xl bg-black flex items-center justify-center"
+                  style={{ minHeight: "315px" }}
+                >
+                  {!playerReady && (
+                    <div className="text-white text-center">
+                      <div className="animate-spin w-8 h-8 border-2 border-yellow-400 border-t-transparent rounded-full mx-auto mb-4"></div>
+                      <p>Loading YouTube Player...</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="w-full h-full rounded-2xl bg-black flex items-center justify-center" style={{ minHeight: "315px" }}>
+                  <div className="text-white text-center">
+                    <div className="animate-spin w-8 h-8 border-2 border-yellow-400 border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <p>Initializing Player...</p>
+                  </div>
+                </div>
+              )}
             </div>
             <button
               type="button"
               onClick={handlePlayPause}
               disabled={!playerReady}
-              className={`absolute -bottom-8 -right-8 w-28 h-28 bg-gradient-to-r from-yellow-500 to-yellow-400 rounded-full flex items-center justify-center shadow-xl transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-12 ${!playerReady ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`absolute -bottom-8 -right-8 w-28 h-28 bg-gradient-to-r from-yellow-500 to-yellow-400 rounded-full flex items-center justify-center shadow-xl transform transition-all duration-300 hover:scale-105 hover:shadow-2xl ${
+                !playerReady 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'opacity-100 cursor-pointer hover:rotate-6'
+              }`}
               aria-label={isPlaying ? "Pause video" : "Play video"}
             >
               {isPlaying ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-black ml-1 font-bold" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="6" y="4" width="4" height="16" />
-                  <rect x="14" y="4" width="4" height="16" />
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="w-10 h-10 text-black transition-transform duration-200" 
+                  viewBox="0 0 24 24" 
+                  fill="currentColor"
+                >
+                  <rect x="6" y="4" width="4" height="16" rx="1" />
+                  <rect x="14" y="4" width="4" height="16" rx="1" />
                 </svg>
               ) : (
-                <Play className="w-10 h-10 text-black ml-1 font-bold" />
+                <Play className="w-10 h-10 text-black ml-1 transition-transform duration-200" fill="currentColor" />
               )}
             </button>
           </div>
-         </div>
+        </div>
         <div className={rightColumnClasses}>
           <h3 className="text-yellow-400 text-sm uppercase tracking-widest mb-6 font-bold">
             MNIT Jaipur
