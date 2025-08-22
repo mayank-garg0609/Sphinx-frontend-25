@@ -1,4 +1,3 @@
-// app/(auth)/sign-up/page.tsx - UPDATED
 "use client";
 
 import { memo, useCallback, useEffect } from "react";

@@ -1,4 +1,3 @@
-// app/(auth)/sign-up/utils/authHelpers.tsx - UPDATED
 import { z } from "zod";
 import type { UserData, User, PasswordStrength } from "../types/authTypes";
 
@@ -24,26 +23,22 @@ export const calculatePasswordStrength = (password: string): PasswordStrength =>
   
   let score = 0;
   
-  // Length check
   if (password.length >= 8) score++;
   if (password.length >= 12) score++;
   
-  // Character type checks
   if (/[a-z]/.test(password)) score++;
   if (/[A-Z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
   if (/[^a-zA-Z0-9]/.test(password)) score++;
   
-  // Common patterns penalty
-  if (/(.)\1{2,}/.test(password)) score--; // Repeated characters
-  if (/123|abc|qwe/i.test(password)) score--; // Sequential patterns
+  if (/(.)\1{2,}/.test(password)) score--; 
+  if (/123|abc|qwe/i.test(password)) score--; 
   
   if (score >= 4) return "Strong";
   if (score >= 2) return "Medium";
   return "Weak";
 };
 
-// Updated token manager - simplified since user is created only after OTP verification
 class SignupTokenManager {
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
@@ -58,7 +53,6 @@ class SignupTokenManager {
     this.refreshToken = refreshToken;
     this.tokenExpiry = Date.now() + expiresIn * 1000;
 
-    // Save to sessionStorage
     if (typeof window !== "undefined") {
       try {
         sessionStorage.setItem(
@@ -77,12 +71,10 @@ class SignupTokenManager {
   }
 
   getAccessToken(): string | null {
-    // Try to get from memory first
     if (this.accessToken && this.isTokenValid()) {
       return this.accessToken;
     }
 
-    // Fallback to sessionStorage
     if (typeof window !== "undefined") {
       try {
         const tokenData = sessionStorage.getItem("auth_tokens");
@@ -122,7 +114,6 @@ class SignupTokenManager {
   }
 }
 
-// Updated user manager - user is fully verified when created
 class SignupUserManager {
   private userData: UserData | null = null;
 
@@ -194,7 +185,6 @@ class SignupUserManager {
   }
 }
 
-// Simple CSRF manager for signup
 class SignupCSRFManager {
   private csrfToken: string | null = null;
 
@@ -227,15 +217,10 @@ class SignupCSRFManager {
   }
 }
 
-// Export managers
 export const tokenManager = new SignupTokenManager();
 export const userManager = new SignupUserManager();
 export const csrfManager = new SignupCSRFManager();
 
-/**
- * Updated handleAuthSuccess for the new flow
- * This function is called after successful account creation (user is already verified)
- */
 export async function handleAuthSuccess(
   accessToken: string,
   refreshToken: string | User,
@@ -258,7 +243,6 @@ export async function handleAuthSuccess(
     let finalUser: User;
     let finalRouter: any;
 
-    // Parameter detection logic
     if (
       typeof refreshToken === "string" &&
       typeof expiresInOrRouter === "number" &&
@@ -331,13 +315,11 @@ export async function handleAuthSuccess(
       throw new Error("Invalid user data");
     }
 
-    // Router validation
     if (finalRouter && typeof finalRouter.push !== 'function') {
       console.warn("Invalid router object, proceeding without it");
       finalRouter = null;
     }
 
-    // Ensure expiresIn is valid
     if (isNaN(finalExpiresIn) || finalExpiresIn <= 0) {
       finalExpiresIn = 3600;
       console.warn("⚠️ Invalid expiresIn, using default value:", finalExpiresIn);

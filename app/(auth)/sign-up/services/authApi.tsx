@@ -7,6 +7,10 @@ export const signUpUser = async (
   data: SignUpFormData,
   verificationToken?: string
 ): Promise<SignUpResponse> => {
+  console.warn(
+    "signUpUser function called - this should only be used for Google auth now"
+  );
+
   const body: any = {
     name: data.name,
     email: data.email,
@@ -31,7 +35,7 @@ export const signUpUser = async (
   }
 
   const result: SignUpResponse = await res.json();
-  
+
   if (!res.ok) {
     throw { response: res, data: result };
   }
@@ -39,7 +43,9 @@ export const signUpUser = async (
   return result;
 };
 
-export const signUpWithGoogle = async (code: string): Promise<SignUpResponse> => {
+export const signUpWithGoogle = async (
+  code: string
+): Promise<SignUpResponse> => {
   if (!code) {
     throw new Error("Google Auth code is missing");
   }
@@ -58,7 +64,7 @@ export const signUpWithGoogle = async (code: string): Promise<SignUpResponse> =>
   }
 
   const result: SignUpResponse = await res.json();
-  
+
   if (!res.ok) {
     throw { response: res, data: result };
   }

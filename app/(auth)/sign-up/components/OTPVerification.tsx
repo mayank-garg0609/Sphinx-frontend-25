@@ -1,176 +1,202 @@
-// app/(auth)/sign-up/components/OTPVerification.tsx
-'use client';
+"use client";
 
-import { memo, useCallback, useState, useEffect, useRef } from 'react';
+import { memo, useCallback, useEffect, useState, useRef } from 'react';
 import { toast } from 'sonner';
-import { sendOTP, verifyOTP } from '../services/otpApi';
-import { tokenManager, handleOTPVerificationSuccess } from '../utils/authHelpers';
+import { MESSAGES, SECURITY, OTP_CONFIG, BUTTON_STYLES } from '../utils/constants';
 import { 
-  handleOTPSendError, 
-  handleOTPVerifyError, 
-  handleOTPValidationError,
-  showOTPSuccessMessage 
+  handleOTPValidationError, 
+  formatCooldownTime,
+  isOTPRateLimited,
+  getOTPCooldownTime 
 } from '../utils/otpErrorHandlers';
-import { ACCESSIBILITY, BUTTON_STYLES } from '../utils/constants';
 
 interface OTPVerificationProps {
   readonly email: string;
-  readonly onVerificationSuccess: () => void;
+  readonly onVerificationSuccess: (otp: string) => Promise<void>;
   readonly onBack: () => void;
+  readonly onResend: () => Promise<void>;
   readonly disabled?: boolean;
-  readonly router?: any; // Add router prop
 }
 
 export const OTPVerification = memo(function OTPVerification({
   email,
   onVerificationSuccess,
   onBack,
-  disabled = false,
-  router,
+  onResend,
+  disabled = false
 }: OTPVerificationProps) {
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSendingOTP, setIsSendingOTP] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  const [otp, setOtp] = useState<string[]>(new Array(OTP_CONFIG.LENGTH).fill(''));
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [lastResendTime, setLastResendTime] = useState(0);
+  const [cooldownTime, setCooldownTime] = useState(0);
+  const [attemptCount, setAttemptCount] = useState(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Countdown timer for resend OTP
+  // Cooldown timer
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (countdown > 0) {
-      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    let interval: NodeJS.Timeout;
+    
+    if (cooldownTime > 0) {
+      interval = setInterval(() => {
+        const remaining = getOTPCooldownTime(lastResendTime, SECURITY.OTP.RESEND_COOLDOWN * 1000);
+        setCooldownTime(remaining);
+        
+        if (remaining <= 0) {
+          setCooldownTime(0);
+        }
+      }, 1000);
     }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [countdown]);
 
-  // Auto-send OTP when component mounts
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [cooldownTime, lastResendTime]);
+
+  // Focus first input on mount
   useEffect(() => {
-    handleSendOTP();
+    if (inputRefs.current[0]) {
+      inputRefs.current[0].focus();
+    }
   }, []);
 
-  const handleSendOTP = useCallback(async () => {
-    const token = tokenManager.getAccessToken();
-    if (!token) {
-      const errorMessage = 'Authentication required. Please sign up first.';
-      setError(errorMessage);
-      toast.error(errorMessage);
-      return;
-    }
-
-    setIsSendingOTP(true);
-    setError(null);
-
-    try {
-      const response = await sendOTP(token);
-      showOTPSuccessMessage('send', email);
-      setCountdown(60); // 60 second countdown
-    } catch (error) {
-      const errorMessage = handleOTPSendError(error);
-      setError(errorMessage);
-    } finally {
-      setIsSendingOTP(false);
-    }
-  }, [email]);
-
-  const handleOtpChange = useCallback((index: number, value: string) => {
-    // Only allow single digits
-    if (value.length > 1 || (value && !/^\d$/.test(value))) return;
-
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-    setError(null);
-
-    // Auto-focus next input
-    if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  }, [otp]);
-
-  const handleKeyDown = useCallback((index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Handle backspace
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
+  const handleInputChange = useCallback((value: string, index: number) => {
+    // Only allow digits
+    const sanitizedValue = value.replace(/\D/g, '');
     
-    // Handle paste
-    if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      navigator.clipboard.readText().then(text => {
-        const digits = text.replace(/\D/g, '').slice(0, 6);
-        if (digits.length === 6) {
-          const newOtp = digits.split('');
-          setOtp(newOtp);
-          inputRefs.current[5]?.focus();
-        }
-      }).catch(() => {
-        // Ignore paste errors
-      });
+    if (sanitizedValue.length <= 1) {
+      const newOtp = [...otp];
+      newOtp[index] = sanitizedValue;
+      setOtp(newOtp);
+
+      // Auto-focus next input
+      if (sanitizedValue && index < OTP_CONFIG.LENGTH - 1) {
+        inputRefs.current[index + 1]?.focus();
+      }
     }
   }, [otp]);
 
-  const handleVerifyOTP = useCallback(async () => {
-    // Client-side validation
-    const validationError = handleOTPValidationError(otp);
+  const handleKeyDown = useCallback((e: React.KeyboardEvent, index: number) => {
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      const newOtp = [...otp];
+      
+      if (otp[index]) {
+        // Clear current input
+        newOtp[index] = '';
+        setOtp(newOtp);
+      } else if (index > 0) {
+        // Move to previous input and clear it
+        newOtp[index - 1] = '';
+        setOtp(newOtp);
+        inputRefs.current[index - 1]?.focus();
+      }
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    } else if (e.key === 'ArrowRight' && index < OTP_CONFIG.LENGTH - 1) {
+      inputRefs.current[index + 1]?.focus();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      handleVerifyOTP();
+    }
+  }, [otp]);
+
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '');
+    
+    if (pastedData.length === OTP_CONFIG.LENGTH) {
+      const newOtp = pastedData.split('');
+      setOtp(newOtp);
+      
+      // Focus last input
+      inputRefs.current[OTP_CONFIG.LENGTH - 1]?.focus();
+      
+      // Auto-submit if enabled
+      if (OTP_CONFIG.AUTO_SUBMIT_ON_COMPLETE) {
+        setTimeout(() => handleVerifyOTP(newOtp), 100);
+      }
+    } else if (pastedData.length > 0) {
+      toast.error("Please paste a valid 6-digit OTP.");
+    }
+  }, []);
+
+  const handleVerifyOTP = useCallback(async (otpToVerify?: string[]) => {
+    const currentOtp = otpToVerify || otp;
+    const otpString = currentOtp.join('');
+    
+    // Validate OTP format
+    const validationError = handleOTPValidationError(currentOtp);
     if (validationError) {
-      setError(validationError);
       toast.error(validationError);
       return;
     }
 
-    const token = tokenManager.getAccessToken();
-    if (!token) {
-      const errorMessage = 'Authentication required. Please sign up first.';
-      setError(errorMessage);
-      toast.error(errorMessage);
+    if (attemptCount >= SECURITY.OTP.MAX_ATTEMPTS) {
+      toast.error("Too many failed attempts. Please request a new OTP.");
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
+    setIsVerifying(true);
+    setAttemptCount(prev => prev + 1);
 
     try {
-      const otpString = otp.join('');
-      const response = await verifyOTP(token, otpString);
-      
-      showOTPSuccessMessage('verify');
-      
-      // Handle OTP verification success
-      if (router) {
-        await handleOTPVerificationSuccess(router);
-      }
-      
-      onVerificationSuccess();
+      await onVerificationSuccess(otpString);
+      // Success is handled in the parent component
     } catch (error) {
-      const errorMessage = handleOTPVerifyError(error);
-      setError(errorMessage);
+      console.error('OTP verification failed:', error);
+      // Error handling is done in the parent component
       
-      // Clear OTP on error
-      setOtp(['', '', '', '', '', '']);
+      // Clear OTP inputs on failed verification
+      setOtp(new Array(OTP_CONFIG.LENGTH).fill(''));
       inputRefs.current[0]?.focus();
     } finally {
-      setIsLoading(false);
+      setIsVerifying(false);
     }
-  }, [otp, onVerificationSuccess, router]);
+  }, [otp, onVerificationSuccess, attemptCount]);
 
-  const isOtpComplete = otp.every(digit => digit !== '');
-  const canResend = countdown === 0 && !isSendingOTP;
+  const handleResendOTP = useCallback(async () => {
+    if (isOTPRateLimited(lastResendTime, SECURITY.OTP.RESEND_COOLDOWN * 1000)) {
+      const remaining = getOTPCooldownTime(lastResendTime, SECURITY.OTP.RESEND_COOLDOWN * 1000);
+      toast.error(`Please wait ${formatCooldownTime(remaining)} before requesting another OTP.`);
+      return;
+    }
+
+    setIsResending(true);
+    
+    try {
+      await onResend();
+      setLastResendTime(Date.now());
+      setCooldownTime(SECURITY.OTP.RESEND_COOLDOWN * 1000);
+      setAttemptCount(0); // Reset attempt count on successful resend
+      
+      // Clear current OTP inputs
+      setOtp(new Array(OTP_CONFIG.LENGTH).fill(''));
+      inputRefs.current[0]?.focus();
+    } catch (error) {
+      console.error('Resend OTP failed:', error);
+      // Error handling is done in the parent component
+    } finally {
+      setIsResending(false);
+    }
+  }, [lastResendTime, onResend]);
+
+  const isFormDisabled = disabled || isVerifying || isResending;
+  const canResend = cooldownTime <= 0 && !isResending;
+  const otpComplete = otp.every(digit => digit !== '');
 
   return (
-    <div className="space-y-4 sm:space-y-5 md:space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="text-center space-y-2">
-        <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white">
-          Verify Your Email
-        </h3>
-        <p className="text-sm sm:text-base text-zinc-300">
-          Enter the 6-digit code sent to
+      <div className="text-center space-y-3">
+        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-bold text-white">
+          {MESSAGES.OTP.VERIFY_EMAIL}
+        </h2>
+        <p className="text-zinc-300 text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl 2xl:text-2xl">
+          {MESSAGES.OTP.OTP_SENT}
         </p>
-        <p className="text-sm sm:text-base text-blue-400 font-medium">
-          {email}
+        <p className="text-zinc-400 text-xs sm:text-sm md:text-sm lg:text-base xl:text-lg 2xl:text-xl">
+          <span className="font-medium">{email}</span>
         </p>
       </div>
 
@@ -182,87 +208,148 @@ export const OTPVerification = memo(function OTPVerification({
               key={index}
               type="text"
               inputMode="numeric"
-              pattern="\d*"
+              pattern="[0-9]*"
               maxLength={1}
               value={digit}
-              onChange={(e) => handleOtpChange(index, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(index, e)}
-              disabled={disabled || isLoading}
-              className={`w-10 h-12 sm:w-12 sm:h-14 text-center text-lg sm:text-xl font-bold border-2 rounded-lg bg-black/20 text-white focus:outline-none focus:ring-2 focus:ring-white focus:border-white transition-colors ${
-                error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-white/30'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
+              onChange={(e) => handleInputChange(e.target.value, index)}
+              onKeyDown={(e) => handleKeyDown(e, index)}
+              onPaste={index === 0 ? handlePaste : undefined}
+              disabled={isFormDisabled}
+              className={`
+                w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 xl:w-18 xl:h-18 2xl:w-20 2xl:h-20
+                text-center text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl font-bold
+                bg-white/10 border-2 border-white/30 rounded-lg
+                text-white placeholder-zinc-400
+                focus:outline-none focus:border-white focus:ring-2 focus:ring-white/50
+                disabled:opacity-50 disabled:cursor-not-allowed
+                transition-all duration-200
+                ${digit ? 'border-white/60' : 'border-white/30'}
+              `}
+              placeholder="0"
               aria-label={`OTP digit ${index + 1}`}
               data-testid={`otp-input-${index}`}
             />
           ))}
         </div>
 
-        {/* Error Message */}
-        {error && (
-          <div
-            className="text-red-400 text-sm text-center flex items-center justify-center gap-1"
-            role="alert"
-            aria-live={ACCESSIBILITY.LIVE_REGIONS.ASSERTIVE}
-          >
-            <svg 
-              className="w-4 h-4 flex-shrink-0" 
-              fill="currentColor" 
-              viewBox="0 0 20 20"
-              aria-hidden="true"
-            >
-              <path
-                fillRule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-            {error}
+        {/* Attempt counter */}
+        {attemptCount > 0 && attemptCount < SECURITY.OTP.MAX_ATTEMPTS && (
+          <div className="text-center">
+            <span className="text-yellow-400 text-xs sm:text-sm">
+              Attempts: {attemptCount}/{SECURITY.OTP.MAX_ATTEMPTS}
+            </span>
+          </div>
+        )}
+
+        {/* Max attempts warning */}
+        {attemptCount >= SECURITY.OTP.MAX_ATTEMPTS && (
+          <div className="text-center">
+            <span className="text-red-400 text-xs sm:text-sm">
+              Maximum attempts reached. Please request a new OTP.
+            </span>
           </div>
         )}
       </div>
 
       {/* Action Buttons */}
       <div className="space-y-3">
+        {/* Verify Button */}
         <button
           type="button"
-          onClick={handleVerifyOTP}
-          disabled={disabled || !isOtpComplete || isLoading}
+          onClick={() => handleVerifyOTP()}
+          disabled={!otpComplete || isFormDisabled || attemptCount >= SECURITY.OTP.MAX_ATTEMPTS}
           className={BUTTON_STYLES.primary}
-          aria-label="Verify OTP"
+          aria-label="Verify OTP and create account"
           data-testid="verify-otp-button"
         >
-          {isLoading ? 'Verifying...' : 'Verify OTP'}
+          {isVerifying ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg 
+                className="animate-spin w-4 h-4" 
+                fill="none" 
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              {MESSAGES.LOADING.VERIFYING}
+            </span>
+          ) : (
+            MESSAGES.OTP.VERIFY_BUTTON
+          )}
         </button>
 
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-center justify-center">
-          <button
-            type="button"
-            onClick={handleSendOTP}
-            disabled={disabled || !canResend}
-            className="text-blue-400 hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            data-testid="resend-otp-button"
-          >
-            {isSendingOTP ? 'Sending...' : canResend ? 'Resend OTP' : `Resend in ${countdown}s`}
-          </button>
+        {/* Resend Button */}
+        <button
+          type="button"
+          onClick={handleResendOTP}
+          disabled={!canResend || isFormDisabled}
+          className={BUTTON_STYLES.secondary}
+          aria-label="Resend OTP to email"
+          data-testid="resend-otp-button"
+        >
+          {isResending ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg 
+                className="animate-spin w-4 h-4" 
+                fill="none" 
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              {MESSAGES.LOADING.SENDING}
+            </span>
+          ) : cooldownTime > 0 ? (
+            `Resend in ${formatCooldownTime(cooldownTime)}`
+          ) : (
+            MESSAGES.OTP.RESEND_BUTTON
+          )}
+        </button>
 
-          <button
-            type="button"
-            onClick={onBack}
-            disabled={disabled || isLoading}
-            className="text-zinc-400 hover:text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            data-testid="back-button"
-          >
-            ← Back to Sign Up
-          </button>
-        </div>
+        {/* Back Button */}
+        <button
+          type="button"
+          onClick={onBack}
+          disabled={isFormDisabled}
+          className="w-full text-zinc-400 hover:text-white font-medium py-2 text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl 2xl:text-2xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-label="Go back to sign up form"
+          data-testid="back-to-signup-button"
+        >
+          {MESSAGES.OTP.BACK_TO_SIGNUP}
+        </button>
       </div>
 
-      {/* Loading indicator for screen readers */}
-      {(isLoading || isSendingOTP) && (
-        <div className="sr-only" aria-live={ACCESSIBILITY.LIVE_REGIONS.POLITE}>
-          {isLoading ? 'Verifying OTP, please wait...' : 'Sending OTP, please wait...'}
-        </div>
-      )}
+      {/* Screen reader announcements */}
+      <div className="sr-only" role="status" aria-live="polite">
+        {isVerifying && "Verifying OTP, please wait..."}
+        {isResending && "Sending new OTP, please wait..."}
+        {cooldownTime > 0 && `Resend available in ${formatCooldownTime(cooldownTime)}`}
+      </div>
     </div>
   );
 });
