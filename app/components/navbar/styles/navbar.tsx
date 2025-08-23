@@ -62,14 +62,14 @@ export const navbarStyles = `
   }
 
   .cyberpunk-inner-track {
-    background: linear-gradient(
-      90deg,
-      #e8e8e8 0%,
-      #f5f5f5 25%,
-      #ffffff 50%,
-      #f5f5f5 75%,
-      #e8e8e8 100%
-    );
+   background: linear-gradient(
+    90deg,
+    #0d0d18 0%,    /* near black */
+    #181830 25%,   /* deep indigo */
+    #222244 50%,   /* muted navy highlight */
+    #181830 75%, 
+    #0d0d18 100%
+  );
     position: relative;
     overflow: hidden;
     border-radius: clamp(30px, 6vw, 50px);

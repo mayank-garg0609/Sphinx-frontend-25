@@ -9,7 +9,6 @@ import { ACCESSIBILITY, SECURITY, MESSAGES } from '../utils/constants';
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
 
-
 interface FormFieldProps {
   readonly field: FormFieldType;
   readonly register: UseFormRegister<LoginFormData>;
@@ -31,7 +30,6 @@ export const FormField = memo(function FormField({
     setShowPassword(prev => !prev);
   }, []);
 
-  // Get appropriate input type
   const getInputType = useCallback(() => {
     if (isPasswordField) {
       return showPassword ? 'text' : 'password';
@@ -39,7 +37,6 @@ export const FormField = memo(function FormField({
     return field.type;
   }, [isPasswordField, showPassword, field.type]);
 
-  // Enhanced validation attributes
   const getValidationProps = useCallback(() => {
     const props: Record<string, any> = {};
     
@@ -48,21 +45,18 @@ export const FormField = memo(function FormField({
     if (field.pattern) props.pattern = field.pattern;
     if (field.autoComplete) props.autoComplete = field.autoComplete;
     
-    // Security attributes
     props.spellCheck = false;
     props.autoCapitalize = 'none';
     props.autoCorrect = 'off';
     
-    // Additional security for password fields
     if (isPasswordField) {
-      props['data-1p-ignore'] = true; // Disable 1Password on password confirm fields
-      props['data-lpignore'] = true; // Disable LastPass
+      props['data-1p-ignore'] = true;
+      props['data-lpignore'] = true;
     }
     
     return props;
   }, [field, isPasswordField]);
 
-  // Get ARIA attributes
   const getAriaAttributes = useCallback(() => {
     return {
       'aria-invalid': hasError,
@@ -75,11 +69,11 @@ export const FormField = memo(function FormField({
   }, [hasError, field.id, field.required, isPasswordField]);
 
   return (
-    <div className="flex flex-col text-zinc-300 gap-1.5 sm:gap-2 md:gap-2 lg:gap-2 xl:gap-2.5 2xl:gap-3">
+    <div className="space-y-2">
       {/* Label */}
       <Label 
         htmlFor={field.id} 
-        className="text-xs sm:text-sm md:text-sm lg:text-base xl:text-lg 2xl:text-xl font-medium"
+        className="text-sm font-medium text-zinc-200"
       >
         {field.label}
         {field.required && (
@@ -123,9 +117,15 @@ export const FormField = memo(function FormField({
           })}
           {...getValidationProps()}
           {...getAriaAttributes()}
-          className={`text-xs sm:text-sm md:text-sm lg:text-base xl:text-lg 2xl:text-xl py-2 sm:py-2 md:py-2 lg:py-2 xl:py-3 2xl:py-4 h-8 sm:h-9 md:h-10 lg:h-auto xl:h-auto 2xl:h-auto disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
-            hasError ? 'border-red-500 focus:border-red-500 ring-red-500' : 'focus:ring-white'
-          } ${isPasswordField ? 'pr-10' : ''}`}
+          className={`
+            h-12 px-4 text-white bg-zinc-800/50 border border-zinc-600 rounded-lg
+            placeholder:text-zinc-400 
+            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+            disabled:opacity-50 disabled:cursor-not-allowed 
+            transition-all duration-200
+            ${hasError ? 'border-red-500 focus:ring-red-500' : 'hover:border-zinc-500'}
+            ${isPasswordField ? 'pr-12' : ''}
+          `}
           data-testid={`${field.id}-input`}
         />
         
@@ -135,15 +135,15 @@ export const FormField = memo(function FormField({
             type="button"
             onClick={togglePasswordVisibility}
             disabled={disabled}
-            className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-400 hover:text-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:text-zinc-200"
+            className="absolute inset-y-0 right-0 flex items-center pr-4 text-zinc-400 hover:text-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
             tabIndex={0}
             data-testid="password-toggle"
           >
             {showPassword ? (
-              <EyeSlashIcon className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
+              <EyeSlashIcon className="w-5 h-5" aria-hidden="true" />
             ) : (
-              <EyeIcon className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
+              <EyeIcon className="w-5 h-5" aria-hidden="true" />
             )}
           </button>
         )}
@@ -153,13 +153,13 @@ export const FormField = memo(function FormField({
       {hasError && (
         <span 
           id={`${field.id}-error`}
-          className="text-red-400 text-xs sm:text-xs md:text-xs lg:text-sm xl:text-base 2xl:text-lg flex items-center gap-1"
+          className="text-red-400 text-sm flex items-center gap-2"
           role="alert"
           aria-live={ACCESSIBILITY.LIVE_REGIONS.ASSERTIVE}
           data-testid={`${field.id}-error`}
         >
           <svg 
-            className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" 
+            className="w-4 h-4 flex-shrink-0" 
             fill="currentColor" 
             viewBox="0 0 20 20"
             aria-hidden="true"
@@ -177,7 +177,7 @@ export const FormField = memo(function FormField({
       {/* Field Help Text */}
       {field.type === 'password' && !hasError && (
         <span 
-          className="text-zinc-400 text-xs sm:text-xs md:text-xs lg:text-sm"
+          className="text-zinc-500 text-sm"
           id={`${field.id}-help`}
           aria-live={ACCESSIBILITY.LIVE_REGIONS.POLITE}
         >

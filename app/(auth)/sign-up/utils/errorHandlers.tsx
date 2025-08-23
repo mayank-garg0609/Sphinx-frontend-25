@@ -1,3 +1,4 @@
+// app/(auth)/sign-up/utils/errorHandlers.tsx - UPDATED for new API flow
 import { toast } from "sonner";
 import {
   AuthenticationError,
@@ -60,10 +61,22 @@ export const ERROR_MESSAGES = {
     ACCOUNT_EXISTS:
       "An account with this Google email already exists. Please log in instead.",
   },
+  OTP: {
+    SEND_FAILED: "Failed to send OTP. Please try again.",
+    VERIFY_FAILED: "Failed to verify OTP. Please try again.",
+    INVALID_FORMAT: "OTP must be a 6-digit number.",
+    EXPIRED: "OTP has expired. Please request a new one.",
+    USER_NOT_FOUND: "User not found. Please sign up first.",
+    USER_ALREADY_EXISTS: "An account with this email already exists. Please log in instead.",
+    USER_ALREADY_VERIFIED: "Your email is already verified. You can proceed to login.",
+    RESEND_TOO_SOON: "Please wait before requesting another OTP.",
+    MAX_ATTEMPTS: "Too many failed attempts. Please request a new OTP.",
+  },
 } as const;
 
+// Updated for new API error handling
 export const handleApiError = (res: Response, result: any): void => {
-  console.error("SignUp API Error:", {
+  console.error("API Error:", {
     status: res.status,
     statusText: res.statusText,
     url: res.url,
@@ -72,51 +85,94 @@ export const handleApiError = (res: Response, result: any): void => {
 
   let errorMessage: string;
 
-  switch (res.status) {
-    case 400:
-      if (
-        result.error?.toLowerCase().includes("user already exists") ||
-        result.error?.toLowerCase().includes("email already")
-      ) {
+  // Handle OTP send errors (POST /auth/signup)
+  if (res.url?.includes('/auth/signup')) {
+    switch (res.status) {
+      case 404:
+        if (result.error === "User already exists") {
+          errorMessage = ERROR_MESSAGES.OTP.USER_ALREADY_EXISTS;
+        } else {
+          errorMessage = ERROR_MESSAGES.OTP.SEND_FAILED;
+        }
+        break;
+      case 500:
+        errorMessage = result.error || ERROR_MESSAGES.OTP.SEND_FAILED;
+        break;
+      default:
+        errorMessage = result.error || ERROR_MESSAGES.OTP.SEND_FAILED;
+    }
+  }
+  // Handle OTP verify errors (POST /auth/verify)
+  else if (res.url?.includes('/auth/verify')) {
+    switch (res.status) {
+      case 401:
+        if (result.error === "User already exist") {
+          errorMessage = ERROR_MESSAGES.OTP.USER_ALREADY_EXISTS;
+        } else {
+          errorMessage = ERROR_MESSAGES.AUTH.ACCOUNT_CREATION_FAILED;
+        }
+        break;
+      case 400:
+        if (result.error === "Invalid or expired OTP") {
+          errorMessage = ERROR_MESSAGES.OTP.EXPIRED;
+        } else {
+          errorMessage = ERROR_MESSAGES.OTP.VERIFY_FAILED;
+        }
+        break;
+      case 500:
+        errorMessage = result.error || ERROR_MESSAGES.OTP.VERIFY_FAILED;
+        break;
+      default:
+        errorMessage = result.error || ERROR_MESSAGES.OTP.VERIFY_FAILED;
+    }
+  }
+  // Handle other API errors
+  else {
+    switch (res.status) {
+      case 400:
+        if (
+          result.error?.toLowerCase().includes("user already exists") ||
+          result.error?.toLowerCase().includes("email already")
+        ) {
+          errorMessage = ERROR_MESSAGES.AUTH.USER_EXISTS;
+        } else if (result.error?.toLowerCase().includes("google")) {
+          errorMessage = ERROR_MESSAGES.AUTH.GOOGLE_SIGNUP_FAILED;
+        } else if (result.error?.toLowerCase().includes("password")) {
+          errorMessage = ERROR_MESSAGES.AUTH.INVALID_PASSWORD;
+        } else if (result.error?.toLowerCase().includes("email")) {
+          errorMessage = ERROR_MESSAGES.VALIDATION.INVALID_EMAIL;
+        } else {
+          errorMessage = ERROR_MESSAGES.AUTH.ACCOUNT_CREATION_FAILED;
+        }
+        break;
+
+      case 409:
         errorMessage = ERROR_MESSAGES.AUTH.USER_EXISTS;
-      } else if (result.error?.toLowerCase().includes("google")) {
-        errorMessage = ERROR_MESSAGES.AUTH.GOOGLE_SIGNUP_FAILED;
-      } else if (result.error?.toLowerCase().includes("password")) {
-        errorMessage = ERROR_MESSAGES.AUTH.INVALID_PASSWORD;
-      } else if (result.error?.toLowerCase().includes("email")) {
+        break;
+
+      case 422:
         errorMessage = ERROR_MESSAGES.VALIDATION.INVALID_EMAIL;
-      } else {
-        errorMessage = ERROR_MESSAGES.AUTH.ACCOUNT_CREATION_FAILED;
-      }
-      break;
+        break;
 
-    case 409:
-      errorMessage = ERROR_MESSAGES.AUTH.USER_EXISTS;
-      break;
+      case 429:
+        errorMessage = ERROR_MESSAGES.NETWORK.RATE_LIMITED;
+        break;
 
-    case 422:
-      errorMessage = ERROR_MESSAGES.VALIDATION.INVALID_EMAIL;
-      break;
+      case 500:
+      case 502:
+      case 503:
+      case 504:
+        errorMessage = ERROR_MESSAGES.NETWORK.SERVER_ERROR;
+        break;
 
-    case 429:
-      errorMessage = ERROR_MESSAGES.NETWORK.RATE_LIMITED;
-      break;
-
-    case 500:
-    case 502:
-    case 503:
-    case 504:
-      errorMessage = ERROR_MESSAGES.NETWORK.SERVER_ERROR;
-      break;
-
-    default:
-      errorMessage =
-        result.error || ERROR_MESSAGES.AUTH.ACCOUNT_CREATION_FAILED;
+      default:
+        errorMessage = result.error || ERROR_MESSAGES.AUTH.ACCOUNT_CREATION_FAILED;
+    }
   }
 
   toast.error(errorMessage);
 
-  if (res.status === 409) {
+  if (res.status === 409 || res.status === 401) {
     throw new AuthenticationError(errorMessage, res.status);
   } else if (res.status === 422) {
     throw new ValidationError(errorMessage);
@@ -177,7 +233,7 @@ export const handleNetworkError = (
   maxRetries: number,
   context = "signup"
 ): void => {
-  console.error("SignUp Network Error:", {
+  console.error("Network Error:", {
     error: sanitizeErrorMessage(
       error instanceof Error ? error.message : "Unknown error"
     ),
@@ -306,4 +362,76 @@ export const handleRateLimitError = (timeUntilReset: number): void => {
       minutes > 1 ? "s" : ""
     } before trying again.`
   );
+};
+
+// OTP-specific error handlers
+export const handleOTPSendError = (error: unknown): string => {
+  let errorMessage: string;
+  
+  if (error instanceof Error) {
+    switch (error.message) {
+      case "User already exists":
+      case "An account with this email already exists. Please log in instead.":
+        errorMessage = ERROR_MESSAGES.OTP.USER_ALREADY_EXISTS;
+        break;
+      case "Failed to send OTP":
+      case "Failed to send OTP. Please try again later.":
+        errorMessage = ERROR_MESSAGES.OTP.SEND_FAILED;
+        break;
+      default:
+        if (error.message.includes("fetch") || error.message.includes("network")) {
+          errorMessage = ERROR_MESSAGES.NETWORK.SERVER_ERROR;
+        } else {
+          errorMessage = error.message || ERROR_MESSAGES.OTP.SEND_FAILED;
+        }
+    }
+  } else {
+    errorMessage = ERROR_MESSAGES.OTP.SEND_FAILED;
+  }
+
+  console.error("OTP Send Error:", {
+    originalError: error instanceof Error ? error.message : String(error),
+    mappedError: errorMessage,
+  });
+
+  return errorMessage;
+};
+
+export const handleOTPVerifyError = (error: unknown): string => {
+  let errorMessage: string;
+  
+  if (error instanceof Error) {
+    switch (error.message) {
+      case "User already exist":
+      case "An account with this email already exists. Please log in instead.":
+        errorMessage = ERROR_MESSAGES.OTP.USER_ALREADY_EXISTS;
+        break;
+      case "Invalid or expired OTP":
+      case "Invalid or expired OTP. Please try again or request a new OTP.":
+        errorMessage = ERROR_MESSAGES.OTP.EXPIRED;
+        break;
+      case "Failed to verify user":
+      case "Failed to verify user. Please try again later.":
+        errorMessage = ERROR_MESSAGES.OTP.VERIFY_FAILED;
+        break;
+      case "Valid 6-digit OTP is required":
+        errorMessage = ERROR_MESSAGES.OTP.INVALID_FORMAT;
+        break;
+      default:
+        if (error.message.includes("fetch") || error.message.includes("network")) {
+          errorMessage = ERROR_MESSAGES.NETWORK.SERVER_ERROR;
+        } else {
+          errorMessage = error.message || ERROR_MESSAGES.OTP.VERIFY_FAILED;
+        }
+    }
+  } else {
+    errorMessage = ERROR_MESSAGES.OTP.VERIFY_FAILED;
+  }
+
+  console.error("OTP Verify Error:", {
+    originalError: error instanceof Error ? error.message : String(error),
+    mappedError: errorMessage,
+  });
+
+  return errorMessage;
 };

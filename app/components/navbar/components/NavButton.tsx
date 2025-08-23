@@ -125,11 +125,11 @@ const NavButtonComponent: React.FC<NavButtonProps> = ({
         }
 
         .elegant-nav-button {
-          background: linear-gradient(
-            135deg,
-            #00ffcc 0%,
-            #00ffcc 50%,
-            #00ffcc 100%
+         background: linear-gradient(
+            90deg,
+            #11111a 0%,
+            #1a1a2a 50%,
+            #11111a 100%
           );
           border: 2px solid rgba(255, 255, 255, 0.8);
           border-radius: 50%;

@@ -19,8 +19,11 @@ const NO_BG_PATHS = new Set([
   "/sign-up",
   "/caProgram",
   "/caProgram/register",
+  "/caProgram/dashboard",
+  "/profile",
   "/update",
   "/devTeam",
+  "/attribution"
 ]);
 
 const UPCOMING_PATHS = new Set([
@@ -126,10 +129,7 @@ const UpcomingBGLayer = memo(() => (
       sizes="100vw"
       quality={85}
     />
-        <div className={HOME_OVERLAY_STYLE} />
-
-    
-    
+    <div className={HOME_OVERLAY_STYLE} />
   </div>
 ));
 UpcomingBGLayer.displayName = "UpcomingBGLayer";

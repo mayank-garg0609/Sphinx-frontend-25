@@ -23,87 +23,325 @@ export const calculatePasswordStrength = (password: string): PasswordStrength =>
   
   let score = 0;
   
-  // Length check
   if (password.length >= 8) score++;
   if (password.length >= 12) score++;
   
-  // Character type checks
   if (/[a-z]/.test(password)) score++;
   if (/[A-Z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
   if (/[^a-zA-Z0-9]/.test(password)) score++;
   
-  // Common patterns penalty
-  if (/(.)\1{2,}/.test(password)) score--; // Repeated characters
-  if (/123|abc|qwe/i.test(password)) score--; // Sequential patterns
+  if (/(.)\1{2,}/.test(password)) score--; 
+  if (/123|abc|qwe/i.test(password)) score--; 
   
   if (score >= 4) return "Strong";
   if (score >= 2) return "Medium";
   return "Weak";
 };
 
-// Import token and user managers from login utils (reusable)
-import { 
-  tokenManager, 
-  userManager, 
-  csrfManager 
-} from "@/app/(auth)/login/utils/authHelpers";
+class SignupTokenManager {
+  private accessToken: string | null = null;
+  private refreshToken: string | null = null;
+  private tokenExpiry: number | null = null;
 
-// Handle authentication success for signup
-export async function handleAuthSuccess(
-  accessToken: string,
-  refreshToken: string,
-  expiresIn: number,
-  user: User,
-  router: any
-): Promise<void>;
+  setTokens(
+    accessToken: string,
+    refreshToken: string,
+    expiresIn: number
+  ): void {
+    this.accessToken = accessToken;
+    this.refreshToken = refreshToken;
+    this.tokenExpiry = Date.now() + expiresIn * 1000;
 
-export async function handleAuthSuccess(
-  accessToken: string,
-  user: User,
-  router: any
-): Promise<void>;
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem(
+          "auth_tokens",
+          JSON.stringify({
+            accessToken: this.accessToken,
+            refreshToken: this.refreshToken,
+            tokenExpiry: this.tokenExpiry,
+          })
+        );
+        console.log("✅ Tokens stored successfully");
+      } catch (error) {
+        console.error("Failed to store tokens in session:", error);
+      }
+    }
+  }
 
-export async function handleAuthSuccess(
-  accessToken: string,
-  refreshTokenOrUser: string | User,
-  expiresInOrRouter: number | any,
-  userOrUndefined?: User,
-  routerOrUndefined?: any
-): Promise<void> {
-  try {
-    let refreshToken: string;
-    let expiresIn: number;
-    let user: User;
-    let router: any;
-
-    if (
-      typeof refreshTokenOrUser === "string" &&
-      typeof expiresInOrRouter === "number" &&
-      userOrUndefined &&
-      routerOrUndefined
-    ) {
-      refreshToken = refreshTokenOrUser;
-      expiresIn = expiresInOrRouter;
-      user = userOrUndefined;
-      router = routerOrUndefined;
-    } else if (
-      typeof refreshTokenOrUser === "object" &&
-      refreshTokenOrUser !== null
-    ) {
-      refreshToken = "";
-      expiresIn = 3600;
-      user = refreshTokenOrUser;
-      router = expiresInOrRouter;
-    } else {
-      throw new Error("Invalid parameters for handleAuthSuccess");
+  getAccessToken(): string | null {
+    if (this.accessToken && this.isTokenValid()) {
+      return this.accessToken;
     }
 
-    if (refreshToken) {
+    if (typeof window !== "undefined") {
+      try {
+        const tokenData = sessionStorage.getItem("auth_tokens");
+        if (!tokenData) return null;
+        
+        const parsed = JSON.parse(tokenData);
+        if (parsed.accessToken && parsed.tokenExpiry > Date.now()) {
+          this.accessToken = parsed.accessToken;
+          this.refreshToken = parsed.refreshToken;
+          this.tokenExpiry = parsed.tokenExpiry;
+          return this.accessToken;
+        }
+      } catch (error) {
+        console.error("Failed to get tokens from session:", error);
+      }
+    }
+    
+    return null;
+  }
+
+  isTokenValid(): boolean {
+    return this.tokenExpiry !== null && this.tokenExpiry > Date.now() + 60000; // 1 minute buffer
+  }
+
+  clearTokens(): void {
+    this.accessToken = null;
+    this.refreshToken = null;
+    this.tokenExpiry = null;
+
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.removeItem("auth_tokens");
+      } catch (error) {
+        console.error("Failed to clear tokens from session:", error);
+      }
+    }
+  }
+}
+
+class SignupUserManager {
+  private userData: UserData | null = null;
+
+  setUser(user: User): void {
+    try {
+      const validatedUser = UserSchema.parse(user);
+
+      this.userData = {
+        sphinx_id: validatedUser.sphinx_id,
+        name: validatedUser.name,
+        email: validatedUser.email,
+        role: validatedUser.role,
+        is_verified: Boolean(validatedUser.is_verified), // Should be true after OTP verification
+        applied_ca: Boolean(validatedUser.applied_ca),
+        last_login: new Date().toISOString(),
+        created_at: validatedUser.created_at,
+      };
+
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem("user_data", JSON.stringify(this.userData));
+          console.log("✅ User data stored successfully");
+        } catch (error) {
+          console.error("Failed to store user data in session:", error);
+        }
+      }
+    } catch (error) {
+      console.error("User validation failed:", error);
+      throw new Error("Invalid user data received");
+    }
+  }
+
+  getUser(): UserData | null {
+    if (this.userData) {
+      return this.userData;
+    }
+
+    if (typeof window !== "undefined") {
+      try {
+        const userData = sessionStorage.getItem("user_data");
+        if (userData) {
+          const parsed = JSON.parse(userData);
+          // Ensure boolean types when retrieving from storage
+          this.userData = {
+            ...parsed,
+            is_verified: Boolean(parsed.is_verified),
+            applied_ca: Boolean(parsed.applied_ca),
+          };
+          return this.userData;
+        }
+      } catch (error) {
+        console.error("Failed to get user data from session:", error);
+      }
+    }
+
+    return null;
+  }
+
+  clearUser(): void {
+    this.userData = null;
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.removeItem("user_data");
+        sessionStorage.removeItem("user_preferences");
+      } catch (error) {
+        console.error("Failed to clear user data from session:", error);
+      }
+    }
+  }
+}
+
+class SignupCSRFManager {
+  private csrfToken: string | null = null;
+
+  async getCSRFToken(): Promise<string | null> {
+    if (this.csrfToken) {
+      return this.csrfToken;
+    }
+
+    try {
+      const response = await fetch("/api/auth/csrf-token", {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        console.warn("CSRF token endpoint not available:", response.status);
+        return null;
+      }
+
+      const { csrfToken } = await response.json();
+      this.csrfToken = csrfToken;
+      return csrfToken;
+    } catch (error) {
+      console.warn("CSRF token fetch failed, proceeding without it:", error);
+      return null;
+    }
+  }
+
+  clearCSRFToken(): void {
+    this.csrfToken = null;
+  }
+}
+
+export const tokenManager = new SignupTokenManager();
+export const userManager = new SignupUserManager();
+export const csrfManager = new SignupCSRFManager();
+
+export async function handleAuthSuccess(
+  accessToken: string,
+  refreshToken: string | User,
+  expiresInOrRouter: number | any,
+  userOrRouter?: User | any,
+  routerOptional?: any
+): Promise<void> {
+  try {
+    console.log("🔄 Processing authentication success...");
+    console.log("📥 Parameters received:", {
+      accessToken: typeof accessToken,
+      refreshToken: typeof refreshToken,
+      expiresInOrRouter: typeof expiresInOrRouter,
+      userOrRouter: typeof userOrRouter,
+      routerOptional: typeof routerOptional
+    });
+
+    let finalRefreshToken: string;
+    let finalExpiresIn: number;
+    let finalUser: User;
+    let finalRouter: any;
+
+    if (
+      typeof refreshToken === "string" &&
+      typeof expiresInOrRouter === "number" &&
+      userOrRouter &&
+      typeof userOrRouter === "object" &&
+      "sphinx_id" in userOrRouter &&
+      routerOptional
+    ) {
+      console.log("📋 Detected 5-parameter pattern");
+      finalRefreshToken = refreshToken;
+      finalExpiresIn = expiresInOrRouter;
+      finalUser = userOrRouter as User;
+      finalRouter = routerOptional;
+    } else if (
+      typeof refreshToken === "object" &&
+      refreshToken !== null &&
+      "sphinx_id" in refreshToken &&
+      typeof expiresInOrRouter === "object" &&
+      expiresInOrRouter !== null
+    ) {
+      console.log("📋 Detected 3-parameter pattern");
+      finalRefreshToken = "";
+      finalExpiresIn = 3600;
+      finalUser = refreshToken as User;
+      finalRouter = expiresInOrRouter;
+    } else if (
+      typeof refreshToken === "string" &&
+      typeof expiresInOrRouter === "object" &&
+      expiresInOrRouter !== null &&
+      "sphinx_id" in expiresInOrRouter
+    ) {
+      console.log("📋 Detected 4-parameter pattern (missing expiresIn)");
+      finalRefreshToken = refreshToken;
+      finalExpiresIn = 3600;
+      finalUser = expiresInOrRouter as User;
+      finalRouter = userOrRouter;
+    } else {
+      console.warn("⚠️ Unrecognized parameter pattern, attempting fallback detection");
+      
+      const userParam = [refreshToken, expiresInOrRouter, userOrRouter].find(
+        param => param && typeof param === "object" && "sphinx_id" in param
+      ) as User | undefined;
+
+      const routerParam = [expiresInOrRouter, userOrRouter, routerOptional].find(
+        param => param && typeof param === "object" && typeof param.push === "function"
+      );
+
+      if (!userParam) {
+        throw new Error("Could not identify user parameter");
+      }
+
+      if (!routerParam) {
+        throw new Error("Could not identify router parameter");
+      }
+
+      finalRefreshToken = typeof refreshToken === "string" ? refreshToken : "";
+      finalExpiresIn = typeof expiresInOrRouter === "number" ? expiresInOrRouter : 3600;
+      finalUser = userParam;
+      finalRouter = routerParam;
+      
+      console.log("📋 Used fallback parameter detection");
+    }
+
+    // Validate required parameters
+    if (!accessToken || typeof accessToken !== 'string') {
+      throw new Error("Invalid access token");
+    }
+
+    if (!finalUser || typeof finalUser !== 'object' || !finalUser.sphinx_id) {
+      throw new Error("Invalid user data");
+    }
+
+    if (finalRouter && typeof finalRouter.push !== 'function') {
+      console.warn("Invalid router object, proceeding without it");
+      finalRouter = null;
+    }
+
+    if (isNaN(finalExpiresIn) || finalExpiresIn <= 0) {
+      finalExpiresIn = 3600;
+      console.warn("⚠️ Invalid expiresIn, using default value:", finalExpiresIn);
+    }
+
+    console.log("🔑 Final authentication details:", {
+      hasAccessToken: !!accessToken,
+      hasRefreshToken: !!finalRefreshToken,
+      expiresIn: finalExpiresIn,
+      userId: finalUser.sphinx_id,
+      userName: finalUser.name,
+      userEmail: finalUser.email,
+      userVerified: finalUser.is_verified,
+      hasRouter: !!finalRouter
+    });
+
+    // Store tokens
+    if (finalRefreshToken) {
       const tokenData = TokenResponseSchema.parse({
         accessToken,
-        refreshToken,
-        expiresIn,
+        refreshToken: finalRefreshToken,
+        expiresIn: finalExpiresIn,
       });
 
       tokenManager.setTokens(
@@ -112,18 +350,18 @@ export async function handleAuthSuccess(
         tokenData.expiresIn
       );
     } else {
-      tokenManager.setTokens(accessToken, "", expiresIn);
+      tokenManager.setTokens(accessToken, "", finalExpiresIn);
     }
 
-    userManager.setUser(user);
+    // Store user data
+    userManager.setUser(finalUser);
 
-    // Navigate to profile after successful signup
-    setTimeout(() => {
-      router.push("/profile");
-    }, 500);
+    console.log("✅ Authentication setup complete - user is verified and authenticated");
+
+    // Don't navigate automatically - let the component handle navigation
   } catch (error) {
-    console.error("Auth success handling failed:", error);
-    throw new Error("Sign up successful but setup failed. Please try again.");
+    console.error("❌ Auth success handling failed:", error);
+    throw new Error("Account created but setup failed. Please try logging in.");
   }
 }
 
@@ -139,33 +377,17 @@ export const handleLogout = async (router: any): Promise<void> => {
   }
 };
 
-export const checkAuthStatus = (): boolean => {
-  return tokenManager.isAuthenticated();
-};
-
-// Signup-specific header function (no auth required)
+// Signup-specific header functions
 export const getSignupHeaders = (): Record<string, string> => {
   return {
     "Content-Type": "application/json",
   };
 };
 
-// If you need CSRF for signup, use this version instead:
-export const getSignupHeadersWithCSRF = async (): Promise<Record<string, string>> => {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-
-  try {
-    // Only get CSRF token for signup, no auth required
-    const csrfToken = await csrfManager.getCSRFToken();
-    headers["X-CSRF-Token"] = csrfToken;
-  } catch (csrfError) {
-    console.warn("CSRF token not available for signup:", csrfError);
-    // Continue without CSRF for signup if not available
-  }
-
-  return headers;
+// Get stored email for resend functionality
+export const getStoredUserEmail = (): string | null => {
+  const userData = userManager.getUser();
+  return userData ? userData.email : null;
 };
 
 // Validation helpers specific to signup
@@ -201,4 +423,13 @@ export const sanitizeSignUpData = (data: any) => {
     confirmPassword: data.confirmPassword,
     agreed: Boolean(data.agreed),
   };
+};
+
+// OTP validation helpers
+export const validateOTP = (otp: string): boolean => {
+  return /^\d{6}$/.test(otp);
+};
+
+export const formatOTP = (otp: string): string => {
+  return otp.replace(/\D/g, '').slice(0, 6);
 };

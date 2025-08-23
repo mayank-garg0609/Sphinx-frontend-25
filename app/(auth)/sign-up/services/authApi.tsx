@@ -3,13 +3,30 @@ import { SignUpResponse } from "../types/authTypes";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export const signUpUser = async (data: SignUpFormData): Promise<SignUpResponse> => {
+export const signUpUser = async (
+  data: SignUpFormData,
+  verificationToken?: string
+): Promise<SignUpResponse> => {
+  console.warn(
+    "signUpUser function called - this should only be used for Google auth now"
+  );
+
+  const body: any = {
+    name: data.name,
+    email: data.email,
+    password: data.password,
+  };
+
+  if (verificationToken) {
+    body.verificationToken = verificationToken;
+  }
+
   const res = await fetch(`${API_BASE_URL}/auth/signup`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify(body),
   });
 
   const contentType = res.headers.get("content-type");
@@ -18,7 +35,7 @@ export const signUpUser = async (data: SignUpFormData): Promise<SignUpResponse> 
   }
 
   const result: SignUpResponse = await res.json();
-  
+
   if (!res.ok) {
     throw { response: res, data: result };
   }
@@ -26,7 +43,9 @@ export const signUpUser = async (data: SignUpFormData): Promise<SignUpResponse> 
   return result;
 };
 
-export const signUpWithGoogle = async (code: string): Promise<SignUpResponse> => {
+export const signUpWithGoogle = async (
+  code: string
+): Promise<SignUpResponse> => {
   if (!code) {
     throw new Error("Google Auth code is missing");
   }
@@ -45,7 +64,7 @@ export const signUpWithGoogle = async (code: string): Promise<SignUpResponse> =>
   }
 
   const result: SignUpResponse = await res.json();
-  
+
   if (!res.ok) {
     throw { response: res, data: result };
   }

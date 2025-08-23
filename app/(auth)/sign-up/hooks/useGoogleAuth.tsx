@@ -3,7 +3,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { toast } from "sonner";
 import type { SignUpResponse } from "../types/authTypes";
 import { API_CONFIG, rateLimiter } from "../utils/config";
-import { handleAuthSuccess } from "@/app/(auth)/login/utils/authHelpers";
+import { handleAuthSuccess } from "@/app/(auth)/sign-up/utils/authHelpers";
 import {
   handleGoogleApiError,
   handleGoogleNetworkError,
@@ -26,7 +26,7 @@ const getGoogleSignupHeaders = (): Record<string, string> => {
 };
 
 export function useGoogleAuth(
-  router: any,
+  router: any, // This should be the transition router
   clearErrors: () => void
 ): UseGoogleAuthReturn {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -84,7 +84,6 @@ export function useGoogleAuth(
             headers,
             body: JSON.stringify({ code }),
             signal: controller.signal,
-            // credentials: "include", // Uncomment if you need cookies
           });
 
           clearTimeout(timeoutId);
@@ -122,6 +121,7 @@ export function useGoogleAuth(
               user = result.user!;
             }
 
+            // Handle auth success and store tokens/user data
             await handleAuthSuccess(
               accessToken,
               refreshToken,
@@ -131,6 +131,21 @@ export function useGoogleAuth(
             );
 
             toast.success("✅ Account created successfully with Google!");
+            
+            // Use transition router for smooth navigation
+            console.log("🔄 Navigating to profile completion with transition...");
+            
+            // Small delay to allow toast to show, then navigate with transition
+            setTimeout(() => {
+              if (router && typeof router.push === 'function') {
+                router.push("/update");
+                console.log("✅ Navigation initiated with transition router");
+              } else {
+                console.warn("⚠️ Router not available, falling back to window location");
+                window.location.href = "/update";
+              }
+            }, 1500);
+            
             setRetryCount(0);
             setError(null);
           } else {

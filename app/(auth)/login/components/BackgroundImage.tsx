@@ -22,6 +22,7 @@ export const BackgroundImage = memo(function BackgroundImage() {
         className="object-cover lg:hidden"
         priority
         sizes="100vw"
+        quality={50}
       />
     </>
   );
